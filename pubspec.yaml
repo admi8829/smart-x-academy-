@@ -19,7 +19,7 @@ dependencies:
   youtube_player_flutter: ^9.0.1
 
   # Local persistence for settings (Theme, Language, Grade)
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:
