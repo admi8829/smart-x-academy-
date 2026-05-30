@@ -16,15 +16,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java 17 (Required for Android Builds)
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-          cache: 'gradle'
-
-      # Step 3: Setup Flutter Environment
+      # Step 2: Setup Flutter Environment
+      # Having Flutter set up first allows us to dynamically bootstrap project wrapper directories.
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -32,28 +25,42 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # Step 4: Install Dependencies
+      # Step 3: Recreate Android Project Wrapper
+      # Recreates the android/ directory containing Gradle wrapper scripts, so the Java JDK setup step can cache gradle builds correctly.
+      - name: Recreate Android Project Wrapper
+        run: flutter create --platforms=android .
+
+      # Step 4: Set up Java 17 (Required for Android Builds)
+      # Now that Gradle configurations from 'flutter create' are generated in the preceding step, this runs flawlessly.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      # Step 5: Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # Step 5: Format Check
+      # Step 6: Check Formatting
       - name: Check Formatting
         run: flutter format --set-exit-if-changed lib/
 
-      # Step 6: Static Code Analysis (Linter)
+      # Step 7: Static Code Analysis (Linter)
       - name: Run Linter Analyzers
         run: flutter analyze
 
-      # Step 7: Run Unit & Widget Tests
+      # Step 8: Run Unit & Widget Tests
       # Kept robust and asset-independent to prevent standard test failures
       - name: Run Widget Tests
         run: flutter test
 
-      # Step 8: Compile Production Release APK
+      # Step 9: Compile Production Release APK
       - name: Build Release APK
         run: flutter build apk --release --no-pub
 
-      # Step 9: Archive compiled APK artifact
+      # Step 10: Archive compiled APK artifact
       - name: Upload APK Release Artifact
         uses: actions/upload-artifact@v4
         with:
