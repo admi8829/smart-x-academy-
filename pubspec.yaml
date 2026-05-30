@@ -12,7 +12,7 @@ dependencies:
     sdk: flutter
 
   # Visual icons and assets
-  cupertino_icons: ^1.1.0
+  cupertino_icons: ^1.0.8
   google_fonts: ^6.2.0
 
   # Video playback placeholder
