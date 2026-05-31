@@ -52,11 +52,11 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        colorScheme: ColorScheme.light(
-          primary: const Color(0xFF0D2353), // Modern dark blue
-          surface: const Color(0xFFF4F7FC), // Soft slate background
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF0D2353), // Modern dark blue
+          surface: Color(0xFFF4F7FC), // Soft slate background
           onPrimary: Colors.white,
-          onSurface: const Color(0xFF1E2843),
+          onSurface: Color(0xFF1E2843),
         ),
         textTheme: const TextTheme(
           titleLarge: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0D2353)),
@@ -66,11 +66,11 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
       darkTheme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF7A97FF),
-          surface: const Color(0xFF111827), // Deep grey-blue
-          onPrimary: const Color(0xFF111827),
-          onSurface: const Color(0xFFFAFAFA),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF7A97FF),
+          surface: Color(0xFF111827), // Deep grey-blue
+          onPrimary: Color(0xFF111827),
+          onSurface: Color(0xFFFAFAFA),
         ),
         textTheme: const TextTheme(
           titleLarge: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
