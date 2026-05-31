@@ -54,7 +54,7 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
         brightness: Brightness.light,
         colorScheme: const ColorScheme.light(
           primary: Color(0xFF0D2353), // Modern dark blue
-          surface: Color(0xFFF4F7FC), // Soft slate background
+          surface: Color(0xFFF5F7FA), // Soft slate background
           onPrimary: Colors.white,
           onSurface: Color(0xFF1E2843),
         ),

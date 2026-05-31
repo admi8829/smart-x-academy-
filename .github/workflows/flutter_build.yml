@@ -27,7 +27,11 @@ jobs:
       # Step 3: Recreate Android Project Wrapper
       # Recreates the android/ directory containing Gradle wrapper scripts, so the Java JDK setup step can cache gradle builds correctly.
       - name: Recreate Android Project Wrapper
-        run: flutter create --project-name=smart_x_academy --platforms=android --no-pub .
+        run: |
+          flutter create --project-name=smart_x_academy --platforms=android --no-pub .
+          if ! grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml; then
+            sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
+          fi
 
       # Step 4: Set up Java 17 (Required for Android Builds)
       # Now that Gradle configurations from 'flutter create' are generated in the preceding step, this runs flawlessly.

@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Replicating tutorial video with standard Youtube embedded controller
     _ytController = YoutubePlayerController(
-      initialVideoId: 'dQw4w9WgXcQ', // Replace with Smart X Academy tutorial ID
+      initialVideoId: 'FRjnr4UAhNk', // Replace with Smart X Academy tutorial ID
       flags: const YoutubePlayerFlags(
         autoPlay: false,
         mute: false,
@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isLight = !widget.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isLight ? const Color(0xFFF4F7FC) : const Color(0xFF111827),
+      backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
       appBar: AppBar(
         scrolledUnderElevation: 0,
         backgroundColor: isLight ? Colors.white : const Color(0xFF1F2937),
@@ -127,33 +127,43 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: widget.onToggleTheme,
           ),
           
-          // Language selection text element (EN / አማርኛ)
+          // Compact, elegant language button
           GestureDetector(
             onTap: widget.onToggleLanguage,
-            child: Container(
-              margin: const EdgeInsets.only(right: 14, left: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: isLight ? const Color(0xFF0D2353) : Colors.white24),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.language,
-                    size: 16,
-                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.languageCode == 'en' ? 'EN' : 'አማ',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.only(right: 16, left: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF374151),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.public, // elegant globe icon
+                      size: 14,
+                      color: isLight ? const Color(0xFF0D2353) : const Color(0xFF7A97FF),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.languageCode.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           )
@@ -253,114 +263,115 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Placeholder representation for the "Welcome to Smart X Academy!" visual
                         _isPlaying
                             ? YoutubePlayer(
                                 controller: _ytController,
                                 showVideoProgressIndicator: true,
                               )
-                            : Container(
-                                height: 190,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: isLight
-                                        ? [const Color(0xFFE3F2FD), const Color(0xFFBBDEFB)]
-                                        : [const Color(0xFF374151), const Color(0xFF1F2937)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
+                            : Stack(
+                                children: [
+                                  // Video Thumbnail Placeholder
+                                  Container(
+                                    height: 190,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: isLight ? const Color(0xFFE5E7EB) : const Color(0xFF374151),
+                                    ),
+                                    child: Image.network(
+                                      'https://img.youtube.com/vi/FRjnr4UAhNk/maxresdefault.jpg',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Image.network(
+                                          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
+                                          fit: BoxFit.cover,
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                                child: Image.network(
-                                  // This replicates the Smart X Academy illustration overlay
-                                  'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                  // Dark overlay tint for visual contrast
+                                  Positioned.fill(
+                                    child: Container(
+                                      color: Colors.black.withOpacity(0.25),
+                                    ),
+                                  ),
+                                  // Elegant Play Button (Center-aligned)
+                                  Positioned.fill(
+                                    child: Align(
+                                      alignment: Alignment.center,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _isPlaying = true;
+                                          });
+                                          _ytController.play();
+                                        },
+                                        child: Container(
+                                          width: 60,
+                                          height: 60,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF1E88E5), // Educational blue play button
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.15),
+                                                blurRadius: 12,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                              BoxShadow(
+                                                color: const Color(0xFF1E88E5).withOpacity(0.3),
+                                                blurRadius: 16,
+                                                spreadRadius: 2,
+                                              )
+                                            ],
+                                          ),
+                                          child: const Icon(
+                                            Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 38,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Top Title overlay (looks premium like floating UI)
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [Colors.black54, Colors.transparent],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                      child: const Row(
                                         children: [
-                                          const Icon(Icons.school, size: 50, color: Color(0xFF1E88E5)),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            "Welcome to Smart X Academy!",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundColor: Colors.white,
+                                            child: Icon(Icons.school, size: 12, color: Color(0xFF1E88E5)),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              "Welcome to Smart X Academy...",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-                        
-                        // Transparent gradient overlay representing the UI header in image
-                        if (!_isPlaying) ...[
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [Colors.black54, Colors.transparent],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                              ),
-                              child: const Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 14,
-                                    backgroundColor: Colors.white,
-                                    child: Icon(Icons.school, size: 14, color: Colors.blue),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      "Welcome to Smart X Academy...",
-                                      style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Icon(Icons.more_vert, color: Colors.white, size: 20)
                                 ],
                               ),
-                            ),
-                          ),
-                          // Visual play button matching red YouTube badge
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isPlaying = true;
-                              });
-                              _ytController.play();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.red.withOpacity(0.4),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
-                                color: Colors.white,
-                                size: 36,
-                              ),
-                            ),
-                          ),
-                        ]
                       ],
                     ),
                   ),
@@ -474,32 +485,32 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: isLight ? Colors.white : const Color(0xFF1F2937),
-          borderRadius: BorderRadius.circular(20.0),
+          borderRadius: BorderRadius.circular(24.0),
           boxShadow: [
             BoxShadow(
-              color: isLight ? Colors.black.withOpacity(0.03) : Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.25),
+              blurRadius: 16.0,
+              offset: const Offset(0, 8),
             )
           ],
         ),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(22.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Icon visual exactly styled to scale
             Container(
-              height: 48,
-              width: 48,
+              height: 50,
+              width: 50,
               decoration: BoxDecoration(
                 color: circleBg,
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: BorderRadius.circular(14.0),
               ),
               child: Icon(
                 icon,
                 color: iconColor,
-                size: 26,
+                size: 25,
               ),
             ),
             Column(
@@ -508,16 +519,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 17.5,
-                    fontWeight: FontWeight.w800,
-                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    fontSize: 17.0,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF111827) : Colors.white,
+                    letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 2.0),
+                const SizedBox(height: 4.0),
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 11.5,
+                    fontSize: 12.0,
                     fontWeight: FontWeight.w500,
                     color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
                   ),
@@ -686,7 +698,7 @@ class GradeCoursesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isLight = !isDarkMode;
     return Scaffold(
-      backgroundColor: isLight ? const Color(0xFFF4F7FC) : const Color(0xFF111827),
+      backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
       appBar: AppBar(
         iconTheme: IconThemeData(color: isLight ? const Color(0xFF0D2353) : Colors.white),
         backgroundColor: isLight ? Colors.white : const Color(0xFF1F2937),
@@ -697,7 +709,7 @@ class GradeCoursesPage extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
         children: [
           _buildItem(context, "Lesson 1: Introduction to Calculus & Function Analysis", "Duration: 45m", isLight),
           _buildItem(context, "Lesson 2: Modern Physics Principles and Vectors", "Duration: 55m", isLight),
@@ -710,24 +722,53 @@ class GradeCoursesPage extends StatelessWidget {
 
   Widget _buildItem(BuildContext context, String title, String duration, bool isLight) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: isLight ? Colors.white : const Color(0xFF1F2937),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(14),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Row(
-          children: [
-            const Icon(Icons.timer, size: 14, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text(duration, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      margin: const EdgeInsets.only(bottom: 14),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isLight ? Colors.white : const Color(0xFF1F2937),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.play_circle_fill, color: Colors.blue, size: 28),
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Launching video lesson player...")));
-          },
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14.5,
+              height: 1.3,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Row(
+              children: [
+                Icon(Icons.timer_outlined, size: 14, color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
+                const SizedBox(width: 4),
+                Text(
+                  duration,
+                  style: TextStyle(
+                    color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.play_circle_fill, color: Color(0xFF1E88E5), size: 32),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Launching video lesson player...")));
+            },
+          ),
         ),
       ),
     );
