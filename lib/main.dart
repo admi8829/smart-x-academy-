@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
+import 'services/gms_and_ads_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
+  
+  // Background, non-blocking initializer for GMS Check, Firebase & AdMob (Zero startup lag)
+  GmsAndAdsService.initializeBackground();
   
   runApp(SmartXAcademyApp(prefs: prefs));
 }

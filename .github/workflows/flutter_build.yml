@@ -32,6 +32,10 @@ jobs:
           if ! grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml; then
             sed -i '/<manifest/a \    <uses-permission android:name="android.permission.INTERNET"/>' android/app/src/main/AndroidManifest.xml
           fi
+          # Inject AdMob Application ID metadata inside the application tag as required by Google Mobile Ads SDK
+          sed -i '/<\/application>/i \        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>' android/app/src/main/AndroidManifest.xml
+          # Set minimum Android SDK version to 21 to ensure seamless Firebase and AdMob build compatibility
+          sed -i "s/minSdkVersion.*/minSdkVersion 21/g" android/app/build.gradle
 
       # Step 4: Set up Java 17 (Required for Android Builds)
       # Now that Gradle configurations from 'flutter create' are generated in the preceding step, this runs flawlessly.

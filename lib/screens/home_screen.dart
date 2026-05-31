@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../services/gms_and_ads_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -391,7 +392,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           
-          const SizedBox(height: 24.0),
+          const SizedBox(height: 16.0),
+          
+          // GMS-Safe Sponsor/AdMob Banner Container
+          const SmartXAdsBannerWidget(),
+          
+          const SizedBox(height: 16.0),
           
           // Explore section title matching image
           Text(
@@ -657,33 +663,161 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSettingsScreen(bool isLight) {
     return ListView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(18.0),
       children: [
-        ListTile(
-          leading: const Icon(Icons.language),
-          title: const Text("Language Toggle"),
-          subtitle: Text(widget.languageCode == 'en' ? "Currently English" : "በአማርኛ"),
-          trailing: Switch(
-            value: widget.languageCode == 'am',
-            onChanged: (val) => widget.onToggleLanguage(),
+        // Premium Theme & Language Settings Card
+        Container(
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : const Color(0xFF1F2937),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: isLight ? Colors.black.withOpacity(0.03) : Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(Icons.language, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF7A97FF)),
+                title: const Text("Language Toggle", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(widget.languageCode == 'en' ? "Currently English" : "በአማርኛ"),
+                trailing: Switch(
+                  value: widget.languageCode == 'am',
+                  onChanged: (val) => widget.onToggleLanguage(),
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.dark_mode, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF7A97FF)),
+                title: const Text("Dark Theme Mode", style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(widget.isDarkMode ? "Enabled" : "Disabled"),
+                trailing: Switch(
+                  value: widget.isDarkMode,
+                  onChanged: (val) => widget.onToggleTheme(),
+                ),
+              ),
+            ],
           ),
         ),
-        ListTile(
-          leading: const Icon(Icons.dark_mode),
-          title: const Text("Dark Theme Mode"),
-          subtitle: Text(widget.isDarkMode ? "Enabled" : "Disabled"),
-          trailing: Switch(
-            value: widget.isDarkMode,
-            onChanged: (val) => widget.onToggleTheme(),
+        
+        const SizedBox(height: 20),
+        
+        // Dynamic Services & Integrations Card
+        Text(
+          "GMS & Notifications Integration",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isLight ? const Color(0xFF0D2353) : Colors.white,
           ),
         ),
-        const Divider(),
-        const ListTile(
-          leading: Icon(Icons.info_outline),
-          title: Text("App Version"),
-          trailing: Text("1.0.0+1"),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : const Color(0xFF1F2937),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: isLight ? Colors.black.withOpacity(0.03) : Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    GmsAndAdsService.isGmsAvailable ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                    color: GmsAndAdsService.isGmsAvailable ? Colors.green : Colors.orange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      GmsAndAdsService.isGmsAvailable ? "Google Play Services [GMS] Detected" : "Non-GMS Device Clean Safe Mode",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _buildStatusLine("GMS Verified", GmsAndAdsService.isGmsAvailable ? "YES" : "NO", isLight),
+              _buildStatusLine("Firebase Messaging (FCM)", GmsAndAdsService.isFirebaseInitialized ? "Initialized" : "Skipped (Offline Mode)", isLight),
+              _buildStatusLine("AdMob Ads Status", GmsAndAdsService.isAdMobInitialized ? "Active & Safe" : "Disabled (Clean Mode)", isLight),
+              if (GmsAndAdsService.fcmToken != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  "FCM Push Token:",
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF374151),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    GmsAndAdsService.fcmToken!,
+                    style: const TextStyle(fontSize: 10.5, fontFamily: 'monospace'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 20),
+        
+        Container(
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : const Color(0xFF1F2937),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: isLight ? Colors.black.withOpacity(0.03) : Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const ListTile(
+            leading: Icon(Icons.info_outline),
+            title: Text("App Version", style: TextStyle(fontWeight: FontWeight.bold)),
+            trailing: Text("1.0.0+1", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusLine(String label, String value, bool isLight) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 12.5, color: Colors.grey)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: value.contains("YES") || value.contains("Active") || value.contains("Initialized")
+                  ? Colors.green
+                  : const Color(0xFFE53935),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
