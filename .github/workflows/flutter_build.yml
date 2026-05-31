@@ -42,6 +42,12 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      # Step 5.5: Patch Proguard support for older libraries (e.g. flutter_inappwebview_android)
+      - name: Patch Proguard in pub-cache and workspace
+        run: |
+          find . -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
+          find ~/.pub-cache -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
+
       # Step 6: Format Code
       - name: Format Code
         run: dart format lib/
