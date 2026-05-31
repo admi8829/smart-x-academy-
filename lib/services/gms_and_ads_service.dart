@@ -148,20 +148,20 @@ class GmsAndAdsService {
   static FirebaseOptions get _currentFirebaseOptions {
     if (Platform.isIOS) {
       return const FirebaseOptions(
-        apiKey: 'AIzaSyA123FakeApiKey456SecureAndFake',
-        appId: '1:1234567890:ios:fakeappid1234',
-        messagingSenderId: '1234567890',
+        apiKey: 'AIzaSyBbDTLG9q0yCzXA-vzffB2hwSRoDeaXymA',
+        appId: '1:629000096457:ios:ca9e524da1729a4afedb18',
+        messagingSenderId: '629000096457',
         projectId: 'smart-x-academy',
-        storageBucket: 'smart-x-academy.appspot.com',
-        iosBundleId: 'com.smartx.academy',
+        storageBucket: 'smart-x-academy.firebasestorage.app',
+        iosBundleId: 'com.smartxacademy.app',
       );
     }
     return const FirebaseOptions(
-      apiKey: 'AIzaSyA123FakeApiKey456SecureAndFake',
-      appId: '1:1234567890:android:fakeappid1234',
-      messagingSenderId: '1234567890',
+      apiKey: 'AIzaSyBbDTLG9q0yCzXA-vzffB2hwSRoDeaXymA',
+      appId: '1:629000096457:android:ca9e524da1729a4afedb18',
+      messagingSenderId: '629000096457',
       projectId: 'smart-x-academy',
-      storageBucket: 'smart-x-academy.appspot.com',
+      storageBucket: 'smart-x-academy.firebasestorage.app',
     );
   }
 }
