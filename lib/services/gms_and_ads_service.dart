@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:google_api_availability/google_api_availability';
+import 'package:google_api_availability/google_api_availability.dart';
 
 class GmsAndAdsService {
   static bool isGmsAvailable = false;

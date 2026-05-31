@@ -27,19 +27,36 @@ __pycache__/
 Thumbs.db
 
 # -------------------------------------------------------------
-# STRICTLY IGNORE PLAYGROUND WEB CORE (Frontend Simulator Helper)
+# STRICTLY IGNORE LOCAL WEB EMULATOR & PLAYGROUND WEB CORE
 # Ensure only the Flutter codebase is pushed to your GitHub Repository!
+# All auxiliary playground web assets, Vite dev server configs, 
+# tailwind/postcss configurations, and local emulators are ignored.
 # -------------------------------------------------------------
 node_modules/
 dist/
 src/
+public/
 index.html
+server.js
 vite.config.ts
+vite.config.js
 tsconfig.json
+tsconfig.node.json
+tsconfig.app.json
 package.json
 package-lock.json
 metadata.json
 components.json
+tailwind.config.js
+tailwind.config.ts
+tailwind.config.cjs
+postcss.config.js
+postcss.config.cjs
+eslint.config.js
+eslint.config.mjs
+eslint.config.cjs
 .env*
 !.env.example
 *.log
+.firebase/
+firebase-blueprint.json
