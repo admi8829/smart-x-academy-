@@ -63,6 +63,10 @@ configurations.all {
             details.useVersion '2.0.0'
             details.because 'Force same version as flutter-gradle-plugin to avoid duplicate class errors'
         }
+        // Force a uniform version of protobuf-javalite to avoid classpath conflicts
+        if (requested.group == 'com.google.protobuf' && requested.name == 'protobuf-javalite') {
+            details.useVersion '3.22.3'
+        }
     }
 }
 
