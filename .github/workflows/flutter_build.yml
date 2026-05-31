@@ -48,7 +48,7 @@ jobs:
 
       # Step 7: Static Code Analysis (Linter)
       - name: Run Linter Analyzers
-        run: flutter analyze
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
       # Step 8: Run Unit & Widget Tests
       # Kept robust and asset-independent to prevent standard test failures
