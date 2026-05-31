@@ -16,9 +16,12 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0.0'
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
+}
 
 android {
     namespace "com.smartxacademy.app"
@@ -60,4 +63,4 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:22.6.0'
 }
 
-apply plugin: 'com.google.gms.google-services'
+
