@@ -59,7 +59,10 @@ jobs:
 
       # Step 9: Compile Production Release APK
       - name: Build Release APK
-        run: cd android && ./gradlew assembleRelease --stacktrace
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace
 
       # Step 10: Archive compiled APK artifact
       - name: Upload APK Release Artifact
