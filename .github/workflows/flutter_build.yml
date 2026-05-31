@@ -45,7 +45,7 @@ jobs:
 
       # Step 6: Check Formatting
       - name: Check Formatting
-        run: flutter format --set-exit-if-changed lib/
+        run: dart format --output=none --set-exit-if-changed lib/
 
       # Step 7: Static Code Analysis (Linter)
       - name: Run Linter Analyzers
