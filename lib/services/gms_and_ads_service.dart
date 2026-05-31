@@ -91,7 +91,7 @@ class GmsAndAdsService {
       return true;
     }
     try {
-      final googleApiCheck = GoogleApiAvailability.instance;
+      const googleApiCheck = GoogleApiAvailability.instance;
       final availability = await googleApiCheck.checkPlayServicesAvailability();
       return availability == GooglePlayServicesAvailability.success;
     } catch (e) {

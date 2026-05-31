@@ -59,4 +59,7 @@ eslint.config.cjs
 !.env.example
 *.log
 .firebase/
+firebase.json
+firestore.rules
+firestore.indexes.json
 firebase-blueprint.json
