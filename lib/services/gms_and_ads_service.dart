@@ -91,9 +91,9 @@ class GmsAndAdsService {
       return true;
     }
     try {
-      const googleApiCheck = GoogleApiAvailability.instance;
-      final availability = await googleApiCheck.checkPlayServicesAvailability();
-      return availability == GooglePlayServicesAvailability.success;
+      final dynamic googleApiCheck = GoogleApiAvailability.instance;
+      final dynamic availability = await googleApiCheck.checkPlayServicesAvailability();
+      return availability.toString().contains('success');
     } catch (e) {
       if (kDebugMode) {
         print("Exception during GMS check: $e");
@@ -257,7 +257,7 @@ class _SmartXAdsBannerWidgetState extends State<SmartXAdsBannerWidget> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -268,7 +268,7 @@ class _SmartXAdsBannerWidgetState extends State<SmartXAdsBannerWidget> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D2353).withOpacity(0.1),
+                color: const Color(0xFF0D2353).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -309,7 +309,7 @@ class _SmartXAdsBannerWidgetState extends State<SmartXAdsBannerWidget> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withOpacity(0.15),
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
