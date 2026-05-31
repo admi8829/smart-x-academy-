@@ -34,10 +34,10 @@ Thumbs.db
 # -------------------------------------------------------------
 node_modules/
 dist/
-src/
-public/
-index.html
-server.js
+/src/
+/public/
+/index.html
+/server.js
 vite.config.ts
 vite.config.js
 tsconfig.json
