@@ -648,7 +648,6 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16.0),
       children: [
         ListTile(
-          textDirection: TextDirection.ltr,
           leading: const Icon(Icons.language),
           title: const Text("Language Toggle"),
           subtitle: Text(widget.languageCode == 'en' ? "Currently English" : "በአማርኛ"),
@@ -658,7 +657,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         ListTile(
-          textDirection: TextDirection.ltr,
           leading: const Icon(Icons.dark_mode),
           title: const Text("Dark Theme Mode"),
           subtitle: Text(widget.isDarkMode ? "Enabled" : "Disabled"),
@@ -669,7 +667,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const Divider(),
         const ListTile(
-          textDirection: TextDirection.ltr,
           leading: Icon(Icons.info_outline),
           title: Text("App Version"),
           trailing: Text("1.0.0+1"),
