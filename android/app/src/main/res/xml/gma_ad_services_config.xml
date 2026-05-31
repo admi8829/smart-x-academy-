@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ad-services-config>
+    <custom-audience-allow-list>
+        <allow-audience allowAllToAccess="true" />
+    </custom-audience-allow-list>
+    <ad-selection-allow-list>
+        <allow-ad-selection allowAllToAccess="true" />
+    </ad-selection-allow-list>
+    <attribution-allow-list>
+        <allow-attribution allowAllToAccess="true" />
+    </attribution-allow-list>
+</ad-services-config>
