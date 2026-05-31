@@ -57,10 +57,12 @@ flutter {
 }
 
 configurations.all {
-    resolutionStrategy {
-        force "org.jetbrains.kotlin:kotlin-stdlib:2.0.0"
-        force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.0"
-        force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.0"
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == 'org.jetbrains.kotlin' && requested.name.startsWith('kotlin-stdlib')) {
+            details.useVersion '2.0.0'
+            details.because 'Force same version as flutter-gradle-plugin to avoid duplicate class errors'
+        }
     }
 }
 
