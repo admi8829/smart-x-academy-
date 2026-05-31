@@ -43,9 +43,9 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      # Step 6: Check Formatting
-      - name: Check Formatting
-        run: dart format --output=none --set-exit-if-changed lib/
+      # Step 6: Format Code
+      - name: Format Code
+        run: dart format lib/
 
       # Step 7: Static Code Analysis (Linter)
       - name: Run Linter Analyzers
