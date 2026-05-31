@@ -28,36 +28,37 @@ jobs:
       # Recreates the android/ directory containing Gradle wrapper scripts, so the Java JDK setup step can cache gradle builds correctly.
       - name: Recreate Android Project Wrapper
         run: |
-          # 1. Back up our beautifully crafted custom project files
+          # 1. Back up our beautifully crafted custom project files (if they exist)
           mkdir -p android_backup/app/src/main/kotlin/com/smartxacademy/app
           mkdir -p android_backup/app/src/debug
           mkdir -p android_backup/app/src/profile
-          cp android/app/build.gradle android_backup/app/build.gradle
-          cp android/build.gradle android_backup/build.gradle
-          cp android/settings.gradle android_backup/settings.gradle
-          cp android/app/google-services.json android_backup/app/google-services.json
-          cp android/app/src/main/AndroidManifest.xml android_backup/app/src/main/AndroidManifest.xml
-          cp android/app/src/debug/AndroidManifest.xml android_backup/app/src/debug/AndroidManifest.xml
-          cp android/app/src/profile/AndroidManifest.xml android_backup/app/src/profile/AndroidManifest.xml
-          cp android/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt android_backup/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt
+          
+          [ -f android/app/build.gradle ] && cp android/app/build.gradle android_backup/app/build.gradle
+          [ -f android/build.gradle ] && cp android/build.gradle android_backup/build.gradle
+          [ -f android/settings.gradle ] && cp android/settings.gradle android_backup/settings.gradle
+          [ -f android/app/google-services.json ] && cp android/app/google-services.json android_backup/app/google-services.json
+          [ -f android/app/src/main/AndroidManifest.xml ] && cp android/app/src/main/AndroidManifest.xml android_backup/app/src/main/AndroidManifest.xml
+          [ -f android/app/src/debug/AndroidManifest.xml ] && cp android/app/src/debug/AndroidManifest.xml android_backup/app/src/debug/AndroidManifest.xml
+          [ -f android/app/src/profile/AndroidManifest.xml ] && cp android/app/src/profile/AndroidManifest.xml android_backup/app/src/profile/AndroidManifest.xml
+          [ -f android/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt ] && cp android/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt android_backup/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt
 
           # 2. Run flutter create to let it populate the gradle wrapper files and wrapper binaries
           flutter create --project-name=smart_x_academy --platforms=android --no-pub .
 
           # 3. Restore all our pristine, fully-configured custom builds and manifests
-          cp android_backup/app/build.gradle android/app/build.gradle
-          cp android_backup/build.gradle android/build.gradle
-          cp android_backup/settings.gradle android/settings.gradle
-          cp android_backup/app/google-services.json android/app/google-services.json
-          cp android_backup/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
-          cp android_backup/app/src/debug/AndroidManifest.xml android/app/src/debug/AndroidManifest.xml
-          cp android_backup/app/src/profile/AndroidManifest.xml android/app/src/profile/AndroidManifest.xml
+          [ -f android_backup/app/build.gradle ] && cp android_backup/app/build.gradle android/app/build.gradle
+          [ -f android_backup/build.gradle ] && cp android_backup/build.gradle android/build.gradle
+          [ -f android_backup/settings.gradle ] && cp android_backup/settings.gradle android/settings.gradle
+          [ -f android_backup/app/google-services.json ] && cp android_backup/app/google-services.json android/app/google-services.json
+          [ -f android_backup/app/src/main/AndroidManifest.xml ] && cp android_backup/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
+          [ -f android_backup/app/src/debug/AndroidManifest.xml ] && cp android_backup/app/src/debug/AndroidManifest.xml android/app/src/debug/AndroidManifest.xml
+          [ -f android_backup/app/src/profile/AndroidManifest.xml ] && cp android_backup/app/src/profile/AndroidManifest.xml android/app/src/profile/AndroidManifest.xml
           
           # Clean default flutter-created kotlin path to avoid multiple package conflicts and write our custom MainActivity
           rm -rf android/app/src/main/kotlin/com/example
           rm -rf android/app/src/main/kotlin/com/smartx
           mkdir -p android/app/src/main/kotlin/com/smartxacademy/app
-          cp android_backup/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt android/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt
+          [ -f android_backup/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt ] && cp android_backup/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt android/app/src/main/kotlin/com/smartxacademy/app/MainActivity.kt
 
           # Clean up backup
           rm -rf android_backup
