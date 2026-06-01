@@ -56,7 +56,6 @@ class _QuizScreenState extends State<QuizScreen> {
   int? _selectedAnswerIndex;
   int _score = 0;
   bool _quizFinished = false;
-  bool _hintRevealed = false;
   bool _hasUsedHintForCurrentQuestion = false;
 
   // --- AdMob Ads State ---
@@ -187,7 +186,6 @@ class _QuizScreenState extends State<QuizScreen> {
         onUserEarnedReward: (ad, reward) {
           if (mounted) {
             setState(() {
-              _hintRevealed = true;
               _hasUsedHintForCurrentQuestion = true;
             });
             _showHintDialog();
@@ -200,7 +198,6 @@ class _QuizScreenState extends State<QuizScreen> {
       debugPrint('Rewarded ad not ready. Fallback active.');
       if (mounted) {
         setState(() {
-          _hintRevealed = true;
           _hasUsedHintForCurrentQuestion = true;
         });
         _showHintDialog(isFallback: true);
@@ -233,7 +230,6 @@ class _QuizScreenState extends State<QuizScreen> {
       setState(() {
         _currentQuestionIndex++;
         _selectedAnswerIndex = null;
-        _hintRevealed = false;
         _hasUsedHintForCurrentQuestion = false;
       });
     } else {
@@ -256,7 +252,6 @@ class _QuizScreenState extends State<QuizScreen> {
       _selectedAnswerIndex = null;
       _score = 0;
       _quizFinished = false;
-      _hintRevealed = false;
       _hasUsedHintForCurrentQuestion = false;
     });
     // Preload fresh ads for the brand-new run
@@ -302,17 +297,17 @@ class _QuizScreenState extends State<QuizScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.emerald.withOpacity(0.12),
+                  color: const Color(0xFF10B981).withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline, color: Colors.emerald, size: 18),
+                    const Icon(Icons.check_circle_outline, color: Color(0xFF10B981), size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         "Help Tip: Match with options closely.",
-                        style: TextStyle(color: Colors.emerald[300], fontSize: 12),
+                        style: TextStyle(color: Color(0xFF34D399), fontSize: 12),
                       ),
                     ),
                   ],
@@ -706,7 +701,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 width: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: passed ? Colors.emerald[500]!.withOpacity(0.12) : Colors.red[500]!.withOpacity(0.12),
+                  color: passed ? const Color(0xFF10B981).withOpacity(0.12) : Colors.red[500]!.withOpacity(0.12),
                 ),
                 child: Icon(
                   passed ? Icons.emoji_events_rounded : Icons.sentiment_dissatisfied_rounded,
