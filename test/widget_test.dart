@@ -42,6 +42,6 @@ void main() {
     await tester.pump();
 
     // Verify application starts gracefully and displays visual headers
-    expect(find.textContaining('Smart X'), findsAnyWidget);
+    expect(find.textContaining('Smart X'), findsWidgets);
   });
 }
