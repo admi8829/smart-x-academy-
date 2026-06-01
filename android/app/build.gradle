@@ -53,7 +53,7 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.debug
-            // Prevents shrinking-related AdMob runtime crashes or compile bugs
+            // Prevents shrinking-related AdMob runtime crashes or build bugs
             minifyEnabled false
             shrinkResources false
         }
@@ -65,6 +65,5 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:multidex:2.0.1'
 }
