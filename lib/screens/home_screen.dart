@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'quiz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -385,6 +386,110 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w500,
                       color: isLight ? const Color(0xFF42526E) : Colors.grey[300],
                     ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24.0),
+
+          // --- Premium Smart X Quiz Arena CTA Banner ---
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLight 
+                    ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
+                    : [const Color(0xFF1E1E38), const Color(0xFF0D2353)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24.0),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1E88E5).withOpacity(0.12),
+                  blurRadius: 18.0,
+                  spreadRadius: 2.0,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+              border: Border.all(
+                color: const Color(0xFF0EA5E9).withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(22.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF59E0B).withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Text(
+                                "POPULAR FEATURE",
+                                style: TextStyle(
+                                  color: Color(0xFFF59E0B),
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.flash_on, color: Colors.amber, size: 14),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Smart X Quiz Arena",
+                          style: TextStyle(
+                            fontSize: 18.5,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Test your syllabus skills, earn grades, watch rewarded test videos for hints, and prepare for exams!",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.grey[300],
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const QuizScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF38BDF8),
+                      foregroundColor: const Color(0xFF0D2353),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      elevation: 3,
+                    ),
+                    child: const Icon(Icons.arrow_forward_rounded, size: 22, color: Color(0xFF0F172A)),
                   ),
                 ],
               ),
