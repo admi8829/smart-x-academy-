@@ -60,7 +60,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
+  bool _isBannerAdReady = false;
 
   InterstitialAd? _interstitialAd;
   bool _isInterstitialAdLoaded = false;
@@ -71,11 +71,6 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
-    _initAdMob();
-  }
-
-  /// Initialize AdMob and trigger async loads
-  void _initAdMob() {
     _loadBannerAd();
     _loadInterstitialAd();
     _loadRewardedAd();
@@ -91,7 +86,7 @@ class _QuizScreenState extends State<QuizScreen> {
         onAdLoaded: (ad) {
           if (mounted) {
             setState(() {
-              _isBannerAdLoaded = true;
+              _isBannerAdReady = true;
             });
           }
         },
@@ -396,7 +391,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             
             // --- Bottom Anchor AdMob Banner ---
-            if (_isBannerAdLoaded && _bannerAd != null)
+            if (_isBannerAdReady && _bannerAd != null)
               Container(
                 width: _bannerAd!.size.width.toDouble(),
                 height: _bannerAd!.size.height.toDouble(),
