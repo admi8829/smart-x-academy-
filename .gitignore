@@ -43,3 +43,6 @@ components.json
 .env*
 !.env.example
 *.log
+
+# Prevent ignoring AndroidManifest.xml
+!/android/app/src/main/AndroidManifest.xml
