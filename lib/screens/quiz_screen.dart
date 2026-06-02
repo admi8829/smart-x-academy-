@@ -60,18 +60,22 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
-  bool _isBannerAdReady = false;
+  bool _isBannerAdLoaded = false;
 
   InterstitialAd? _interstitialAd;
   bool _isInterstitialAdLoaded = false;
 
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
-  bool _earnedReward = false; // Flag to trace if user successfully watched the reward ad
 
   @override
   void initState() {
     super.initState();
+    _initAdMob();
+  }
+
+  /// Initialize AdMob and trigger async loads
+  void _initAdMob() {
     _loadBannerAd();
     _loadInterstitialAd();
     _loadRewardedAd();
@@ -79,9 +83,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // --- BANNER AD ---
   void _loadBannerAd() {
+    // Safely dispose prior banner reference if reloading
     _bannerAd?.dispose();
     _bannerAd = null;
-    _isBannerAdReady = false;
+    _isBannerAdLoaded = false;
 
     _bannerAd = BannerAd(
       adUnitId: AdHelper.bannerAdUnitId,
@@ -91,17 +96,19 @@ class _QuizScreenState extends State<QuizScreen> {
         onAdLoaded: (ad) {
           if (mounted) {
             setState(() {
-              _isBannerAdReady = true;
+              _isBannerAdLoaded = true;
             });
+          } else {
+            ad.dispose();
           }
         },
         onAdFailedToLoad: (ad, err) {
           debugPrint('BannerAd failed to load: $err. Code: ${err.code}');
           ad.dispose();
-          _bannerAd = null;
           if (mounted) {
             setState(() {
-              _isBannerAdReady = false;
+              _isBannerAdLoaded = false;
+              _bannerAd = null;
             });
           }
         },
@@ -112,6 +119,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // --- INTERSTITIAL AD ---
   void _loadInterstitialAd() {
+    // Safely dispose prior interstitial reference if preloading fresh
     _interstitialAd?.dispose();
     _interstitialAd = null;
     _isInterstitialAdLoaded = false;
@@ -121,30 +129,47 @@ class _QuizScreenState extends State<QuizScreen> {
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          _interstitialAd = ad;
-          _isInterstitialAdLoaded = true;
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+          setState(() {
+            _interstitialAd = ad;
+            _isInterstitialAdLoaded = true;
+          });
 
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              _interstitialAd = null;
-              _isInterstitialAdLoaded = false;
-              _finishQuizAfterAd();
+              if (mounted) {
+                setState(() {
+                  _isInterstitialAdLoaded = false;
+                  _interstitialAd = null;
+                });
+                _finishQuizAfterAd();
+              }
             },
             onAdFailedToShowFullScreenContent: (ad, err) {
               debugPrint('InterstitialAd failed to show: $err');
               ad.dispose();
-              _interstitialAd = null;
-              _isInterstitialAdLoaded = false;
-              _finishQuizAfterAd(); // Fail gracefully and proceed
+              if (mounted) {
+                setState(() {
+                  _isInterstitialAdLoaded = false;
+                  _interstitialAd = null;
+                });
+                _finishQuizAfterAd(); // Fail gracefully and proceed
+              }
             },
           );
         },
         onAdFailedToLoad: (err) {
           debugPrint('InterstitialAd failed to load: $err');
-          _interstitialAd = null;
-          _isInterstitialAdLoaded = false;
-          // Soft failure - the user won't experience blocking
+          if (mounted) {
+            setState(() {
+              _isInterstitialAdLoaded = false;
+              _interstitialAd = null;
+            });
+          }
         },
       ),
     );
@@ -161,6 +186,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   // --- REWARDED AD ---
   void _loadRewardedAd() {
+    // Safely dispose prior rewarded reference if preloading fresh
     _rewardedAd?.dispose();
     _rewardedAd = null;
     _isRewardedAdLoaded = false;
@@ -170,39 +196,47 @@ class _QuizScreenState extends State<QuizScreen> {
       request: const AdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          _rewardedAd = ad;
-          _isRewardedAdLoaded = true;
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+          setState(() {
+            _rewardedAd = ad;
+            _isRewardedAdLoaded = true;
+          });
 
           ad.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
               ad.dispose();
-              _rewardedAd = null;
-              _isRewardedAdLoaded = false;
-              _loadRewardedAd(); // Preload next one
-
-              if (_earnedReward) {
-                _earnedReward = false;
-                if (mounted) {
-                  setState(() {
-                    _hasUsedHintForCurrentQuestion = true;
-                  });
-                  _showHintDialog();
-                }
+              if (mounted) {
+                setState(() {
+                  _isRewardedAdLoaded = false;
+                  _rewardedAd = null;
+                });
+                _loadRewardedAd(); // Preload next one
               }
             },
             onAdFailedToShowFullScreenContent: (ad, err) {
               debugPrint('Rewarded ad failed to show: $err');
               ad.dispose();
-              _rewardedAd = null;
-              _isRewardedAdLoaded = false;
-              _loadRewardedAd();
+              if (mounted) {
+                setState(() {
+                  _isRewardedAdLoaded = false;
+                  _rewardedAd = null;
+                });
+                _loadRewardedAd();
+              }
             },
           );
         },
         onAdFailedToLoad: (err) {
           debugPrint('Rewarded ad failed to load: $err');
-          _rewardedAd = null;
-          _isRewardedAdLoaded = false;
+          if (mounted) {
+            setState(() {
+              _isRewardedAdLoaded = false;
+              _rewardedAd = null;
+            });
+          }
         },
       ),
     );
@@ -210,10 +244,14 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _showRewardedAd() {
     if (_isRewardedAdLoaded && _rewardedAd != null) {
-      _earnedReward = false; // Reset earned reward status before displaying
       _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
-          _earnedReward = true;
+          if (mounted) {
+            setState(() {
+              _hasUsedHintForCurrentQuestion = true;
+            });
+            _showHintDialog();
+          }
         },
       );
     } else {
@@ -226,7 +264,9 @@ class _QuizScreenState extends State<QuizScreen> {
         });
         _showHintDialog(isFallback: true);
       }
-      _loadRewardedAd(); // Attempt to load a new ad
+      if (mounted) {
+        _loadRewardedAd(); // Attempt to load a new ad
+      }
     }
   }
 
@@ -284,7 +324,6 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _showHintDialog({bool isFallback = false}) {
-    if (!mounted) return;
     final currentQ = _questions[_currentQuestionIndex];
     showDialog(
       context: context,
@@ -358,11 +397,8 @@ class _QuizScreenState extends State<QuizScreen> {
   void dispose() {
     // --- Memory Leak Prevention ---
     _bannerAd?.dispose();
-    _bannerAd = null;
     _interstitialAd?.dispose();
-    _interstitialAd = null;
     _rewardedAd?.dispose();
-    _rewardedAd = null;
     super.dispose();
   }
 
@@ -424,7 +460,7 @@ class _QuizScreenState extends State<QuizScreen> {
             ),
             
             // --- Bottom Anchor AdMob Banner ---
-            if (_isBannerAdReady && _bannerAd != null)
+            if (_isBannerAdLoaded && _bannerAd != null)
               Container(
                 width: _bannerAd!.size.width.toDouble(),
                 height: _bannerAd!.size.height.toDouble(),
@@ -490,7 +526,13 @@ class _QuizScreenState extends State<QuizScreen> {
               
               // REWARDED VIDEO HINT BUTTON
               ElevatedButton.icon(
-                onPressed: _showRewardedAd,
+                onPressed: () {
+                  if (_hasUsedHintForCurrentQuestion) {
+                    _showHintDialog(isFallback: false);
+                  } else {
+                    _showRewardedAd();
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF59E0B), // Vibrant Amber Accent
                   foregroundColor: Colors.white,
