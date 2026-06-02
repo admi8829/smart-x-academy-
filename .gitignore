@@ -32,7 +32,7 @@ Thumbs.db
 # -------------------------------------------------------------
 node_modules/
 dist/
-src/
+/src/
 index.html
 vite.config.ts
 tsconfig.json

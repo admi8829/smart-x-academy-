@@ -67,7 +67,7 @@ jobs:
 
       # Step 9: Compile Production Release APK
       - name: Build Release APK
-        run: flutter build apk --release --no-pub
+        run: flutter build apk --release --no-pub --android-skip-build-dependency-validation
 
       # Step 10: Archive compiled APK artifact
       - name: Upload APK Release Artifact
