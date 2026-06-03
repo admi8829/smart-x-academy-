@@ -269,32 +269,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHomeScreenContent(bool isLight) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Elegant Video / Tutorial Showcase Card (image_2.png top box)
+          // Elegant Video / Tutorial Showcase Card (image_2.png top box) with custom border and gradient frame
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isLight ? Colors.white : const Color(0xFF1F2937),
+              gradient: LinearGradient(
+                colors: isLight 
+                    ? [Colors.white, const Color(0xFFF8FAFC)] 
+                    : [const Color(0xFF1F2937), const Color(0xFF111827)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(24.0),
+              border: Border.all(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.2),
-                  blurRadius: 12.0,
-                  offset: const Offset(0, 4),
+                  color: isLight ? const Color(0xFF0D2353).withOpacity(0.06) : Colors.black.withOpacity(0.3),
+                  blurRadius: 16.0,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.all(14.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // YouTube simulated video viewport
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(18.0),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -307,10 +317,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 children: [
                                   // Video Thumbnail Placeholder
                                   Container(
-                                    height: 190,
+                                    height: 200,
                                     width: double.infinity,
                                     decoration: BoxDecoration(
-                                      color: isLight ? const Color(0xFFE5E7EB) : const Color(0xFF374151),
+                                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
                                     ),
                                     child: Image.network(
                                       'https://img.youtube.com/vi/K_js8HXa8VM/maxresdefault.jpg',
@@ -326,10 +336,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   // Dark overlay tint for visual contrast
                                   Positioned.fill(
                                     child: Container(
-                                      color: Colors.black.withOpacity(0.25),
+                                      color: Colors.black.withOpacity(0.32),
                                     ),
                                   ),
-                                  // Elegant Play Button (Center-aligned)
+                                  // Elegant Play Button (Center-aligned with premium animation pulse look)
                                   Positioned.fill(
                                     child: Align(
                                       alignment: Alignment.center,
@@ -341,28 +351,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                           _ytController.play();
                                         },
                                         child: Container(
-                                          width: 60,
-                                          height: 60,
+                                          width: 64,
+                                          height: 64,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF1E88E5), // Educational blue play button
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.15),
+                                                color: Colors.black.withOpacity(0.25),
                                                 blurRadius: 12,
                                                 offset: const Offset(0, 4),
                                               ),
                                               BoxShadow(
-                                                color: const Color(0xFF1E88E5).withOpacity(0.3),
-                                                blurRadius: 16,
-                                                spreadRadius: 2,
+                                                color: const Color(0xFF1E88E5).withOpacity(0.4),
+                                                blurRadius: 20,
+                                                spreadRadius: 4,
                                               )
                                             ],
                                           ),
                                           child: const Icon(
                                             Icons.play_arrow_rounded,
                                             color: Colors.white,
-                                            size: 38,
+                                            size: 42,
                                           ),
                                         ),
                                       ),
@@ -374,29 +388,33 @@ class _HomeScreenState extends State<HomeScreen> {
                                     left: 0,
                                     right: 0,
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
                                       decoration: const BoxDecoration(
                                         gradient: LinearGradient(
-                                          colors: [Colors.black54, Colors.transparent],
+                                          colors: [Colors.black74, Colors.transparent],
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                         ),
                                       ),
-                                      child: const Row(
+                                      child: Row(
                                         children: [
-                                          CircleAvatar(
-                                            radius: 12,
-                                            backgroundColor: Colors.white,
-                                            child: Icon(Icons.school, size: 12, color: Color(0xFF1E88E5)),
+                                          Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFF1E88E5)),
                                           ),
-                                          SizedBox(width: 8),
-                                          Expanded(
+                                          const SizedBox(width: 8),
+                                          const Expanded(
                                             child: Text(
-                                              "Welcome to Smart X Academy...",
+                                              "Welcome to Smart X Academy Tutorial",
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 12.5,
                                                 fontWeight: FontWeight.bold,
+                                                letterSpacing: 0.1,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -410,53 +428,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12.0),
-                  // Bottom caption matching image
-                  Text(
-                    _local('tutorial_desc'),
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      height: 1.3,
-                      fontWeight: FontWeight.w500,
-                      color: isLight ? const Color(0xFF42526E) : Colors.grey[300],
-                    ),
+                  const SizedBox(height: 14.0),
+                  // Bottom caption matching image with elegant play icon
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2.0, marginRight: 8.0),
+                        child: Icon(
+                          Icons.play_lesson_rounded,
+                          color: isLight ? const Color(0xFF0084FF) : const Color(0xFF38BDF8),
+                          size: 16,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          _local('tutorial_desc'),
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            height: 1.35,
+                            fontWeight: FontWeight.w700,
+                            color: isLight ? const Color(0xFF334155) : Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
           
-          const SizedBox(height: 16.0),
-
-          // --- Custom AdMob Banner Ad Area ---
-          if (_isBannerAdLoaded && _bannerAd != null) ...[
-            Center(
-              child: Container(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                margin: const EdgeInsets.only(bottom: 16.0),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 24.0),
           
           // Explore section title matching image
           Text(
             _local('explore_title'),
             style: TextStyle(
               fontSize: 22.0,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
               color: isLight ? const Color(0xFF0D2353) : Colors.white,
-              letterSpacing: -0.4,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 4.0),
           Text(
             _local('explore_sub'),
             style: TextStyle(
-              fontSize: 14.5,
+              fontSize: 14.0,
               fontWeight: FontWeight.w500,
               color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
             ),
@@ -469,9 +488,9 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 16.0,
-            mainAxisSpacing: 16.0,
-            childAspectRatio: 1.5, // 45% smaller height compared to 0.88
+            crossAxisSpacing: 14.0,
+            mainAxisSpacing: 14.0,
+            childAspectRatio: 1.28, // Visually perfect aspect ratio for decreased height card ensuring no overflows on small viewports
             children: [
               // Grade 9
               _buildGradeCard(
@@ -512,8 +531,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           
-          // Bottom Coming Soon Horizontal Subjects Row
-          _buildComingSoonSubjectsSection(isLight),
+          const SizedBox(height: 24.0),
+
+          // --- Custom AdMob Banner Ad Area located visually at the very bottom end of home content ---
+          if (_isBannerAdLoaded && _bannerAd != null) ...[
+            Center(
+              child: Container(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                margin: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -531,106 +561,123 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: isLight ? Colors.white : const Color(0xFF1F2937),
-          borderRadius: BorderRadius.circular(20.0),
+          gradient: LinearGradient(
+            colors: isLight 
+                ? [Colors.white, const Color(0xFFF8FAFC)] 
+                : [const Color(0xFF1E2937), const Color(0xFF111827)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18.0),
           border: Border.all(
             color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.2),
+              color: isLight ? const Color(0xFF0D2353).withOpacity(0.04) : Colors.black.withOpacity(0.25),
               blurRadius: 10.0,
               offset: const Offset(0, 4),
             )
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        child: Stack(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Right Corner Custom Vector Illustration
-            Positioned(
-              right: 0,
-              top: 0,
-              child: SizedBox(
-                height: 38,
-                width: 38,
-                child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: illustration,
-                ),
+            // Top Section containing header information
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.w900,
+                            color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 3.0),
+                        Expanded(
+                          child: Text(
+                            subtitle.replaceAll('\n', ' '),
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.25,
+                              fontWeight: FontWeight.w500,
+                              color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    height: 36,
+                    width: 36,
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
+                      shape: BoxShape.circle,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: illustration,
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Title, description and CTA Button Column
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w800,
-                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          height: 1.25,
-                          fontWeight: FontWeight.w500,
-                          color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+            const SizedBox(height: 6.0),
+            // Premium full-width start course button
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [btnColor, btnColor.withOpacity(0.85)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                // Premium full-width Start Course button with icon
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    color: btnColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: btnColor.withOpacity(0.25),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      )
-                    ],
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: btnColor.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Start Course",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.extrabold,
+                    ),
                   ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Start Course",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(width: 6),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        color: Colors.white,
-                        size: 13,
-                      ),
-                    ],
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 11,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -772,145 +819,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Horizontal Scrolling Subjects Row with elegant "Coming Soon" badges
-  Widget _buildComingSoonSubjectsSection(bool isLight) {
-    final subjectItems = [
-      _SubjectItem(name: "Math", icon: Icons.calculate_outlined, color: const Color(0xFF0084FF)),
-      _SubjectItem(name: "Physics", icon: Icons.science_outlined, color: const Color(0xFF8B5CF6)),
-      _SubjectItem(name: "Biology", icon: Icons.biotech_outlined, color: const Color(0xFF10B981)),
-      _SubjectItem(name: "History", icon: Icons.class_outlined, color: const Color(0xFFF59E0B)),
-      _SubjectItem(name: "Chemistry", icon: Icons.opacity, color: const Color(0xFF06B6D4)),
-    ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 28.0),
-        Row(
-          children: [
-            Text(
-              "Explore Subjects",
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w800,
-                color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                "Syllabus",
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14.0),
-        SizedBox(
-          height: 110,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            clipBehavior: Clip.none,
-            itemCount: subjectItems.length,
-            itemBuilder: (context, index) {
-              final item = subjectItems[index];
-              return Container(
-                width: 95,
-                margin: const EdgeInsets.only(right: 14),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topCenter,
-                  children: [
-                    // Class body container
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      top: 10,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isLight ? Colors.white : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                             const SizedBox(height: 12),
-                             Container(
-                               padding: const EdgeInsets.all(8),
-                               decoration: BoxDecoration(
-                                 color: item.color.withOpacity(0.12),
-                                 shape: BoxShape.circle,
-                               ),
-                               child: Icon(
-                                 item.icon,
-                                 color: item.color,
-                                 size: 22,
-                               ),
-                             ),
-                             const SizedBox(height: 8),
-                             Text(
-                               item.name,
-                               style: TextStyle(
-                                 fontSize: 12,
-                                 fontWeight: FontWeight.bold,
-                                 color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                               ),
-                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    // Elegant "Coming Soon" Badge over Subject
-                    Positioned(
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFF334155) : const Color(0xFF475569),
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            )
-                          ],
-                        ),
-                        child: const Text(
-                          "Coming Soon",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16.0),
-      ],
-    );
-  }
 
   void _navigateToGradeScreen(int grade) {
     Navigator.of(context).push(
