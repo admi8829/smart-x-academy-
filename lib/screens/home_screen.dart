@@ -938,7 +938,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToGradeScreen(int grade) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => GradeCoursesPage(grade: grade, isDarkMode: widget.isDarkMode),
+        builder: (context) => QuizScreen(grade: grade),
       ),
     );
   }
