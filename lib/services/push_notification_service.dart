@@ -5,28 +5,11 @@ import 'package:flutter/material.dart';
 class PushNotificationService {
   static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
+  // Initialize Firebase and set up handlers
   static Future<void> initialize() async {
     try {
       // Assuming google-services.json is configured, calling initializeApp automatically reads it.
       await Firebase.initializeApp();
-
-      // Request permission for iOS/Web and devices on Android 13+
-      NotificationSettings settings = await _fcm.requestPermission(
-        alert: true,
-        badge: true,
-        sound: true,
-        provisional: false,
-      );
-
-      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('User granted permission for push notifications');
-      } else {
-        debugPrint('User declined or has not accepted permission');
-      }
-
-      // Handle raw Firebase configuration where FCM tokens are used for specific messages
-      String? token = await _fcm.getToken();
-      debugPrint("FCM Registration Token: $token");
 
       // Handle foreground messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -40,7 +23,29 @@ class PushNotificationService {
       });
 
     } catch (e) {
-      debugPrint('Error initializing Firebase / FCM: $e');
+      debugPrint('Error initializing Firebase: $e');
+    }
+  }
+
+  // Request permission for iOS/Web and devices on Android 13+ after Splash Screen completes
+  static Future<void> requestNotificationPermission() async {
+    try {
+      NotificationSettings settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        debugPrint('User granted permission for push notifications');
+        String? token = await _fcm.getToken();
+        debugPrint("FCM Registration Token: $token");
+      } else {
+        debugPrint('User declined or has not accepted permission');
+      }
+    } catch (e) {
+      debugPrint('Error requesting notification permission: $e');
     }
   }
 }

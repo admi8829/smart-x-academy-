@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/quiz_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/push_notification_service.dart';
 
 void main() async {
@@ -95,8 +96,8 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
       ),
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       
-      // Launch the Home Screen on start, containing the tutorial video and grade quiz selectors
-      home: HomeScreen(
+      // Launch the beautiful animated open-application process (Splash Screen)
+      home: SplashScreen(
         isDarkMode: _isDarkMode,
         languageCode: _languageCode,
         onToggleTheme: toggleTheme,
