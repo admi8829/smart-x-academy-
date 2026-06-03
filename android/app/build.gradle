@@ -66,25 +66,3 @@ flutter {
 
 dependencies {
 }
-
-configurations.all {
-    resolutionStrategy {
-        // Force newer AndroidX WorkManager and Room versions required by google_mobile_ads (play-services-ads:24.9.0)
-        force 'androidx.work:work-runtime:2.9.0'
-        force 'androidx.work:work-runtime-ktx:2.9.0'
-        force 'androidx.room:room-runtime:2.6.1'
-        force 'androidx.room:room-ktx:2.6.1'
-        
-        // Align lifecycle and SQLite packages to guarantee runtime classpath harmony
-        force 'androidx.sqlite:sqlite:2.4.0'
-        force 'androidx.sqlite:sqlite-framework:2.4.0'
-        force 'androidx.lifecycle:lifecycle-runtime:2.7.0'
-        force 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-        force 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
-        force 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
-        force 'androidx.lifecycle:lifecycle-livedata:2.7.0'
-        force 'androidx.lifecycle:lifecycle-livedata-core:2.7.0'
-        force 'androidx.lifecycle:lifecycle-common:2.7.0'
-    }
-}
-
