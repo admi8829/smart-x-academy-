@@ -483,20 +483,20 @@ class _HomeScreenState extends State<HomeScreen> {
           
           const SizedBox(height: 20.0),
           
-          // 2x2 Clean Grid Layout with 45% decreased height and full-width buttons
+          // 2x2 Clean Grid Layout with 0.92 aspect ratio following elegant 60-30-10 design rules
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 14.0,
-            mainAxisSpacing: 14.0,
-            childAspectRatio: 1.28, // Visually perfect aspect ratio for decreased height card ensuring no overflows on small viewports
+            crossAxisSpacing: 16.0,
+            mainAxisSpacing: 16.0,
+            childAspectRatio: 0.92, // Comfortable aspect ratio ensuring perfect proportional margins and spacious solid buttons
             children: [
               // Grade 9
               _buildGradeCard(
                 title: _local('g9_title'),
                 subtitle: _local('g9_sub'),
-                illustration: _buildScrollIllustration(),
+                illustration: _buildScrollIllustration(isLight),
                 btnColor: const Color(0xFF0084FF),
                 isLight: isLight,
                 onTap: () => _navigateToGradeScreen(9),
@@ -505,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildGradeCard(
                 title: _local('g10_title'),
                 subtitle: _local('g10_sub'),
-                illustration: _buildShieldIllustration(),
+                illustration: _buildShieldIllustration(isLight),
                 btnColor: const Color(0xFF10B981),
                 isLight: isLight,
                 onTap: () => _navigateToGradeScreen(10),
@@ -514,7 +514,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildGradeCard(
                 title: _local('g11_title'),
                 subtitle: _local('g11_sub'),
-                illustration: _buildOrbitIllustration(),
+                illustration: _buildOrbitIllustration(isLight),
                 btnColor: const Color(0xFFF59E0B),
                 isLight: isLight,
                 onTap: () => _navigateToGradeScreen(11),
@@ -523,7 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildGradeCard(
                 title: _local('g12_title'),
                 subtitle: _local('g12_sub'),
-                illustration: _buildGraduateIllustration(),
+                illustration: _buildGraduateIllustration(isLight),
                 btnColor: const Color(0xFF8B5CF6),
                 isLight: isLight,
                 onTap: () => _navigateToGradeScreen(12),
@@ -561,102 +561,88 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isLight 
-                ? [Colors.white, const Color(0xFFF1F5F9)] 
-                : [const Color(0xFF1E293B), const Color(0xFF0F172A)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(22.0),
+          color: isLight ? Colors.white : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(28.0),
           border: Border.all(
-            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: isLight ? btnColor.withValues(alpha: 0.1) : btnColor.withValues(alpha: 0.2),
-              blurRadius: 18.0,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            )
+              color: btnColor.withValues(alpha: isLight ? 0.08 : 0.20),
+              blurRadius: 24.0,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.12),
+              blurRadius: 16.0,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 18.0, bottom: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Section containing header information
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                            letterSpacing: -0.3,
-                          ),
+            // Top section: Row with titles and illustration
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.w900,
+                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                          letterSpacing: -0.4,
                         ),
-                        const SizedBox(height: 3.0),
-                        Expanded(
-                          child: Text(
-                            subtitle.replaceAll('\n', ' '),
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              height: 1.25,
-                              fontWeight: FontWeight.w500,
-                              color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      ),
+                      const SizedBox(height: 4.0),
+                      Text(
+                        subtitle.replaceAll('\n', ' '),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          height: 1.25,
+                          fontWeight: FontWeight.w500,
+                          color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                         ),
-                      ],
-                    ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Container(
-                    height: 36,
-                    width: 36,
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
-                      shape: BoxShape.circle,
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: illustration,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: Center(child: illustration),
+                ),
+              ],
             ),
-            const SizedBox(height: 6.0),
+            const Spacer(),
             // Premium full-width start course button
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [btnColor.withValues(alpha: 0.9), btnColor],
+                  colors: [btnColor, btnColor.withValues(alpha: 0.85)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: btnColor.withValues(alpha: 0.35),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+                    color: btnColor.withValues(alpha: isLight ? 0.35 : 0.45),
+                    blurRadius: 12,
+                    offset: const Offset(0, 5),
                   )
                 ],
               ),
@@ -666,14 +652,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(
                     Icons.play_circle_fill_rounded,
                     color: Colors.white,
-                    size: 14,
+                    size: 16,
                   ),
                   SizedBox(width: 6),
                   Text(
                     "Start Course",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 11.0,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.2,
                     ),
@@ -688,9 +674,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // --- Beautiful Custom stacked vector illustrations matching image ---
-  Widget _buildScrollIllustration() {
+  Widget _buildScrollIllustration(bool isLight) {
     return Stack(
       alignment: Alignment.center,
+      clipBehavior: Clip.none,
       children: [
         Transform.rotate(
           angle: -0.15,
@@ -716,105 +703,131 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         Positioned(
-          right: 0,
-          bottom: 0,
+          right: -4,
+          bottom: -4,
           child: Container(
-            padding: const EdgeInsets.all(3.5),
+            padding: const EdgeInsets.all(4.0),
             decoration: const BoxDecoration(
               color: Color(0xFFE53935),
               shape: BoxShape.circle,
             ),
-            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold)),
+            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.0, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildShieldIllustration() {
+  Widget _buildShieldIllustration(bool isLight) {
     return Stack(
       alignment: Alignment.center,
+      clipBehavior: Clip.none,
       children: [
-        const Icon(
-          Icons.shield_outlined,
-          color: Color(0xFF2E7D32),
-          size: 46,
-        ),
-        Positioned(
-          child: Icon(
-            Icons.nature_people_outlined,
-            color: const Color(0xFF2E7D32).withValues(alpha: 0.4),
-            size: 20,
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isLight ? const Color(0xFFE8F5E9) : const Color(0xFF1B5E20).withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.shield_outlined,
+              color: Color(0xFF2E7D32),
+              size: 32,
+            ),
           ),
         ),
         Positioned(
-          right: 0,
-          bottom: 0,
+          top: 14,
+          child: Icon(
+            Icons.nature_people_outlined,
+            color: const Color(0xFF2E7D32).withValues(alpha: 0.4),
+            size: 16,
+          ),
+        ),
+        Positioned(
+          right: -2,
+          bottom: -2,
           child: Container(
-            padding: const EdgeInsets.all(3.5),
+            padding: const EdgeInsets.all(4.0),
             decoration: const BoxDecoration(
               color: Color(0xFF2E7D32),
               shape: BoxShape.circle,
             ),
-            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold)),
+            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.0, fontWeight: FontWeight.bold)),
           ),
         )
       ],
     );
   }
 
-  Widget _buildOrbitIllustration() {
+  Widget _buildOrbitIllustration(bool isLight) {
     return Stack(
       alignment: Alignment.center,
+      clipBehavior: Clip.none,
       children: [
-        const Icon(
-          Icons.analytics_outlined,
-          color: Color(0xFFEF6C00),
-          size: 46,
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isLight ? const Color(0xFFFFF3E0) : const Color(0xFFE65100).withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.analytics_outlined,
+              color: Color(0xFFEF6C00),
+              size: 32,
+            ),
+          ),
         ),
         Positioned(
-          right: 0,
-          bottom: 0,
+          right: -2,
+          bottom: -2,
           child: Container(
-            padding: const EdgeInsets.all(3.5),
+            padding: const EdgeInsets.all(4.0),
             decoration: const BoxDecoration(
               color: Color(0xFFEF6C00),
               shape: BoxShape.circle,
             ),
-            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold)),
+            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.0, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGraduateIllustration() {
+  Widget _buildGraduateIllustration(bool isLight) {
     return Stack(
       alignment: Alignment.center,
+      clipBehavior: Clip.none,
       children: [
-        const Icon(
-          Icons.public_outlined,
-          color: Color(0xFF6A1B9A),
-          size: 46,
-        ),
-        Positioned(
-          top: 0,
-          child: Icon(
-            Icons.school_outlined,
-            color: const Color(0xFF6A1B9A).withValues(alpha: 0.8),
-            size: 18,
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isLight ? const Color(0xFFF3E5F5) : const Color(0xFF4A148C).withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.public_rounded,
+              color: Color(0xFF6A1B9A),
+              size: 32,
+            ),
           ),
         ),
         Positioned(
-          right: 0,
-          bottom: 0,
+          right: -2,
+          bottom: -2,
           child: Container(
-            padding: const EdgeInsets.all(3.5),
+            padding: const EdgeInsets.all(4.0),
             decoration: const BoxDecoration(
               color: Color(0xFF6A1B9A),
               shape: BoxShape.circle,
             ),
-            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold)),
+            child: const Text("A+", style: TextStyle(color: Colors.white, fontSize: 8.0, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
