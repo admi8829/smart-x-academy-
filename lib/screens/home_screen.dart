@@ -563,25 +563,26 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isLight 
-                ? [Colors.white, const Color(0xFFF8FAFC)] 
-                : [const Color(0xFF1E2937), const Color(0xFF111827)],
+                ? [Colors.white, const Color(0xFFF1F5F9)] 
+                : [const Color(0xFF1E293B), const Color(0xFF0F172A)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(18.0),
+          borderRadius: BorderRadius.circular(22.0),
           border: Border.all(
-            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-            width: 1,
+            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.25),
-              blurRadius: 10.0,
-              offset: const Offset(0, 4),
+              color: isLight ? btnColor.withValues(alpha: 0.1) : btnColor.withValues(alpha: 0.2),
+              blurRadius: 18.0,
+              offset: const Offset(0, 8),
+              spreadRadius: 2,
             )
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -643,38 +644,39 @@ class _HomeScreenState extends State<HomeScreen> {
             // Premium full-width start course button
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 7),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [btnColor, btnColor.withValues(alpha: 0.85)],
+                  colors: [btnColor.withValues(alpha: 0.9), btnColor],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: btnColor.withValues(alpha: 0.3),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+                    color: btnColor.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
                   )
                 ],
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  Icon(
+                    Icons.play_circle_fill_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  SizedBox(width: 6),
                   Text(
                     "Start Course",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.2,
                     ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 11,
                   ),
                 ],
               ),

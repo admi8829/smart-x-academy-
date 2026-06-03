@@ -3,11 +3,15 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/quiz_screen.dart';
+import 'services/push_notification_service.dart';
 
 void main() async {
   // Ensure widget bindings are safely initialized before calling native platforms/plugins
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Initialize Push Notifications via Firebase
+  await PushNotificationService.initialize();
+
   // Initialize the Mobile Ads SDK asynchronously
   try {
     await MobileAds.instance.initialize();
