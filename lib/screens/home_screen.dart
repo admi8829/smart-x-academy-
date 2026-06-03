@@ -562,20 +562,20 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           // Warm cream beige color matches the screenshot perfectly for light mode
-          color: isLight ? const Color(0xFFFAF7F2) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(28.0),
+          color: isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(26.0),
           boxShadow: [
             BoxShadow(
               color: isLight 
-                  ? const Color(0xFF0D2353).withValues(alpha: 0.05) 
-                  : Colors.black.withValues(alpha: 0.3),
-              blurRadius: 18.0,
-              offset: const Offset(0, 8),
-              spreadRadius: 1,
+                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
+                  : Colors.black.withValues(alpha: 0.35),
+              blurRadius: 24.0,
+              offset: const Offset(0, 10),
+              spreadRadius: 0,
             )
           ],
         ),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -602,6 +602,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 4.0),
                         Text(
                           subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12.0,
                             height: 1.3,
@@ -635,10 +637,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: isLight 
-                        ? const Color(0xFF0D2353).withValues(alpha: 0.04) 
+                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.03) 
                         : Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 8.0,
+                    blurRadius: 10.0,
                     offset: const Offset(0, 4),
+                    spreadRadius: 0,
                   )
                 ],
               ),
@@ -646,7 +649,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 "Start Course",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: isLight ? const Color(0xFF5577A5) : Colors.white,
+                  color: isLight ? const Color(0xFF4C6B94) : Colors.white,
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.1,
