@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../services/ad_helper.dart';
 import 'quiz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -24,6 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late YoutubePlayerController _ytController;
   bool _isPlaying = false;
+
+  // --- AdMob Ads State ---
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
   // Dictionary for dynamic translation matching 'EN/አማርኛ'
   final Map<String, Map<String, String>> _localizedValues = {
@@ -81,12 +87,49 @@ class _HomeScreenState extends State<HomeScreen> {
         disableDragSeek: false,
       ),
     );
+    _loadBannerAd();
   }
 
   @override
   void dispose() {
     _ytController.dispose();
+    _bannerAd?.dispose();
     super.dispose();
+  }
+
+  /// Initialize AdMob and trigger async load for HomeScreen banner
+  void _loadBannerAd() {
+    _bannerAd?.dispose();
+    _bannerAd = null;
+    _isBannerAdLoaded = false;
+
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = true;
+            });
+          } else {
+            ad.dispose();
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          debugPrint('HomeScreen BannerAd failed to load: $err. Code: ${err.code}');
+          ad.dispose();
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = false;
+              _bannerAd = null;
+            });
+          }
+        },
+      ),
+    );
+    _bannerAd!.load();
   }
 
   @override
@@ -383,111 +426,21 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           
-          const SizedBox(height: 24.0),
+          const SizedBox(height: 16.0),
 
-          // --- Premium Smart X Quiz Arena CTA Banner ---
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isLight 
-                    ? [const Color(0xFF0F172A), const Color(0xFF1E293B)] 
-                    : [const Color(0xFF1E1E38), const Color(0xFF0D2353)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24.0),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1E88E5).withOpacity(0.12),
-                  blurRadius: 18.0,
-                  spreadRadius: 2.0,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-              border: Border.all(
-                color: const Color(0xFF0EA5E9).withOpacity(0.2),
-                width: 1,
+          // --- Custom AdMob Banner Ad Area ---
+          if (_isBannerAdLoaded && _bannerAd != null) ...[
+            Center(
+              child: Container(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                margin: const EdgeInsets.only(bottom: 16.0),
+                child: AdWidget(ad: _bannerAd!),
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(22.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF59E0B).withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Text(
-                                "POPULAR FEATURE",
-                                style: TextStyle(
-                                  color: Color(0xFFF59E0B),
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.flash_on, color: Colors.amber, size: 14),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Smart X Quiz Arena",
-                          style: TextStyle(
-                            fontSize: 18.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Test your syllabus skills, earn grades, watch rewarded test videos for hints, and prepare for exams!",
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: Colors.grey[300],
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const QuizScreen(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF38BDF8),
-                      foregroundColor: const Color(0xFF0D2353),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                      elevation: 3,
-                    ),
-                    child: const Icon(Icons.arrow_forward_rounded, size: 22, color: Color(0xFF0F172A)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 24.0),
+          ],
+
+          const SizedBox(height: 16.0),
           
           // Explore section title matching image
           Text(
@@ -511,14 +464,14 @@ class _HomeScreenState extends State<HomeScreen> {
           
           const SizedBox(height: 20.0),
           
-          // 2x2 Clean Grid Layout matching exact cards in image
+          // 2x2 Clean Grid Layout with 45% decreased height and full-width buttons
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: 16.0,
             mainAxisSpacing: 16.0,
-            childAspectRatio: 0.88, // Custom aspect ratio optimized to hold title, sub text and pill button
+            childAspectRatio: 1.5, // 45% smaller height compared to 0.88
             children: [
               // Grade 9
               _buildGradeCard(
@@ -579,78 +532,102 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: isLight ? Colors.white : const Color(0xFF1F2937),
-          borderRadius: BorderRadius.circular(24.0),
+          borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
             color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.25),
-              blurRadius: 16.0,
-              offset: const Offset(0, 8),
+              color: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.2),
+              blurRadius: 10.0,
+              offset: const Offset(0, 4),
             )
           ],
         ),
-        padding: const EdgeInsets.all(18.0),
+        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
         child: Stack(
           children: [
             // Right Corner Custom Vector Illustration
             Positioned(
               right: 0,
               top: 0,
-              child: illustration,
+              child: SizedBox(
+                height: 38,
+                width: 38,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: illustration,
+                ),
+              ),
             ),
             // Title, description and CTA Button Column
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w800,
-                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                        letterSpacing: -0.3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w800,
+                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                          letterSpacing: -0.3,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6.0),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.0,
-                        height: 1.35,
-                        fontWeight: FontWeight.w500,
-                        color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          height: 1.25,
+                          fontWeight: FontWeight.w500,
+                          color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                // Premium colored Start Course button at the bottom left of card
+                // Premium full-width Start Course button with icon
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: btnColor,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: btnColor.withOpacity(0.3),
+                        color: btnColor.withOpacity(0.25),
                         blurRadius: 6,
-                        offset: const Offset(0, 3),
+                        offset: const Offset(0, 2),
                       )
                     ],
                   ),
-                  child: const Text(
-                    "Start Course",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Start Course",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.white,
+                        size: 13,
+                      ),
+                    ],
                   ),
                 ),
               ],
