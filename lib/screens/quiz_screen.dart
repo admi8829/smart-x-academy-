@@ -17,7 +17,8 @@ class QuizQuestion {
 }
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final int grade;
+  const QuizScreen({super.key, this.grade = 9});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -25,32 +26,7 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   // --- Quiz State ---
-  final List<QuizQuestion> _questions = const [
-    QuizQuestion(
-      questionText: "What is the capital city of Ethiopia?",
-      options: ["Asmara", "Addis Ababa", "Nairobi", "Djibouti"],
-      correctAnswerIndex: 1,
-      hint: "It is the third highest capital in the world and means 'New Flower'.",
-    ),
-    QuizQuestion(
-      questionText: "Which chemical element has the symbol 'Au'?",
-      options: ["Silver", "Gold", "Copper", "Platinum"],
-      correctAnswerIndex: 1,
-      hint: "It has atomic number 79 and is highly prized for jewelry and investment.",
-    ),
-    QuizQuestion(
-      questionText: "In which year did Ethiopia defeat the Italian army at the Battle of Adwa?",
-      options: ["1889", "1896", "1935", "1941"],
-      correctAnswerIndex: 1,
-      hint: "It happened on the 1st of March in a leap year during the late 19th century.",
-    ),
-    QuizQuestion(
-      questionText: "What is the primary power generation source of the Grand Ethiopian Renaissance Dam (GERD)?",
-      options: ["Hydroelectric", "Geothermal", "Solar Power", "Wind Energy"],
-      correctAnswerIndex: 0,
-      hint: "It utilizes the mighty Blue Nile flow running through massive water turbos.",
-    ),
-  ];
+  late final List<QuizQuestion> _questions;
 
   int _currentQuestionIndex = 0;
   int? _selectedAnswerIndex;
@@ -71,7 +47,148 @@ class _QuizScreenState extends State<QuizScreen> {
   @override
   void initState() {
     super.initState();
+    _questions = _getQuestionsForGrade(widget.grade);
     _initAdMob();
+  }
+
+  List<QuizQuestion> _getQuestionsForGrade(int grade) {
+    if (grade == 9) {
+      return const [
+        QuizQuestion(
+          questionText: "What is the value of x if 3x - 7 = 14?",
+          options: ["5", "6", "7", "8"],
+          correctAnswerIndex: 2,
+          hint: "Add 7 to both sides, then divide by 3.",
+        ),
+        QuizQuestion(
+          questionText: "What is the powerhouse of the cell?",
+          options: ["Nucleus", "Ribosome", "Mitochondria", "Golgi Apparatus"],
+          correctAnswerIndex: 2,
+          hint: "It generates most of the cell's supply of adenosine triphosphate (ATP).",
+        ),
+        QuizQuestion(
+          questionText: "Which of the following is a physical quantity that has both magnitude and direction?",
+          options: ["Speed", "Mass", "Velocity", "Temperature"],
+          correctAnswerIndex: 2,
+          hint: "Unlike speed, this vector quantity includes direction.",
+        ),
+        QuizQuestion(
+          questionText: "What is the atomic number of Hydrogen, the most abundant element in the universe?",
+          options: ["1", "2", "6", "8"],
+          correctAnswerIndex: 0,
+          hint: "It is the very first element on the periodic table.",
+        ),
+      ];
+    } else if (grade == 10) {
+      return const [
+        QuizQuestion(
+          questionText: "Which blood cells are highly responsible for fighting infections in the human body?",
+          options: ["Red blood cells", "White blood cells", "Platelets", "Plasma"],
+          correctAnswerIndex: 1,
+          hint: "Also called leukocytes, they act as the body's defense shields.",
+        ),
+        QuizQuestion(
+          questionText: "What type of chemical bond is formed when one element loses electrons and another gains them?",
+          options: ["Covalent bond", "Ionic bond", "Metallic bond", "Hydrogen bond"],
+          correctAnswerIndex: 1,
+          hint: "It involves electrostatic attraction between oppositely charged ions.",
+        ),
+        QuizQuestion(
+          questionText: "What is the primary pigment used by plants during photosynthesis to absorb light energy?",
+          options: ["Carotenoid", "Chlorophyll", "Xanthophyll", "Phycobilin"],
+          correctAnswerIndex: 1,
+          hint: "It gives plants their characteristic green color.",
+        ),
+        QuizQuestion(
+          questionText: "Which laws explain the mathematical relationship between force, mass, and acceleration?",
+          options: ["Kepler's Laws", "Newton's Laws of Motion", "Ohm's Law", "First Law of Thermodynamics"],
+          correctAnswerIndex: 1,
+          hint: "F = ma is the second of these famous laws proposed in 1687.",
+        ),
+      ];
+    } else if (grade == 11) {
+      return const [
+        QuizQuestion(
+          questionText: "What is the vector cross product of two parallel vectors?",
+          options: ["Their product", "Zero vector", "Unit vector", "Infinity"],
+          correctAnswerIndex: 1,
+          hint: "Since the angle theta is 0, sin(0) makes the cross product zero.",
+        ),
+        QuizQuestion(
+          questionText: "In organic chemistry, what is the chemical formula of Benzene, the simplest aromatic hydrocarbon?",
+          options: ["C6H12", "C6H6", "C5H5", "CH4"],
+          correctAnswerIndex: 1,
+          hint: "It represents a beautiful hexagonal ring with alternating double bonds.",
+        ),
+        QuizQuestion(
+          questionText: "Which ancient trading empire was located in northern Ethiopia and Eritrea around the 1st to 8th centuries AD?",
+          options: ["Zagwe Dynasty", "Kingdom of Aksum", "Kushite Empire", "Harar Sultanate"],
+          correctAnswerIndex: 1,
+          hint: "Known for towering stone obelisks (stele) and introducing Christianity.",
+        ),
+        QuizQuestion(
+          questionText: "What is the derivative of f(x) = x^3 with respect to x?",
+          options: ["3x", "3x^2", "x^2", "3"],
+          correctAnswerIndex: 1,
+          hint: "Use the Power Rule: d/dx(x^n) = n * x^(n-1).",
+        ),
+      ];
+    } else if (grade == 12) {
+      return const [
+        QuizQuestion(
+          questionText: "What is the limit of (sin x) / x as x approaches 0?",
+          options: ["0", "1", "Infinity", "Undefined"],
+          correctAnswerIndex: 1,
+          hint: "This is a fundamental trigonometric limit, also provable by L'Hopital's Rule.",
+        ),
+        QuizQuestion(
+          questionText: "In electromagnetic theory, which law states that an induced EMF is proportional to the rate of change of magnetic flux?",
+          options: ["Ohm's Law", "Faraday's Law of Induction", "Coulomb's Law", "Ampere's Law"],
+          correctAnswerIndex: 1,
+          hint: "A negative sign is added to this law by Lenz to indicate direction.",
+        ),
+        QuizQuestion(
+          questionText: "What is the value of the definite integral of 2x from x=1 to x=3?",
+          options: ["4", "6", "8", "9"],
+          correctAnswerIndex: 2,
+          hint: "The antiderivative is x^2. Evaluate (3^2) - (1^2).",
+        ),
+        QuizQuestion(
+          questionText: "Which fundamental particle is responsible for mediating the strong nuclear force that binds quarks together?",
+          options: ["Photon", "Gluon", "W boson", "Graviton"],
+          correctAnswerIndex: 1,
+          hint: "Think of the word 'glue' because it glues quarks together.",
+        ),
+      ];
+    } else {
+      // Default / fallback list
+      return const [
+        QuizQuestion(
+          questionText: "What is the capital city of Ethiopia?",
+          options: ["Asmara", "Addis Ababa", "Nairobi", "Djibouti"],
+          correctAnswerIndex: 1,
+          hint: "It is the third highest capital in the world and means 'New Flower'.",
+        ),
+        QuizQuestion(
+          questionText: "Which chemical element has the symbol 'Au'?",
+          options: ["Silver", "Gold", "Copper", "Platinum"],
+          correctAnswerIndex: 1,
+          hint: "It has atomic number 79 and is highly prized for jewelry and investment.",
+        ),
+        QuizQuestion(
+          questionText: "In which year did Ethiopia defeat the Italian army at the Battle of Adwa?",
+          options: ["1889", "1896", "1935", "1941"],
+          correctAnswerIndex: 1,
+          hint: "It happened on the 1st of March in a leap year during the late 19th century.",
+        ),
+        QuizQuestion(
+          questionText: "What is the primary power generation source of the Grand Ethiopian Renaissance Dam (GERD)?",
+          options: ["Hydroelectric", "Geothermal", "Solar Power", "Wind Energy"],
+          correctAnswerIndex: 0,
+          hint: "It utilizes the mighty Blue Nile flow running through massive water turbos.",
+        ),
+      ];
+    }
   }
 
   /// Initialize AdMob and trigger async loads

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/home_screen.dart';
 import 'screens/quiz_screen.dart';
 
 void main() async {
@@ -90,8 +91,13 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
       ),
       themeMode: _isDarkMode ? ThemeMode.dark : ThemeMode.light,
       
-      // Launch the Quiz Challenge Screen directly on start, as desired by the user
-      home: const QuizScreen(),
+      // Launch the Home Screen on start, containing the tutorial video and grade quiz selectors
+      home: HomeScreen(
+        isDarkMode: _isDarkMode,
+        languageCode: _languageCode,
+        onToggleTheme: toggleTheme,
+        onToggleLanguage: toggleLanguage,
+      ),
     );
   }
 }
