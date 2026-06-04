@@ -22,10 +22,11 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late YoutubePlayerController _ytController;
   bool _isPlaying = false;
+  late AnimationController _fadeController;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -51,6 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'nav_profile': 'Profile',
       'nav_settings': 'Settings',
       'start_course_btn': 'Start Course',
+      'featured_title': 'Today\'s Featured Lessons',
+      'featured_sub': 'Select a lesson below to watch instantly in the player.',
     },
     'am': {
       'title': 'ስማርት ኤክስ አካዳሚ',
@@ -70,8 +73,38 @@ class _HomeScreenState extends State<HomeScreen> {
       'nav_profile': 'መገለጫ',
       'nav_settings': 'ማስተካከያዎች',
       'start_course_btn': 'ኮርስ ጀምር',
+      'featured_title': 'የዛሬው ልዩ ትምህርቶች',
+      'featured_sub': 'በቀጥታ ለመመልከት ከታች ካሉት ቪዲዮዎች አንዱን ይምረጡ።',
     }
   };
+
+  // 4 Featured rich playlist videos matching the user screen layout perfectly
+  final List<Map<String, String>> _featuredVideos = [
+    {
+      'title': 'Biology G10: Cell Biology',
+      'duration': '15:30',
+      'id': 'bZ_g8D8zHrc',
+      'thumbnail': 'https://images.unsplash.com/photo-1530026405186-ed1eaae6bbdb?w=500&auto=format&fit=crop&q=80',
+    },
+    {
+      'title': 'English G11: Tenses & Grammar',
+      'duration': '18:45',
+      'id': '17l-m92hR0o',
+      'thumbnail': 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=500&auto=format&fit=crop&q=80',
+    },
+    {
+      'title': 'Math G12: Calculus Fundamentals',
+      'duration': '22:15',
+      'id': 'Wp_QvD0C7_0',
+      'thumbnail': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=500&auto=format&fit=crop&q=80',
+    },
+    {
+      'title': 'Chemistry G9: Chemical Reaction',
+      'duration': '12:10',
+      'id': 'q59S32-V8Yg',
+      'thumbnail': 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?w=500&auto=format&fit=crop&q=80',
+    },
+  ];
 
   String _local(String key) {
     return _localizedValues[widget.languageCode]?[key] ?? key;
@@ -80,6 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    
     // Replicating tutorial video with standard Youtube embedded controller
     _ytController = YoutubePlayerController(
       initialVideoId: 'K_js8HXa8VM', // Smart X Academy tutorial Video ID requested by user
@@ -90,10 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     _loadBannerAd();
+    _fadeController.forward();
   }
 
   @override
   void dispose() {
+    _fadeController.dispose();
     _ytController.dispose();
     _bannerAd?.dispose();
     super.dispose();
@@ -329,225 +369,228 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _animateItem({required Widget child, required int index}) {
+    final curver = CurvedAnimation(
+      parent: _fadeController,
+      curve: Interval(
+        (0.05 + (index * 0.12)).clamp(0.0, 1.0),
+        (0.55 + (index * 0.12)).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    return FadeTransition(
+      opacity: _fadeController,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.0, 0.14),
+          end: Offset.zero,
+        ).animate(curver),
+        child: child,
+      ),
+    );
+  }
+
   Widget _buildHomeScreenContent(bool isLight) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Elegant Video / Tutorial Showcase Card (image_2.png top box) with custom border and gradient frame
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isLight 
-                    ? [Colors.white, const Color(0xFFFBFDFF)] 
-                    : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(28.0),
-              border: Border.all(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.35),
-                  blurRadius: 22.0,
-                  offset: const Offset(0, 8),
+          // Index 0: Video Tutorial Section
+          _animateItem(
+            index: 0,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isLight 
+                      ? [Colors.white, const Color(0xFFFBFDFF)] 
+                      : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(14.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // YouTube simulated video viewport
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(18.0),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        _isPlaying
-                            ? YoutubePlayer(
-                                controller: _ytController,
-                                showVideoProgressIndicator: true,
-                              )
-                            : Stack(
-                                children: [
-                                  // Video Thumbnail Placeholder
-                                  Container(
-                                    height: 200,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                                    ),
-                                    child: Image.network(
-                                      'https://img.youtube.com/vi/K_js8HXa8VM/maxresdefault.jpg',
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Image.network(
-                                          'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
-                                          fit: BoxFit.cover,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  // Dark overlay tint for visual contrast
-                                  Positioned.fill(
-                                    child: Container(
-                                      color: Colors.black.withValues(alpha: 0.32),
-                                    ),
-                                  ),
-                                  // Elegant Play Button (Center-aligned with premium animation pulse look)
-                                  Positioned.fill(
-                                    child: Align(
-                                      alignment: Alignment.center,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            _isPlaying = true;
-                                          });
-                                          _ytController.play();
-                                        },
-                                        child: Container(
-                                          width: 64,
-                                          height: 64,
-                                          decoration: BoxDecoration(
-                                            gradient: const LinearGradient(
-                                              colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.25),
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                              BoxShadow(
-                                                color: const Color(0xFF1E88E5).withValues(alpha: 0.4),
-                                                blurRadius: 20,
-                                                spreadRadius: 4,
-                                              )
-                                            ],
-                                          ),
-                                          child: const Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Colors.white,
-                                            size: 42,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Top Title overlay (looks premium like floating UI)
-                                  Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [Colors.black54, Colors.transparent],
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFF1E88E5)),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Expanded(
-                                            child: Text(
-                                              "Welcome to Smart X Academy Tutorial",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.bold,
-                                                letterSpacing: 0.1,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14.0),
-                  // Bottom caption matching image with elegant play icon
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2.0, right: 8.0),
-                        child: Icon(
-                          Icons.play_lesson_rounded,
-                          color: isLight ? const Color(0xFF0084FF) : const Color(0xFF38BDF8),
-                          size: 16,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          _local('tutorial_desc'),
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            height: 1.35,
-                            fontWeight: FontWeight.w700,
-                            color: isLight ? const Color(0xFF334155) : Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
+                borderRadius: BorderRadius.circular(28.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 26.0,
+                    offset: const Offset(0, 10),
                   ),
                 ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // YouTube simulated video viewport
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(18.0),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          _isPlaying
+                              ? YoutubePlayer(
+                                  controller: _ytController,
+                                  showVideoProgressIndicator: true,
+                                )
+                              : Stack(
+                                  children: [
+                                    // Video Thumbnail Placeholder
+                                    Container(
+                                      height: 200,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                                      ),
+                                      child: Image.network(
+                                        'https://img.youtube.com/vi/K_js8HXa8VM/maxresdefault.jpg',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Image.network(
+                                            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    // Dark overlay tint for visual contrast
+                                    Positioned.fill(
+                                      child: Container(
+                                        color: Colors.black.withValues(alpha: 0.32),
+                                      ),
+                                    ),
+                                    // Elegant Play Button (Center-aligned with premium animation pulse look)
+                                    Positioned.fill(
+                                      child: Align(
+                                        alignment: Alignment.center,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _isPlaying = true;
+                                            });
+                                            _ytController.play();
+                                          },
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.25),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                                BoxShadow(
+                                                  color: const Color(0xFF1E88E5).withValues(alpha: 0.4),
+                                                  blurRadius: 20,
+                                                  spreadRadius: 4,
+                                                )
+                                              ],
+                                            ),
+                                            child: const Icon(
+                                              Icons.play_arrow_rounded,
+                                              color: Colors.white,
+                                              size: 42,
+                                              id: "main_video_play_btn",
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Top Title overlay (looks premium like floating UI)
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [Colors.black54, Colors.transparent],
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFF1E88E5)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Expanded(
+                                              child: Text(
+                                                "Welcome to Smart X Academy Tutorial",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.1,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14.0),
+                    // Bottom caption matching image with elegant play icon
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0, right: 8.0),
+                          child: Icon(
+                            Icons.play_lesson_rounded,
+                            color: isLight ? const Color(0xFF0084FF) : const Color(0xFF38BDF8),
+                            size: 16,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _local('tutorial_desc'),
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                              color: isLight ? const Color(0xFF334155) : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
           
-          const SizedBox(height: 24.0),
+          const SizedBox(height: 28.0),
           
-          // One general box for the educational menu (grades 9-12 selector) matching the YouTube player card style
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isLight 
-                    ? [Colors.white, const Color(0xFFFBFDFF)] 
-                    : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(28.0),
-              border: Border.all(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.35),
-                  blurRadius: 22.0,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.all(18.0),
+          // Index 1: Free standing Explore Header (DECOUPLED AS REQUESTED!)
+          _animateItem(
+            index: 1,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -555,73 +598,290 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   _local('explore_title'),
                   style: TextStyle(
-                    fontSize: 20.0,
+                    fontSize: 24.0,
                     fontWeight: FontWeight.w900,
                     color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.6,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 4.0),
+                const SizedBox(height: 6.0),
                 Text(
                   _local('explore_sub'),
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 14.0,
                     fontWeight: FontWeight.w500,
                     color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
                   ),
                 ),
-                const SizedBox(height: 20.0),
-                // 2x2 Clean Grid Layout matching the custom AspectRatio and spacing in the image
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 14.0,
-                  mainAxisSpacing: 14.0,
-                  childAspectRatio: 1.05, // Visually perfect square-ish aspect ratio matching the image
-                  children: [
-                    // Grade 9
-                    _buildGradeCard(
-                      title: _local('g9_title'),
-                      subtitle: _local('g9_sub'),
-                      illustration: _buildScrollIllustration(),
-                      btnColor: const Color(0xFF0084FF),
-                      isLight: isLight,
-                      onTap: () => _navigateToGradeScreen(9),
-                    ),
-                    // Grade 10
-                    _buildGradeCard(
-                      title: _local('g10_title'),
-                      subtitle: _local('g10_sub'),
-                      illustration: _buildShieldIllustration(),
-                      btnColor: const Color(0xFF10B981),
-                      isLight: isLight,
-                      onTap: () => _navigateToGradeScreen(10),
-                    ),
-                    // Grade 11
-                    _buildGradeCard(
-                      title: _local('g11_title'),
-                      subtitle: _local('g11_sub'),
-                      illustration: _buildOrbitIllustration(),
-                      btnColor: const Color(0xFFF59E0B),
-                      isLight: isLight,
-                      onTap: () => _navigateToGradeScreen(11),
-                    ),
-                    // Grade 12
-                    _buildGradeCard(
-                      title: _local('g12_title'),
-                      subtitle: _local('g12_sub'),
-                      illustration: _buildGraduateIllustration(),
-                      btnColor: const Color(0xFF8B5CF6),
-                      isLight: isLight,
-                      onTap: () => _navigateToGradeScreen(12),
-                    ),
-                  ],
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18.0),
+
+          // Index 2: Grid Layout of DECOUPLED INDEPENDENT GRADE CARDS with powerful shadows & gorgeous buttons
+          _animateItem(
+            index: 2,
+            child: GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 0.98, // Adjusted height to make start buttons float beautifully below
+              children: [
+                // Grade 9
+                _buildGradeCard(
+                  title: _local('g9_title'),
+                  subtitle: _local('g9_sub'),
+                  illustration: _buildScrollIllustration(),
+                  btnColor: const Color(0xFF0084FF),
+                  isLight: isLight,
+                  onTap: () => _navigateToGradeScreen(9),
+                ),
+                // Grade 10
+                _buildGradeCard(
+                  title: _local('g10_title'),
+                  subtitle: _local('g10_sub'),
+                  illustration: _buildShieldIllustration(),
+                  btnColor: const Color(0xFF10B981),
+                  isLight: isLight,
+                  onTap: () => _navigateToGradeScreen(10),
+                ),
+                // Grade 11
+                _buildGradeCard(
+                  title: _local('g11_title'),
+                  subtitle: _local('g11_sub'),
+                  illustration: _buildOrbitIllustration(),
+                  btnColor: const Color(0xFFF59E0B),
+                  isLight: isLight,
+                  onTap: () => _navigateToGradeScreen(11),
+                ),
+                // Grade 12
+                _buildGradeCard(
+                  title: _local('g12_title'),
+                  subtitle: _local('g12_sub'),
+                  illustration: _buildGraduateIllustration(),
+                  btnColor: const Color(0xFF8B5CF6),
+                  isLight: isLight,
+                  onTap: () => _navigateToGradeScreen(12),
                 ),
               ],
             ),
           ),
           
+          const SizedBox(height: 32.0),
+
+          // Index 3: Rich Dynamic Playlist Video Format (Horizontal scroll viewport containing > 3 videos)
+          _animateItem(
+            index: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E88E5),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _local('featured_title'),
+                      style: TextStyle(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  _local('featured_sub'),
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: isLight ? const Color(0xFF718096) : const Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                SizedBox(
+                  height: 245.0,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _featuredVideos.length,
+                    itemBuilder: (context, index) {
+                      final video = _featuredVideos[index];
+                      return Container(
+                        width: 215.0,
+                        margin: const EdgeInsets.only(right: 16.0, bottom: 8),
+                        decoration: BoxDecoration(
+                          color: isLight ? Colors.white : const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(22.0),
+                          border: Border.all(
+                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isLight 
+                                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
+                                  : Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 18.0,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(22.0),
+                          onTap: () {
+                            // Update dynamic player immediately
+                            setState(() {
+                              _isPlaying = true;
+                            });
+                            _ytController.load(video['id']!);
+                            _ytController.play();
+                            // Scroll list upward to player focus
+                            Scrollable.ensureVisible(context);
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Video Thumbnail with floating Duration tag & Play marker
+                              ClipRRect(
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(21.0)),
+                                child: Stack(
+                                  children: [
+                                    SizedBox(
+                                      height: 115.0,
+                                      width: double.infinity,
+                                      child: Image.network(
+                                        video['thumbnail']!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, e, s) => Container(
+                                          color: const Color(0xFFCBD5E1),
+                                          child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 30),
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned.fill(
+                                      child: Container(
+                                        color: Colors.black.withValues(alpha: 0.15),
+                                      ),
+                                    ),
+                                    // Play icon ring in center
+                                    Positioned.fill(
+                                      child: Align(
+                                        alignment: Alignment.center,
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withValues(alpha: 0.9),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withValues(alpha: 0.15),
+                                                blurRadius: 5,
+                                              )
+                                            ]
+                                          ),
+                                          child: const Icon(
+                                            Icons.play_arrow_rounded,
+                                            size: 20,
+                                            color: Color(0xFF0F172A),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Duration badge at the bottom-right corner of image matching screenshot
+                                    Positioned(
+                                      bottom: 8.0,
+                                      right: 8.0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 3.5),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.8),
+                                          borderRadius: BorderRadius.circular(6.0),
+                                        ),
+                                        child: Text(
+                                          video['duration']!,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10.5,
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      video['title']!,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 13.5,
+                                        fontWeight: FontWeight.w800,
+                                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                        height: 1.25,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14.0),
+                                    // Watch pill button matching screenshot "▶ Watch"
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0B3C5D), // Match gorgeous dark-blue pill
+                                        borderRadius: BorderRadius.circular(50.0),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 13,
+                                            id: "arrow_watch_${video['id']}",
+                                          ),
+                                          const SizedBox(width: 4.0),
+                                          const Text(
+                                            "Watch",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 24.0),
 
           // --- Custom AdMob Banner Ad Area located visually at the very bottom end of home content ---
@@ -654,19 +914,23 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           // Warm cream beige color matches the screenshot perfectly for light mode
           color: isLight ? const Color(0xFFFAF8F5) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(32.0),
+          borderRadius: BorderRadius.circular(30.0),
+          border: Border.all(
+            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
               color: isLight 
-                  ? const Color(0xFF1E293B).withValues(alpha: 0.05) 
-                  : Colors.black.withValues(alpha: 0.35),
+                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.08) 
+                  : Colors.black.withValues(alpha: 0.45),
               blurRadius: 28.0,
               offset: const Offset(0, 10),
-              spreadRadius: 0,
+              spreadRadius: 1.5,
             )
           ],
         ),
-        padding: const EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 18.0, 16.0, 14.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -684,7 +948,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 19.0,
+                            fontSize: 19.5,
                             fontWeight: FontWeight.w900,
                             color: isLight ? const Color(0xFF0F2537) : Colors.white,
                             letterSpacing: -0.4,
@@ -696,9 +960,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12.5,
-                            height: 1.25,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 12.0,
+                            height: 1.2,
+                            fontWeight: FontWeight.w600,
                             color: isLight ? const Color(0xFF718096) : const Color(0xFFA0AEC0),
                           ),
                         ),
@@ -717,25 +981,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 12.0),
-            // Premium full-width rectangular Start Course button matching the user's design requirement
+            const SizedBox(height: 10.0),
+            // Premium Start Course floating button matching design and screenshot perfectly!
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              height: 44,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1F2937),
-                borderRadius: BorderRadius.zero, // Sleek rectangular format - zero border radius!
+                color: isLight ? Colors.white : const Color(0xFF2D3748),
+                borderRadius: BorderRadius.circular(16.0), // Rounded rectangular format matching screen!
                 border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF4A5568),
                   width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.04) 
-                        : Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 6.0,
-                    offset: const Offset(0, 2),
+                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.06) 
+                        : Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, 4),
                   )
                 ],
               ),
@@ -745,8 +1010,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   color: isLight ? const Color(0xFF4C6B94) : Colors.white,
                   fontSize: 13.5,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.2,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.1,
                 ),
               ),
             ),
