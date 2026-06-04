@@ -38,7 +38,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   bool _isLoading = false;
   bool _codeSent = false;
   String? _verificationId;
-  int? _resendToken;
   
   // Country code configuration
   String _selectedCountryCode = "+251"; // Ethiopia by default for Smart X Academy
@@ -160,7 +159,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         codeSent: (String verificationId, int? resendToken) {
           setState(() {
             _verificationId = verificationId;
-            _resendToken = resendToken;
             _codeSent = true;
             _isLoading = false;
           });
@@ -307,7 +305,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           children: [
             Icon(
               isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-              color: isError ? Colors.redAccent : Colors.emerald,
+              color: isError ? Colors.redAccent : const Color(0xFF10B981),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -600,7 +598,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                   opacity: _fadeAnimation,
                   child: SizeTransition(
                     sizeFactor: _fadeAnimation,
-                    axisAlignment: -1.0,
+                    alignment: Alignment.topCenter,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -647,7 +645,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _verifyAndRegister,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.emerald,
+                              backgroundColor: const Color(0xFF10B981),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16.0),
                               ),
