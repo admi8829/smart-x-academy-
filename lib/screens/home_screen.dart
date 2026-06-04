@@ -214,8 +214,8 @@ class _HomeScreenState extends State<HomeScreen> {
           image: DecorationImage(
             image: const AssetImage('assets/images/education_bg_pattern.png'),
             repeat: ImageRepeat.repeat,
-            opacity: isLight ? 0.06 : 0.015,
-            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white, BlendMode.difference),
+            opacity: isLight ? 0.09 : 0.03,
+            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
           ),
         ),
         child: _buildCurrentTab(isLight),
@@ -294,21 +294,21 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isLight 
-                    ? [Colors.white, const Color(0xFFF8FAFC)] 
-                    : [const Color(0xFF1F2937), const Color(0xFF111827)],
+                    ? [Colors.white, const Color(0xFFFBFDFF)] 
+                    : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24.0),
+              borderRadius: BorderRadius.circular(28.0),
               border: Border.all(
                 color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                width: 1,
+                width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 6),
+                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 22.0,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -482,21 +482,21 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isLight 
-                    ? [Colors.white, const Color(0xFFF8FAFC)] 
-                    : [const Color(0xFF1F2937), const Color(0xFF111827)],
+                    ? [Colors.white, const Color(0xFFFBFDFF)] 
+                    : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24.0),
+              borderRadius: BorderRadius.circular(28.0),
               border: Border.all(
                 color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                width: 1,
+                width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 6),
+                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 22.0,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -676,15 +676,19 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF2D3748),
+                color: isLight ? Colors.white : const Color(0xFF1F2937),
                 borderRadius: BorderRadius.zero, // Sleek rectangular format - zero border radius!
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.07) 
-                        : Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 4),
+                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.04) 
+                        : Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 6.0,
+                    offset: const Offset(0, 2),
                   )
                 ],
               ),

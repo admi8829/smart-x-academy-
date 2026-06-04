@@ -624,8 +624,8 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           image: DecorationImage(
             image: const AssetImage('assets/images/education_bg_pattern.png'),
             repeat: ImageRepeat.repeat,
-            opacity: isLight ? 0.06 : 0.015,
-            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white, BlendMode.difference),
+            opacity: isLight ? 0.09 : 0.03,
+            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
           ),
         ),
         child: SafeArea(
