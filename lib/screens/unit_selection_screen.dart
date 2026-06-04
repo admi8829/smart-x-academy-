@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/education_watermark_background.dart';
 import 'quiz_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
@@ -570,8 +569,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isLight = !widget.isDarkMode;
-    // Premium very light grayish-blue background color
-    final Color bgColor = isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
+    final Color bgColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
     final Color cardBgColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
@@ -587,7 +585,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        elevation: 0.5,
+        elevation: 0.0,
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: headerTextColor, size: 20),
@@ -596,7 +594,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
         title: Text(
           widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
           style: TextStyle(
-            fontSize: 18.0,
+            fontSize: 16.0,
             fontWeight: FontWeight.w900,
             color: headerTextColor,
             letterSpacing: 0.5,
@@ -618,11 +616,21 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: EducationWatermarkBackground(
-        isDarkMode: widget.isDarkMode,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: bgColor,
+          image: DecorationImage(
+            image: const AssetImage('assets/images/education_bg_pattern.png'),
+            repeat: ImageRepeat.repeat,
+            opacity: isLight ? 0.06 : 0.015,
+            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white, BlendMode.difference),
+          ),
+        ),
         child: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1120,7 +1128,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           ),
         ),
       ),
-    ),
     );
   }
 }

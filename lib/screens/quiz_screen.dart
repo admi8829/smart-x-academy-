@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_helper.dart';
-import '../widgets/education_watermark_background.dart';
 
 class QuizQuestion {
   final String questionText;
@@ -1290,46 +1289,55 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ],
       ),
-      body: EducationWatermarkBackground(
-        isDarkMode: !isLight,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+          image: DecorationImage(
+            image: const AssetImage('assets/images/education_bg_pattern.png'),
+            repeat: ImageRepeat.repeat,
+            opacity: isLight ? 0.06 : 0.015,
+            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white, BlendMode.difference),
+          ),
+        ),
         child: SafeArea(
           child: Column(
             children: [
-              Expanded(
-                child: _quizFinished
-                    ? _buildResultsView(isLight, primaryBlue)
-                    : _buildQuestionsView(isLight, primaryBlue),
-              ),
-              
-              // --- Bottom Anchor AdMob Banner ---
-              if (_isBannerAdLoaded && _bannerAd != null)
-                Container(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  color: Colors.transparent,
-                  alignment: Alignment.center,
-                  child: AdWidget(ad: _bannerAd!),
-                )
-              else
-                // Elegant tiny matching space fallback (no jarring layout shift)
-                Container(
-                  height: 50,
-                  color: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.ad_units, size: 14, color: Colors.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Banner Ad Area (Test AdMob Loaded)",
-                        style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                      ),
-                    ],
-                  ),
+            Expanded(
+              child: _quizFinished
+                  ? _buildResultsView(isLight, primaryBlue)
+                  : _buildQuestionsView(isLight, primaryBlue),
+            ),
+            
+            // --- Bottom Anchor AdMob Banner ---
+            if (_isBannerAdLoaded && _bannerAd != null)
+              Container(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                color: Colors.transparent,
+                alignment: Alignment.center,
+                child: AdWidget(ad: _bannerAd!),
+              )
+            else
+              // Elegant tiny matching space fallback (no jarring layout shift)
+              Container(
+                height: 50,
+                color: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.ad_units, size: 14, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Banner Ad Area (Test AdMob Loaded)",
+                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                    ),
+                  ],
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
