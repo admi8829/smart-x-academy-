@@ -768,7 +768,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   backgroundColor: const Color(0xFF1E293B),
                                   content: Row(
                                     children: const [
-                                      Icon(Icons.check_circle_rounded, color: Colors.emerald, size: 20),
+                                      Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 20),
                                       SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
