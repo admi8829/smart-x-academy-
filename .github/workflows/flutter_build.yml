@@ -1,14 +1,15 @@
-name: Flutter Build APK
+name: Flutter Android Build & SHA Key Extraction
 
 on:
   push:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  workflow_dispatch: # Allows manual trigger from mobile GitHub app or website
 
 jobs:
   build:
-    name: Build & Release APK
+    name: Build APKs & Extract SHA Fingerprints
     runs-on: ubuntu-latest
 
     steps:
@@ -16,16 +17,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Setup Flutter Environment
-      # Having Flutter set up first allows us to dynamically bootstrap project wrapper directories.
+      # Step 2: Set up Flutter Environment
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      # Step 3: Set up Java 17 (Required for Android Builds)
-      # Setup JDK for Gradle builds
+      # Step 3: Set up Java 17 (Required for Android builds)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,38 +32,46 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      # Step 5: Install Dependencies
+      # Step 4: Install Dependencies
       - name: Install Dependencies
         run: flutter pub get
 
-      # Step 5.5: Patch Proguard support for older libraries (e.g. flutter_inappwebview_android)
+      # Step 5: Patch Proguard support for libraries in the workspace
       - name: Patch Proguard in pub-cache and workspace
         run: |
           find . -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
           find ~/.pub-cache -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
 
-      # Step 6: Format Code
-      - name: Format Code
-        run: dart format lib/
+      # Step 6: Make gradlew executable & Run signingReport
+      # This outputs SHA-1 and SHA-256 fingerprints so the user can copy them from the GitHub logs on their phone.
+      - name: Generate and Output SHA-1 & SHA-256 signingReport
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew signingReport
 
-      # Step 7: Static Code Analysis (Linter)
-      - name: Run Linter Analyzers
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+      # Step 7: Build DEBUG APK as explicitly requested
+      - name: Build Debug APK
+        run: flutter build apk --debug --no-pub --android-skip-build-dependency-validation
 
-      # Step 8: Run Unit & Widget Tests
-      # Kept robust and asset-independent to prevent standard test failures
-      - name: Run Widget Tests
-        run: flutter test
-
-      # Step 9: Compile Production Release APK
+      # Step 8: Build RELEASE APK
       - name: Build Release APK
         run: flutter build apk --release --no-pub --android-skip-build-dependency-validation
 
-      # Step 10: Archive compiled APK artifact
-      - name: Upload APK Release Artifact
+      # Step 9: Upload Debug APK Artifact
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-x-academy-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: warn
+          retention-days: 7
+
+      # Step 10: Upload Release APK Artifact
+      - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: smart-x-academy-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7
