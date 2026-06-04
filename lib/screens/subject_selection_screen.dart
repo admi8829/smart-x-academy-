@@ -311,40 +311,38 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
             ),
             const SizedBox(height: 12.0),
 
-            // Premium Floating interactive action button with play button matching user request
+            // Premium solid full-width rectangular start course button with customized vibrant background and glowing shadow
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 9),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF2D3748),
-                borderRadius: BorderRadius.circular(16.0),
+                color: color, // Attractive subject-specific background color!
+                borderRadius: BorderRadius.zero, // Sleek rectangular format - removed border radius!
                 boxShadow: [
                   BoxShadow(
-                    color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.04) 
-                        : Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 0,
+                    color: color.withValues(alpha: 0.45),
+                    blurRadius: 12.0,
+                    offset: const Offset(0, 5),
+                    spreadRadius: 1,
                   )
                 ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.play_circle_fill_rounded,
-                    color: isLight ? color : Colors.white,
-                    size: 13,
+                    color: Colors.white,
+                    size: 15,
                   ),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 6),
                   Text(
                     _local('btn_start'),
-                    style: TextStyle(
-                      color: isLight ? const Color(0xFF4C6B94) : Colors.white,
-                      fontSize: 11.5,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: 0.1,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],

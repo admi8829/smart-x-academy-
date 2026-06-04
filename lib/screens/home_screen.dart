@@ -50,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'nav_courses': 'Courses',
       'nav_profile': 'Profile',
       'nav_settings': 'Settings',
+      'start_course_btn': 'Start Course',
     },
     'am': {
       'title': 'ስማርት ኤክስ አካዳሚ',
@@ -68,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'nav_courses': 'ኮርሶች',
       'nav_profile': 'መገለጫ',
       'nav_settings': 'ማስተካከያዎች',
+      'start_course_btn': 'ኮርስ ጀምር',
     }
   };
 
@@ -627,32 +629,30 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 14.0),
-            // Premium full-width floating white Start Course button with neutral steel blue font color
+            // Premium full-width floating rectangular Start Course button with custom glowing shadow
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 11),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF2D3748),
-                borderRadius: BorderRadius.circular(16.0),
+                color: btnColor,
+                borderRadius: BorderRadius.zero, // Rectangular format - removed border radius!
                 boxShadow: [
                   BoxShadow(
-                    color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.03) 
-                        : Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 0,
+                    color: btnColor.withValues(alpha: 0.45),
+                    blurRadius: 12.0,
+                    offset: const Offset(0, 6),
+                    spreadRadius: 1,
                   )
                 ],
               ),
               child: Text(
-                "Start Course",
+                _local('start_course_btn'),
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isLight ? const Color(0xFF4C6B94) : Colors.white,
+                style: const TextStyle(
+                  color: Colors.white,
                   fontSize: 13.5,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.1,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.6,
                 ),
               ),
             ),
