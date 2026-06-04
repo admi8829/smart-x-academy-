@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
+import 'unit_selection_screen.dart';
 
 class SubjectSelectionScreen extends StatefulWidget {
   final int grade;
@@ -101,12 +102,20 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     ];
   }
 
-  void _navigateToQuizScreen(String subjectId) {
+  void _navigateToUnitSelectionScreen(Map<String, dynamic> subject) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => QuizScreen(
+        builder: (context) => UnitSelectionScreen(
           grade: widget.grade,
-          subject: subjectId,
+          subjectId: subject['id'],
+          enTitle: subject['enTitle'],
+          amTitle: subject['amTitle'],
+          color: subject['color'],
+          icon: subject['illustration'],
+          isDarkMode: widget.isDarkMode,
+          languageCode: widget.languageCode,
+          onToggleTheme: widget.onToggleTheme,
+          onToggleLanguage: widget.onToggleLanguage,
         ),
       ),
     );
@@ -212,7 +221,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     color: subject['color'],
                     illustration: subject['illustration'],
                     isLight: isLight,
-                    onTap: () => _navigateToQuizScreen(subject['id']),
+                    onTap: () => _navigateToUnitSelectionScreen(subject),
                   );
                 },
               ),
