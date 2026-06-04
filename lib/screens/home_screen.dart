@@ -28,6 +28,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isPlaying = false;
   late AnimationController _fadeController;
 
+  // --- PDF Preview Mode State ---
+  int _pdfCurrentPage = 1;
+  final int _pdfTotalPages = 3;
+
+  final List<Map<String, String>> _pdfPageContents = [
+    {
+      'header': 'Chapter 1: Limits & Continuity (G12 Math)',
+      'body': '• A limit is the value that a function approaches as the input approaches some value.\n• Theorem: Limit of f(x) as x approaches c exists iff right-side and left-side limits are equal.\n• Definition: f(x) is continuous at c iff lim[x->c] f(x) exists and equals f(c).\n• Formula: f\'(c) = lim[h->0] (f(c+h) - f(c))/h.',
+    },
+    {
+      'header': 'Chapter 2: Derivative Rules Cheat Sheet',
+      'body': '• Power Rule: d/dx [x^n] = n * x^(n-1)\n• Product Rule: d/dx [u*v] = u\'*v + u*v\'\n• Chain Rule: d/dx [f(g(x))] = f\'(g(x)) * g\'(x)\n• Quotient Rule: d/dx [u/v] = (u\'*v - u*v\') / v^2.',
+    },
+    {
+      'header': 'Chapter 3: Integration & Area Fundamentals',
+      'body': '• Anti-derivative represents the area under the curve f(x).\n• Fundamental Theorem of Calculus: ∫[a to b] f(x)dx = F(b) - F(a) where F\'(x) = f(x).\n• Common Antiderivatives:\n  - ∫ x^n dx = (x^(n+1))/(n+1) + C,  n != -1\n  - ∫ (1/x) dx = ln|x| + C.',
+    },
+  ];
+
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
@@ -54,6 +73,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'start_course_btn': 'Start Course',
       'featured_title': 'Today\'s Featured Lessons',
       'featured_sub': 'Select a lesson below to watch instantly in the player.',
+      'pdf_preview_title': 'PDF Study Material Preview',
+      'pdf_preview_sub': 'Interactive quick summary cheat cards. Switch pages below.',
+      'pdf_prev_btn': 'Prev',
+      'pdf_next_btn': 'Next',
+      'pdf_download_btn': 'Download PDF',
+      'pdf_page_label': 'Page',
     },
     'am': {
       'title': 'ስማርት ኤክስ አካዳሚ',
@@ -75,6 +100,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'start_course_btn': 'ኮርስ ጀምር',
       'featured_title': 'የዛሬው ልዩ ትምህርቶች',
       'featured_sub': 'በቀጥታ ለመመልከት ከታች ካሉት ቪዲዮዎች አንዱን ይምረጡ።',
+      'pdf_preview_title': 'የፒዲኤፍ ማጠቃለያ ማሳያ',
+      'pdf_preview_sub': 'በይነተገናኝ አጫጭር የጥናት ካርዶች። ገጾችን ከታች ይቀይሩ።',
+      'pdf_prev_btn': 'ቀዳሚ',
+      'pdf_next_btn': 'ቀጣይ',
+      'pdf_download_btn': 'ማውረድ (PDF)',
+      'pdf_page_label': 'ገጽ',
     }
   };
 
@@ -396,7 +427,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Index 0: Video Tutorial Section
+          // Index 0: Interactive PDF Short Material Preview
           _animateItem(
             index: 0,
             child: Container(
@@ -405,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 gradient: LinearGradient(
                   colors: isLight 
                       ? [Colors.white, const Color(0xFFFBFDFF)] 
-                      : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
+                      : [const Color(0xFF1E293B), const Color(0xFF0F172A)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -423,158 +454,333 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.all(14.0),
+                padding: const EdgeInsets.all(18.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // YouTube simulated video viewport
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(18.0),
-                      child: Stack(
-                        alignment: Alignment.center,
+                    // PDF Badge Header row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE53935).withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8.0),
+                                border: Border.all(color: const Color(0xFFE53935), width: 1.0),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.picture_as_pdf_rounded, color: Color(0xFFE53935), size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    "PDF PREVIEW",
+                                    style: TextStyle(
+                                      color: const Color(0xFFE53935),
+                                      fontSize: 10.0,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.5, vertical: 5.0),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1E88E5).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: const Text(
+                                "Grade 12",
+                                style: TextStyle(
+                                  color: Color(0xFF1E88E5),
+                                  fontSize: 10.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Quick info / page indicator
+                        Text(
+                          "${_local('pdf_page_label')} $_pdfCurrentPage / $_pdfTotalPages",
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.bold,
+                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12.0),
+                    // Title and subtitle
+                    Text(
+                      _local('pdf_preview_title'),
+                      style: TextStyle(
+                        fontSize: 19.0,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        letterSpacing: -0.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      _local('pdf_preview_sub'),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+                    
+                    // Interactive PDF Document Sheet Canvas
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: isLight ? const Color(0xFFFDFDFD) : const Color(0xFF181F2F),
+                        borderRadius: BorderRadius.circular(18.0),
+                        border: Border.all(
+                          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                          width: 1.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8.0,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _isPlaying
-                              ? YoutubePlayer(
-                                  controller: _ytController,
-                                  showVideoProgressIndicator: true,
-                                )
-                              : Stack(
+                          // Sheet top accent ruler line (simulates real notebook/PDF header)
+                          Container(
+                            height: 4,
+                            width: double.infinity,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE53935), // Red top spine accent
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(18.0)),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Page Header Topic Text
+                                Row(
                                   children: [
-                                    // Video Thumbnail Placeholder
-                                    Container(
-                                      height: 200,
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
-                                      ),
-                                      child: Image.network(
-                                        'https://img.youtube.com/vi/K_js8HXa8VM/maxresdefault.jpg',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Image.network(
-                                            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
-                                            fit: BoxFit.cover,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    // Dark overlay tint for visual contrast
-                                    Positioned.fill(
-                                      child: Container(
-                                        color: Colors.black.withValues(alpha: 0.32),
-                                      ),
-                                    ),
-                                    // Elegant Play Button (Center-aligned with premium animation pulse look)
-                                    Positioned.fill(
-                                      child: Align(
-                                        alignment: Alignment.center,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            setState(() {
-                                              _isPlaying = true;
-                                            });
-                                            _ytController.play();
-                                          },
-                                          child: Container(
-                                            width: 64,
-                                            height: 64,
-                                            decoration: BoxDecoration(
-                                              gradient: const LinearGradient(
-                                                colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withValues(alpha: 0.25),
-                                                  blurRadius: 12,
-                                                  offset: const Offset(0, 4),
-                                                ),
-                                                BoxShadow(
-                                                  color: const Color(0xFF1E88E5).withValues(alpha: 0.4),
-                                                  blurRadius: 20,
-                                                  spreadRadius: 4,
-                                                )
-                                              ],
-                                            ),
-                                            child: const Icon(
-                                              Icons.play_arrow_rounded,
-                                              color: Colors.white,
-                                              size: 42,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // Top Title overlay (looks premium like floating UI)
-                                    Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                                        decoration: const BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [Colors.black54, Colors.transparent],
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: const BoxDecoration(
-                                                color: Colors.white,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFF1E88E5)),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            const Expanded(
-                                              child: Text(
-                                                "Welcome to Smart X Academy Tutorial",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12.5,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.1,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
+                                    const Icon(Icons.bookmark_added_rounded, color: Color(0xFF1E88E5), size: 16),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        _pdfPageContents[_pdfCurrentPage - 1]['header']!,
+                                        style: TextStyle(
+                                          fontSize: 14.0,
+                                          fontWeight: FontWeight.w900,
+                                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 8),
+                                Divider(height: 1.0, thickness: 1.0, color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+                                const SizedBox(height: 12),
+                                // Page Content Body Text with custom margins and heights
+                                Text(
+                                  _pdfPageContents[_pdfCurrentPage - 1]['body']!,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    height: 1.6,
+                                    fontFamily: 'Courier', // Nice monospace look for math representations
+                                    fontWeight: FontWeight.w600,
+                                    color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Smart X Academy • Advanced Math",
+                                      style: TextStyle(
+                                        fontSize: 10.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                    Text(
+                                      "${_local('pdf_page_label')} $_pdfCurrentPage of $_pdfTotalPages",
+                                      style: TextStyle(
+                                        fontSize: 10.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14.0),
-                    // Bottom caption matching image with elegant play icon
+                    const SizedBox(height: 16.0),
+                    
+                    // Inline Control Panel Bar (Prev, Indicator, Next, Download)
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2.0, right: 8.0),
-                          child: Icon(
-                            Icons.play_lesson_rounded,
-                            color: isLight ? const Color(0xFF0084FF) : const Color(0xFF38BDF8),
-                            size: 16,
+                        // Previous page button
+                        Expanded(
+                          child: InkWell(
+                            onTap: _pdfCurrentPage > 1 
+                                ? () {
+                                    setState(() {
+                                      _pdfCurrentPage--;
+                                    });
+                                  }
+                                : null,
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _pdfCurrentPage > 1 
+                                    ? (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155))
+                                    : (isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B)),
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(
+                                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.arrow_back_ios_new_rounded, 
+                                    size: 13, 
+                                    color: _pdfCurrentPage > 1 
+                                        ? (isLight ? const Color(0xFF334155) : Colors.white)
+                                        : Colors.grey,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _local('pdf_prev_btn'),
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: _pdfCurrentPage > 1 
+                                          ? (isLight ? const Color(0xFF334155) : Colors.white)
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 10),
+                        // Next page button
                         Expanded(
-                          child: Text(
-                            _local('tutorial_desc'),
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              height: 1.35,
-                              fontWeight: FontWeight.w700,
-                              color: isLight ? const Color(0xFF334155) : Colors.white,
+                          child: InkWell(
+                            onTap: _pdfCurrentPage < _pdfTotalPages 
+                                ? () {
+                                    setState(() {
+                                      _pdfCurrentPage++;
+                                    });
+                                  }
+                                : null,
+                            borderRadius: BorderRadius.circular(12.0),
+                            child: Container(
+                              height: 40,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: _pdfCurrentPage < _pdfTotalPages 
+                                    ? (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155))
+                                    : (isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B)),
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(
+                                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                                  width: 1.0,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _local('pdf_next_btn'),
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: _pdfCurrentPage < _pdfTotalPages 
+                                          ? (isLight ? const Color(0xFF334155) : Colors.white)
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded, 
+                                    size: 13, 
+                                    color: _pdfCurrentPage < _pdfTotalPages 
+                                        ? (isLight ? const Color(0xFF334155) : Colors.white)
+                                        : Colors.grey,
+                                  ),
+                                ],
+                              ),
                             ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Download full PDF button
+                        Container(
+                          width: 46,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFE53935), Color(0xFFC62828)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFE53935).withValues(alpha: 0.2),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.download_rounded, color: Colors.white, size: 18),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  backgroundColor: const Color(0xFF1E293B),
+                                  content: Row(
+                                    children: const [
+                                      Icon(Icons.check_circle_rounded, color: Colors.emerald, size: 20),
+                                      SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          "Downloading G12 limits study summary sheet PDF...",
+                                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -877,6 +1083,197 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 32.0),
+
+          // Index 4: Transferred Video Tutorial Section (moved from top to bottom)
+          _animateItem(
+            index: 4,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isLight 
+                      ? [Colors.white, const Color(0xFFFBFDFF)] 
+                      : [const Color(0xFF1F2937), const Color(0xFF0F172A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 26.0,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // YouTube simulated video viewport
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(18.0),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          _isPlaying
+                              ? YoutubePlayer(
+                                  controller: _ytController,
+                                  showVideoProgressIndicator: true,
+                                )
+                              : Stack(
+                                  children: [
+                                    // Video Thumbnail Placeholder
+                                    Container(
+                                      height: 200,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                                      ),
+                                      child: Image.network(
+                                        'https://img.youtube.com/vi/K_js8HXa8VM/maxresdefault.jpg',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Image.network(
+                                            'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    // Dark overlay tint for visual contrast
+                                    Positioned.fill(
+                                      child: Container(
+                                        color: Colors.black.withValues(alpha: 0.32),
+                                      ),
+                                    ),
+                                    // Elegant Play Button (Center-aligned with premium animation pulse look)
+                                    Positioned.fill(
+                                      child: Align(
+                                        alignment: Alignment.center,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _isPlaying = true;
+                                            });
+                                            _ytController.play();
+                                          },
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [Color(0xFF1E88E5), Color(0xFF0D47A1)],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.25),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                                BoxShadow(
+                                                  color: const Color(0xFF1E88E5).withValues(alpha: 0.4),
+                                                  blurRadius: 20,
+                                                  spreadRadius: 4,
+                                                )
+                                              ],
+                                            ),
+                                            child: const Icon(
+                                              Icons.play_arrow_rounded,
+                                              color: Colors.white,
+                                              size: 42,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Top Title overlay (looks premium like floating UI)
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+                                        decoration: const BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [Colors.black54, Colors.transparent],
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: const BoxDecoration(
+                                                color: Colors.white,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(Icons.play_circle_fill_rounded, size: 14, color: Color(0xFF1E88E5)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            const Expanded(
+                                              child: Text(
+                                                "Welcome to Smart X Academy Tutorial",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.1,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14.0),
+                    // Bottom caption matching image with elegant play icon
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0, right: 8.0),
+                          child: Icon(
+                            Icons.play_lesson_rounded,
+                            color: isLight ? const Color(0xFF0084FF) : const Color(0xFF38BDF8),
+                            size: 16,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            _local('tutorial_desc'),
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              height: 1.35,
+                              fontWeight: FontWeight.w700,
+                              color: isLight ? const Color(0xFF334155) : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
