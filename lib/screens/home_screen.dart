@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/ad_helper.dart';
-import 'quiz_screen.dart';
 import 'subject_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {

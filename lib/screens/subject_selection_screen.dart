@@ -621,9 +621,7 @@ class _WorldMapGeographyPainter extends CustomPainter {
     final double cx = size.width / 2.0;
     final double cy = size.height / 2.0;
 
-    final Paint mapPaint = Paint()
-      ..color = const Color(0xFF8E24AA)
-      ..style = PaintingStyle.fill;
+    final Paint mapPaint = Paint()..style = PaintingStyle.fill;
 
     // Draw stylized continents as connected organic shapes
     // Africa-like polygon shape
@@ -637,7 +635,7 @@ class _WorldMapGeographyPainter extends CustomPainter {
       ..lineTo(cx - 8, cy + 2)
       ..lineTo(cx - 6, cy - 4)
       ..close();
-    canvas.drawPath(africaPath, mapPaint.withValues(alpha: 0.85));
+    canvas.drawPath(africaPath, mapPaint..color = const Color(0xFF8E24AA).withValues(alpha: 0.85));
 
     // America-like shapes
     final Path northAmerica = Path()
@@ -646,7 +644,7 @@ class _WorldMapGeographyPainter extends CustomPainter {
       ..lineTo(cx - 12, cy - 4)
       ..lineTo(cx - 16, cy + 2)
       ..close();
-    canvas.drawPath(northAmerica, mapPaint.withValues(alpha: 0.4));
+    canvas.drawPath(northAmerica, mapPaint..color = const Color(0xFF8E24AA).withValues(alpha: 0.4));
 
     final Path southAmerica = Path()
       ..moveTo(cx - 16, cy + 4)
@@ -654,7 +652,7 @@ class _WorldMapGeographyPainter extends CustomPainter {
       ..lineTo(cx - 11, cy + 12)
       ..lineTo(cx - 15, cy + 14)
       ..close();
-    canvas.drawPath(southAmerica, mapPaint.withValues(alpha: 0.6));
+    canvas.drawPath(southAmerica, mapPaint..color = const Color(0xFF8E24AA).withValues(alpha: 0.6));
 
     // Asia/Europe shape
     final Path eurasia = Path()
@@ -664,7 +662,7 @@ class _WorldMapGeographyPainter extends CustomPainter {
       ..lineTo(cx + 11, cy - 2)
       ..lineTo(cx + 4, cy - 4)
       ..close();
-    canvas.drawPath(eurasia, mapPaint.withValues(alpha: 0.5));
+    canvas.drawPath(eurasia, mapPaint..color = const Color(0xFF8E24AA).withValues(alpha: 0.5));
 
     // Latitude longitude visual grid circle structure
     final Paint gridPaint = Paint()

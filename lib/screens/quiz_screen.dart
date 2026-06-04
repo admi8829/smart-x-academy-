@@ -1198,7 +1198,7 @@ class _QuizScreenState extends State<QuizScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.12),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -1421,7 +1421,7 @@ class _QuizScreenState extends State<QuizScreen> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isLight ? 0.05 : 0.25),
+                  color: Colors.black.withValues(alpha: isLight ? 0.05 : 0.25),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -1492,8 +1492,8 @@ class _QuizScreenState extends State<QuizScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? (isLight
-                                ? const Color(0xFF1E88E5).withOpacity(0.08)
-                                : const Color(0xFF38BDF8).withOpacity(0.12))
+                                ? const Color(0xFF1E88E5).withValues(alpha: 0.08)
+                                : const Color(0xFF38BDF8).withValues(alpha: 0.12))
                             : (isLight ? Colors.white : const Color(0xFF1E293B)),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -1505,7 +1505,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         boxShadow: [
                           if (!isSelected)
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
+                              color: Colors.black.withValues(alpha: 0.02),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -1598,7 +1598,7 @@ class _QuizScreenState extends State<QuizScreen> {
         color: isLight ? Colors.white : const Color(0xFF1E293B),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 8,
-        shadowColor: Colors.black.withOpacity(0.06),
+        shadowColor: Colors.black.withValues(alpha: 0.06),
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Column(
@@ -1610,7 +1610,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 width: 90,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: passed ? const Color(0xFF10B981).withOpacity(0.12) : Colors.red[500]!.withOpacity(0.12),
+                  color: passed ? const Color(0xFF10B981).withValues(alpha: 0.12) : Colors.red[500]!.withValues(alpha: 0.12),
                 ),
                 child: Icon(
                   passed ? Icons.emoji_events_rounded : Icons.sentiment_dissatisfied_rounded,
