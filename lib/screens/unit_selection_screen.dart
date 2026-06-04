@@ -1128,6 +1128,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

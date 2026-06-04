@@ -241,8 +241,9 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSubjectCard({
     required String amTitle,

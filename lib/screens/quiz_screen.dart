@@ -1340,8 +1340,9 @@ class _QuizScreenState extends State<QuizScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // --- QUESTIONS MAIN LAYOUT ---
   Widget _buildQuestionsView(bool isLight, Color primaryBlue) {
