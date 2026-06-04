@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/ad_helper.dart';
 import 'quiz_screen.dart';
+import 'subject_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -801,7 +802,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void _navigateToGradeScreen(int grade) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => QuizScreen(grade: grade),
+        builder: (context) => SubjectSelectionScreen(
+          grade: grade,
+          isDarkMode: widget.isDarkMode,
+          languageCode: widget.languageCode,
+          onToggleTheme: widget.onToggleTheme,
+          onToggleLanguage: widget.onToggleLanguage,
+        ),
       ),
     );
   }
