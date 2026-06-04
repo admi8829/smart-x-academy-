@@ -42,22 +42,30 @@ jobs:
           find . -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
           find ~/.pub-cache -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
 
-      # Step 6: Generate and Output SHA-1 & SHA-256 signingReport
+      # Step 6: Create default debug keystore
+      - name: Create default debug keystore
+        run: |
+          mkdir -p ~/.config/.android
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.config/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cp ~/.config/.android/debug.keystore ~/.android/debug.keystore
+
+      # Step 7: Generate and Output SHA-1 & SHA-256 signingReport
       # Runs global "gradle signingReport" in the "android" folder to bypass the missing local gradlew script.
       - name: Generate and Output SHA-1 & SHA-256 signingReport
         run: |
           cd android
           gradle signingReport
 
-      # Step 7: Build DEBUG APK as explicitly requested
+      # Step 8: Build DEBUG APK as explicitly requested
       - name: Build Debug APK
         run: flutter build apk --debug --no-pub --android-skip-build-dependency-validation
 
-      # Step 8: Build RELEASE APK
+      # Step 9: Build RELEASE APK
       - name: Build Release APK
         run: flutter build apk --release --no-pub --android-skip-build-dependency-validation
 
-      # Step 9: Upload Debug APK Artifact
+      # Step 10: Upload Debug APK Artifact
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -66,7 +74,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-      # Step 10: Upload Release APK Artifact
+      # Step 11: Upload Release APK Artifact
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
