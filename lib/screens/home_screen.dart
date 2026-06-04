@@ -502,7 +502,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                               Icons.play_arrow_rounded,
                                               color: Colors.white,
                                               size: 42,
-                                              id: "main_video_play_btn",
                                             ),
                                           ),
                                         ),
@@ -850,11 +849,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Icons.play_arrow_rounded,
                                             color: Colors.white,
                                             size: 13,
-                                            id: "arrow_watch_${video['id']}",
                                           ),
                                           const SizedBox(width: 4.0),
                                           const Text(
@@ -1393,16 +1391,4 @@ class GradeCoursesPage extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SubjectItem {
-  final String name;
-  final IconData icon;
-  final Color color;
-
-  const _SubjectItem({
-    required this.name,
-    required this.icon,
-    required this.color,
-  });
 }

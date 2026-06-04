@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'quiz_screen.dart';
 import 'unit_selection_screen.dart';
 
 class SubjectSelectionScreen extends StatefulWidget {
