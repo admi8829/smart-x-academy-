@@ -42,13 +42,12 @@ jobs:
           find . -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
           find ~/.pub-cache -name "build.gradle" -exec sed -i "s/proguard-android.txt/proguard-android-optimize.txt/g" {} +
 
-      # Step 6: Make gradlew executable & Run signingReport
-      # This outputs SHA-1 and SHA-256 fingerprints so the user can copy them from the GitHub logs on their phone.
+      # Step 6: Generate and Output SHA-1 & SHA-256 signingReport
+      # Runs global "gradle signingReport" in the "android" folder to bypass the missing local gradlew script.
       - name: Generate and Output SHA-1 & SHA-256 signingReport
         run: |
-          chmod +x android/gradlew
           cd android
-          ./gradlew signingReport
+          gradle signingReport
 
       # Step 7: Build DEBUG APK as explicitly requested
       - name: Build Debug APK
