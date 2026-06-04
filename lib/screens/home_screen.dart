@@ -220,48 +220,95 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: _buildCurrentTab(isLight),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              spreadRadius: 2,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(18.0, 0.0, 18.0, 24.0),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isLight ? Colors.white : const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(38.0),
+            border: Border.all(
+              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+              width: 1.5,
             ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: isLight ? Colors.white : const Color(0xFF1F2937),
-          selectedItemColor: const Color(0xFF1E88E5),
-          unselectedItemColor: isLight ? const Color(0xFF90A4AE) : const Color(0xFF64748B),
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.home_filled),
-              label: _local('nav_home'),
+            boxShadow: [
+              BoxShadow(
+                color: isLight 
+                    ? const Color(0xFF0F1B2B).withValues(alpha: 0.08) 
+                    : Colors.black.withValues(alpha: 0.4),
+                blurRadius: 28.0,
+                offset: const Offset(0, 10),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(38.0),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              elevation: 0,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              selectedItemColor: const Color(0xFF1E88E5),
+              unselectedItemColor: isLight ? const Color(0xFF2D3748) : const Color(0xFF94A3B8),
+              selectedFontSize: 12.5,
+              unselectedFontSize: 12.5,
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF1E88E5),
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: isLight ? const Color(0xFF212529) : const Color(0xFFA0AEC0),
+              ),
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4.0),
+                    child: Icon(
+                      Icons.home_rounded,
+                      size: 26,
+                    ),
+                  ),
+                  label: _local('nav_home'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4.0),
+                    child: Icon(
+                      Icons.book_outlined,
+                      size: 25,
+                    ),
+                  ),
+                  label: _local('nav_courses'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4.0),
+                    child: Icon(
+                      Icons.person_outline_rounded,
+                      size: 26,
+                    ),
+                  ),
+                  label: _local('nav_profile'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4.0),
+                    child: Icon(
+                      Icons.settings_outlined,
+                      size: 25,
+                    ),
+                  ),
+                  label: _local('nav_settings'),
+                ),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.book_outlined),
-              label: _local('nav_courses'),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
-              label: _local('nav_profile'),
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.settings_outlined),
-              label: _local('nav_settings'),
-            ),
-          ],
+          ),
         ),
       ),
     );
