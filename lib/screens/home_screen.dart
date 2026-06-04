@@ -476,74 +476,103 @@ class _HomeScreenState extends State<HomeScreen> {
           
           const SizedBox(height: 24.0),
           
-          // Explore section title matching image
-          Text(
-            _local('explore_title'),
-            style: TextStyle(
-              fontSize: 22.0,
-              fontWeight: FontWeight.w900,
-              color: isLight ? const Color(0xFF0D2353) : Colors.white,
-              letterSpacing: -0.5,
+          // One general box for the educational menu (grades 9-12 selector) matching the YouTube player card style
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLight 
+                    ? [Colors.white, const Color(0xFFF8FAFC)] 
+                    : [const Color(0xFF1F2937), const Color(0xFF111827)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24.0),
+              border: Border.all(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isLight ? const Color(0xFF0D2353).withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 16.0,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4.0),
-          Text(
-            _local('explore_sub'),
-            style: TextStyle(
-              fontSize: 14.0,
-              fontWeight: FontWeight.w500,
-              color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+            padding: const EdgeInsets.all(18.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Explore section title matching image
+                Text(
+                  _local('explore_title'),
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  _local('explore_sub'),
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w500,
+                    color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
+                  ),
+                ),
+                const SizedBox(height: 20.0),
+                // 2x2 Clean Grid Layout matching the custom AspectRatio and spacing in the image
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 14.0,
+                  mainAxisSpacing: 14.0,
+                  childAspectRatio: 1.05, // Visually perfect square-ish aspect ratio matching the image
+                  children: [
+                    // Grade 9
+                    _buildGradeCard(
+                      title: _local('g9_title'),
+                      subtitle: _local('g9_sub'),
+                      illustration: _buildScrollIllustration(),
+                      btnColor: const Color(0xFF0084FF),
+                      isLight: isLight,
+                      onTap: () => _navigateToGradeScreen(9),
+                    ),
+                    // Grade 10
+                    _buildGradeCard(
+                      title: _local('g10_title'),
+                      subtitle: _local('g10_sub'),
+                      illustration: _buildShieldIllustration(),
+                      btnColor: const Color(0xFF10B981),
+                      isLight: isLight,
+                      onTap: () => _navigateToGradeScreen(10),
+                    ),
+                    // Grade 11
+                    _buildGradeCard(
+                      title: _local('g11_title'),
+                      subtitle: _local('g11_sub'),
+                      illustration: _buildOrbitIllustration(),
+                      btnColor: const Color(0xFFF59E0B),
+                      isLight: isLight,
+                      onTap: () => _navigateToGradeScreen(11),
+                    ),
+                    // Grade 12
+                    _buildGradeCard(
+                      title: _local('g12_title'),
+                      subtitle: _local('g12_sub'),
+                      illustration: _buildGraduateIllustration(),
+                      btnColor: const Color(0xFF8B5CF6),
+                      isLight: isLight,
+                      onTap: () => _navigateToGradeScreen(12),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          
-          const SizedBox(height: 20.0),
-          
-          // 2x2 Clean Grid Layout matching the custom AspectRatio and spacing in the image
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 16.0,
-            mainAxisSpacing: 16.0,
-            childAspectRatio: 1.05, // Visually perfect square-ish aspect ratio matching the image
-            children: [
-              // Grade 9
-              _buildGradeCard(
-                title: _local('g9_title'),
-                subtitle: _local('g9_sub'),
-                illustration: _buildScrollIllustration(),
-                btnColor: const Color(0xFF0084FF),
-                isLight: isLight,
-                onTap: () => _navigateToGradeScreen(9),
-              ),
-              // Grade 10
-              _buildGradeCard(
-                title: _local('g10_title'),
-                subtitle: _local('g10_sub'),
-                illustration: _buildShieldIllustration(),
-                btnColor: const Color(0xFF10B981),
-                isLight: isLight,
-                onTap: () => _navigateToGradeScreen(10),
-              ),
-              // Grade 11
-              _buildGradeCard(
-                title: _local('g11_title'),
-                subtitle: _local('g11_sub'),
-                illustration: _buildOrbitIllustration(),
-                btnColor: const Color(0xFFF59E0B),
-                isLight: isLight,
-                onTap: () => _navigateToGradeScreen(11),
-              ),
-              // Grade 12
-              _buildGradeCard(
-                title: _local('g12_title'),
-                subtitle: _local('g12_sub'),
-                illustration: _buildGraduateIllustration(),
-                btnColor: const Color(0xFF8B5CF6),
-                isLight: isLight,
-                onTap: () => _navigateToGradeScreen(12),
-              ),
-            ],
           ),
           
           const SizedBox(height: 24.0),
@@ -642,13 +671,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 12.0),
-            // Premium full-width floating rounded-rectangular Start Course button matching the design image 100% exactly
+            // Premium full-width rectangular Start Course button matching the user's design requirement
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: isLight ? Colors.white : const Color(0xFF2D3748),
-                borderRadius: BorderRadius.circular(16.0), // Rounded corners matching the image!
+                borderRadius: BorderRadius.zero, // Sleek rectangular format - zero border radius!
                 boxShadow: [
                   BoxShadow(
                     color: isLight 
