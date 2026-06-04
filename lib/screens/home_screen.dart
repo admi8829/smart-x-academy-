@@ -577,20 +577,20 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           // Warm cream beige color matches the screenshot perfectly for light mode
-          color: isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(26.0),
+          color: isLight ? const Color(0xFFFAF8F5) : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(32.0),
           boxShadow: [
             BoxShadow(
               color: isLight 
-                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
+                  ? const Color(0xFF1E293B).withValues(alpha: 0.05) 
                   : Colors.black.withValues(alpha: 0.35),
-              blurRadius: 24.0,
+              blurRadius: 28.0,
               offset: const Offset(0, 10),
               spreadRadius: 0,
             )
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        padding: const EdgeInsets.fromLTRB(18.0, 20.0, 18.0, 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -608,9 +608,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 18.0,
+                            fontSize: 19.0,
                             fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                            color: isLight ? const Color(0xFF0F2537) : Colors.white,
                             letterSpacing: -0.4,
                           ),
                         ),
@@ -620,10 +620,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 12.0,
-                            height: 1.3,
-                            fontWeight: FontWeight.w600,
-                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            fontSize: 12.5,
+                            height: 1.25,
+                            fontWeight: FontWeight.w500,
+                            color: isLight ? const Color(0xFF718096) : const Color(0xFFA0AEC0),
                           ),
                         ),
                       ],
@@ -641,31 +641,32 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14.0),
-            // Premium full-width floating rectangular Start Course button with custom glowing shadow
+            const SizedBox(height: 12.0),
+            // Premium full-width floating rounded-rectangular Start Course button matching the design image 100% exactly
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: btnColor,
-                borderRadius: BorderRadius.zero, // Rectangular format - removed border radius!
+                color: isLight ? Colors.white : const Color(0xFF2D3748),
+                borderRadius: BorderRadius.circular(16.0), // Rounded corners matching the image!
                 boxShadow: [
                   BoxShadow(
-                    color: btnColor.withValues(alpha: 0.45),
-                    blurRadius: 12.0,
-                    offset: const Offset(0, 6),
-                    spreadRadius: 1,
+                    color: isLight 
+                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.07) 
+                        : Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, 4),
                   )
                 ],
               ),
               child: Text(
                 _local('start_course_btn'),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isLight ? const Color(0xFF4C6B94) : Colors.white,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
