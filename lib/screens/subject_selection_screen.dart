@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/education_watermark_background.dart';
 import 'quiz_screen.dart';
 import 'unit_selection_screen.dart';
 
@@ -126,14 +127,14 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     final bool isLight = !widget.isDarkMode;
     final subjects = _getSubjects();
 
-    // Matching responsive top UI alignment and clean off-white platform canvas background
-    final Color bgColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    // Matching responsive top UI alignment and clean off-white platform canvas background (very light grayish-blue)
+    final Color bgColor = isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
 
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        elevation: 0.0,
+        elevation: 0.5,
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: headerTextColor, size: 20),
@@ -142,33 +143,35 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
         title: Text(
           _local('title'),
           style: TextStyle(
-            fontSize: 16.0,
+            fontSize: 18.0,
             fontWeight: FontWeight.w900,
             color: headerTextColor,
             letterSpacing: 0.5,
           ),
         ),
         actions: [
-          // Elegant language option toggle matching parent structure
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          // Elegant language option toggle displaying a single unified language label
+          GestureDetector(
+            onTap: widget.onToggleLanguage,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.g_translate_rounded, size: 14, color: headerTextColor),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 5),
                   Text(
-                    widget.languageCode.toUpperCase(),
-                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: headerTextColor),
+                    widget.languageCode == 'en' ? "English" : "አማርኛ",
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w900, color: headerTextColor),
                   ),
                 ],
               ),
             ),
-            onPressed: widget.onToggleLanguage,
           ),
           // Elegant theme mode toggles
           IconButton(
@@ -182,50 +185,53 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Beautiful descriptive subtitle
-              Padding(
-                padding: const EdgeInsets.only(bottom: 22.0),
-                child: Text(
-                  _local('subtitle'),
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+      body: EducationWatermarkBackground(
+        isDarkMode: widget.isDarkMode,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Beautiful descriptive subtitle
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 22.0),
+                  child: Text(
+                    _local('subtitle'),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
-              ),
-
-              // 2-Column Responsive Bento Grid matching requested design aspect perfectly
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 18.0,
-                  childAspectRatio: 0.98, // Ideal aspect ratio for cards so we fit all text plus floating button beautifully
+  
+                // 2-Column Responsive Bento Grid matching requested design aspect perfectly
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 18.0,
+                    childAspectRatio: 0.98, // Ideal aspect ratio for cards so we fit all text plus floating button beautifully
+                  ),
+                  itemCount: subjects.length,
+                  itemBuilder: (context, index) {
+                    final subject = subjects[index];
+                    return _buildSubjectCard(
+                      amTitle: subject['amTitle'],
+                      enTitle: subject['enTitle'],
+                      color: subject['color'],
+                      illustration: subject['illustration'],
+                      isLight: isLight,
+                      onTap: () => _navigateToUnitSelectionScreen(subject),
+                    );
+                  },
                 ),
-                itemCount: subjects.length,
-                itemBuilder: (context, index) {
-                  final subject = subjects[index];
-                  return _buildSubjectCard(
-                    amTitle: subject['amTitle'],
-                    enTitle: subject['enTitle'],
-                    color: subject['color'],
-                    illustration: subject['illustration'],
-                    isLight: isLight,
-                    onTap: () => _navigateToUnitSelectionScreen(subject),
-                  );
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -240,21 +246,21 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     required bool isLight,
     required VoidCallback onTap,
   }) {
+    final String activeTitle = widget.languageCode == 'en' ? enTitle : amTitle;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          // Soft warm cream beige color or elegant dark slate
-          color: isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(26.0),
+          // Striking subject-specific attractive background color
+          color: color,
+          borderRadius: BorderRadius.zero, // Sleek rectangular format - removed border radius!
           boxShadow: [
             BoxShadow(
-              color: isLight 
-                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
-                  : Colors.black.withValues(alpha: 0.35),
-              blurRadius: 24.0,
-              offset: const Offset(0, 10),
-              spreadRadius: 0,
+              color: color.withValues(alpha: 0.4),
+              blurRadius: 14.0,
+              offset: const Offset(0, 7),
+              spreadRadius: 1,
             )
           ],
         ),
@@ -262,7 +268,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Upper Content: Titles and Custom illustrations
+            // Upper Content: Title and Custom illustration
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,26 +278,25 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          amTitle,
+                          activeTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 20.0,
+                          style: const TextStyle(
+                            fontSize: 18.0,
                             fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                            height: 1.15,
+                            color: Colors.white,
+                            height: 1.2,
                             letterSpacing: -0.3,
                           ),
                         ),
-                        const SizedBox(height: 3.0),
+                        const SizedBox(height: 4.0),
                         Text(
-                          enTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          widget.languageCode == 'en' ? "GRADE ${widget.grade}" : "ክፍል ${widget.grade}",
                           style: TextStyle(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.bold,
-                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white.withValues(alpha: 0.8),
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
@@ -299,8 +304,8 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                   ),
                   const SizedBox(width: 4),
                   SizedBox(
-                    height: 48,
-                    width: 48,
+                    height: 44,
+                    width: 44,
                     child: FittedBox(
                       fit: BoxFit.contain,
                       child: illustration,
@@ -311,36 +316,28 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
             ),
             const SizedBox(height: 12.0),
 
-            // Premium solid full-width rectangular start course button with customized vibrant background and glowing shadow
+            // Premium solid full-width rectangular start course button with white contrast background
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: color, // Attractive subject-specific background color!
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              decoration: const BoxDecoration(
+                color: Colors.white, // High-contrast clean white background button
                 borderRadius: BorderRadius.zero, // Sleek rectangular format - removed border radius!
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.45),
-                    blurRadius: 12.0,
-                    offset: const Offset(0, 5),
-                    spreadRadius: 1,
-                  )
-                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.play_circle_fill_rounded,
-                    color: Colors.white,
-                    size: 15,
+                    color: color,
+                    size: 14,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     _local('btn_start'),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.5,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12.0,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
                     ),

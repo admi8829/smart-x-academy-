@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/ad_helper.dart';
+import '../widgets/education_watermark_background.dart';
 import 'subject_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -139,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool isLight = !widget.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
+      backgroundColor: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
       appBar: AppBar(
         scrolledUnderElevation: 0,
         backgroundColor: isLight ? Colors.white : const Color(0xFF1F2937),
@@ -173,14 +174,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: widget.onToggleTheme,
           ),
           
-          // Compact, elegant language globe button matching design with EN/አማ
+          // Compact, elegant language globe button showing a single dedicated language text
           GestureDetector(
             onTap: widget.onToggleLanguage,
             child: Container(
               margin: const EdgeInsets.only(right: 16, left: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF374151),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -191,12 +192,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     size: 18,
                     color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 5),
                   Text(
-                    "EN/አማ",
+                    widget.languageCode == 'en' ? "English" : "አማርኛ",
                     style: TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                       color: isLight ? const Color(0xFF0D2353) : Colors.white,
                     ),
                   ),
@@ -206,7 +207,10 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-      body: _buildCurrentTab(isLight),
+      body: EducationWatermarkBackground(
+        isDarkMode: widget.isDarkMode,
+        child: _buildCurrentTab(isLight),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [

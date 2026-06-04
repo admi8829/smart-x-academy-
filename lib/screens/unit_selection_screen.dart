@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/education_watermark_background.dart';
 import 'quiz_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
@@ -569,7 +570,8 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isLight = !widget.isDarkMode;
-    final Color bgColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    // Premium very light grayish-blue background color
+    final Color bgColor = isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A);
     final Color cardBgColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
@@ -585,7 +587,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        elevation: 0.0,
+        elevation: 0.5,
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: headerTextColor, size: 20),
@@ -594,7 +596,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
         title: Text(
           widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
           style: TextStyle(
-            fontSize: 16.0,
+            fontSize: 18.0,
             fontWeight: FontWeight.w900,
             color: headerTextColor,
             letterSpacing: 0.5,
@@ -616,7 +618,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SafeArea(
+      body: EducationWatermarkBackground(
+        isDarkMode: widget.isDarkMode,
+        child: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
@@ -1116,6 +1120,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
