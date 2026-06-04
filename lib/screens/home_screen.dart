@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
+import 'register_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -1652,7 +1653,90 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _buildStatColumn("Completed", "18 lessons", Icons.check_circle_outline, Colors.green),
                 _buildStatColumn("Avg Score", "94%", Icons.emoji_events_outlined, Colors.purple),
               ],
-            )
+            ),
+            const SizedBox(height: 32),
+            // Beautiful interactive Firebase Register/Profile Settings Entry
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.0,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.security_rounded,
+                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                    size: 36,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    widget.languageCode == 'en' ? 'Auth & Secure Synchronization' : 'ደህንነት እና ማመሳሰል',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.languageCode == 'en' 
+                        ? 'Link your profile using Firebase Phone authentication for cloud record tracking & progress state backup.' 
+                        : 'የጥናት እድገትዎን በደመና ላይ ለማስቀመጥ እና ለመቆጣጠር መገለጫዎን እዚህ ያገናኙ።',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      height: 1.4,
+                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 18),
+                      label: Text(
+                        widget.languageCode == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegisterScreen(
+                              isDarkMode: widget.isDarkMode,
+                              languageCode: widget.languageCode,
+                              onToggleTheme: widget.onToggleTheme,
+                              onToggleLanguage: widget.onToggleLanguage,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                        foregroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
