@@ -712,21 +712,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          // Warm cream beige color matches the screenshot perfectly for light mode
-          color: isLight ? const Color(0xFFFAF8F5) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(30.0),
+          // Pure Colors.white background for light mode
+          color: isLight ? Colors.white : const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(20.0),
           border: Border.all(
-            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: isLight 
-                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.08) 
-                  : Colors.black.withValues(alpha: 0.45),
-              blurRadius: 28.0,
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 20.0,
               offset: const Offset(0, 10),
-              spreadRadius: 1.5,
+              spreadRadius: 1.0,
             )
           ],
         ),
@@ -789,16 +787,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: isLight ? Colors.white : const Color(0xFF2D3748),
-                borderRadius: BorderRadius.circular(16.0), // Rounded rectangular format matching screen!
+                borderRadius: BorderRadius.circular(20.0), // Rounded rectangular format matching screen with radius 20!
                 border: Border.all(
                   color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF4A5568),
                   width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.06) 
-                        : Colors.black.withValues(alpha: 0.25),
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 10.0,
                     offset: const Offset(0, 4),
                   )
