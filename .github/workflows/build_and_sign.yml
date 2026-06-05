@@ -35,8 +35,7 @@ jobs:
       - name: Run Gradle Signing Report
         run: |
           cd android
-          chmod +x gradlew
-          ./gradlew signingReport
+          gradle signingReport
 
       - name: Build Code Artifact (APK)
         run: flutter build apk --release
