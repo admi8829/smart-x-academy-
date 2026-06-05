@@ -21,6 +21,8 @@ __pycache__/
 .vscode/
 *.cert
 *.keystore
+android/app/my-release-key.keystore
+**/my-release-key.keystore
 
 # Ignore OS files
 .DS_Store
