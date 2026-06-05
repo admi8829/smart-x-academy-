@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -40,8 +42,19 @@ jobs:
       - name: Build Code Artifact (APK)
         run: flutter build apk --release
 
-      - name: Upload compiled APK
+      - name: Upload compiled APK to Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: smartx-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub Release & Upload Release APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v1.0.2-build.${{ github.run_number }}" \
+            build/app/outputs/flutter-apk/app-release.apk \
+            --title "Release v1.0.2 (Build #${{ github.run_number }})" \
+            --notes "Interactive automatic production release of Smart X Academy. Built on $(date +'%Y-%m-%d %H:%M:%S UTC'). This package contains full Grades 9-12 curriculum syllabus courses, offline preview summary cards, interactive student profile register features, and optimized AdMob banners implementation."
+
