@@ -153,7 +153,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _handleSandboxRegisterFallback(String fullName, String email, String phone) async {
     _showSnackBar('Initializing Live Preview Account (Local Database Synchronized)', isError: false);
     
-    await Future.delayed(const Duration(seconds: 1.5));
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     final String mockUid = "email_sandbox_uid_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}";
     
