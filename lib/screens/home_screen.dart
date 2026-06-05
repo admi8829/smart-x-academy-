@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
+import 'video_player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -91,28 +92,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // 4 Featured rich playlist videos matching the user screen layout perfectly
   final List<Map<String, String>> _featuredVideos = [
     {
-      'title': 'Biology G10: Cell Biology',
-      'duration': '15:30',
-      'id': 'bZ_g8D8zHrc',
-      'thumbnail': 'https://images.unsplash.com/photo-1530026405186-ed1eaae6bbdb?w=500&auto=format&fit=crop&q=80',
+      'title': 'Mathematics G12 - Unit 1: Sequence & Series Matric Prep',
+      'duration': '1:15:30',
+      'id': 'K_js8HXa8VM',
+      'thumbnail': 'https://img.youtube.com/vi/K_js8HXa8VM/hqdefault.jpg',
     },
     {
-      'title': 'English G11: Tenses & Grammar',
-      'duration': '18:45',
-      'id': '17l-m92hR0o',
-      'thumbnail': 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=500&auto=format&fit=crop&q=80',
+      'title': 'Physics G11 - Unit 2: Two-Dimensional Motion Concept Mastery',
+      'duration': '1:48:15',
+      'id': 'bhpnLBUrk-4',
+      'thumbnail': 'https://img.youtube.com/vi/bhpnLBUrk-4/hqdefault.jpg',
     },
     {
-      'title': 'Math G12: Calculus Fundamentals',
-      'duration': '22:15',
-      'id': 'Wp_QvD0C7_0',
-      'thumbnail': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=500&auto=format&fit=crop&q=80',
+      'title': 'Chemistry G10 - Unit 3: Organic Hydrocarbons and Formulas',
+      'duration': '1:02:40',
+      'id': 'I5GdkvpY424',
+      'thumbnail': 'https://img.youtube.com/vi/I5GdkvpY424/hqdefault.jpg',
     },
     {
-      'title': 'Chemistry G9: Chemical Reaction',
-      'duration': '12:10',
-      'id': 'q59S32-V8Yg',
-      'thumbnail': 'https://images.unsplash.com/photo-1603126857599-f6e157fa2fe6?w=500&auto=format&fit=crop&q=80',
+      'title': 'Biology G9 - Unit 4: Cellular Structures & Daily Revision',
+      'duration': '55:20',
+      'id': 'AIinN1ezdoE',
+      'thumbnail': 'https://img.youtube.com/vi/AIinN1ezdoE/hqdefault.jpg',
     },
   ];
 
@@ -435,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 16.0),
                 SizedBox(
-                  height: 245.0,
+                  height: 195.0,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
@@ -443,52 +444,60 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     itemBuilder: (context, index) {
                       final video = _featuredVideos[index];
                       return Container(
-                        width: 215.0,
+                        width: 220.0,
                         margin: const EdgeInsets.only(right: 16.0, bottom: 8),
                         decoration: BoxDecoration(
                           color: isLight ? Colors.white : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(22.0),
+                          borderRadius: BorderRadius.circular(20.0),
                           border: Border.all(
                             color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                             width: 1.0,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: isLight 
-                                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
-                                  : Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 18.0,
-                              offset: const Offset(0, 8),
+                              color: Colors.black.withOpacity(0.18),
+                              blurRadius: 12.0,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(22.0),
+                          borderRadius: BorderRadius.circular(20.0),
                           onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => VideoPlayerScreen(
+                                  videoId: video['id']!,
+                                  title: video['title']!,
+                                  duration: video['duration']!,
+                                  isDarkMode: !isLight,
+                                ),
+                              ),
+                            );
                           },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Video Thumbnail with floating Duration tag & Play marker
                               ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(21.0)),
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(19.0)),
                                 child: Stack(
                                   children: [
                                     SizedBox(
-                                      height: 115.0,
+                                      height: 80.0,
                                       width: double.infinity,
                                       child: Image.network(
                                         video['thumbnail']!,
                                         fit: BoxFit.cover,
                                         errorBuilder: (context, e, s) => Container(
                                           color: const Color(0xFFCBD5E1),
-                                          child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 30),
+                                          child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 24),
                                         ),
                                       ),
                                     ),
                                     Positioned.fill(
                                       child: Container(
-                                        color: Colors.black.withValues(alpha: 0.15),
+                                        color: Colors.black.withValues(alpha: 0.12),
                                       ),
                                     ),
                                     // Play icon ring in center
@@ -496,21 +505,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       child: Align(
                                         alignment: Alignment.center,
                                         child: Container(
-                                          width: 32,
-                                          height: 32,
+                                          width: 26,
+                                          height: 26,
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withValues(alpha: 0.9),
+                                            color: Colors.white.withOpacity(0.9),
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.15),
-                                                blurRadius: 5,
+                                                color: Colors.black.withOpacity(0.15),
+                                                blurRadius: 4,
                                               )
                                             ]
                                           ),
                                           child: const Icon(
                                             Icons.play_arrow_rounded,
-                                            size: 20,
+                                            size: 16,
                                             color: Color(0xFF0F172A),
                                           ),
                                         ),
@@ -518,19 +527,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     ),
                                     // Duration badge at the bottom-right corner of image matching screenshot
                                     Positioned(
-                                      bottom: 8.0,
-                                      right: 8.0,
+                                      bottom: 4.0,
+                                      right: 4.0,
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 3.5),
+                                        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.8),
-                                          borderRadius: BorderRadius.circular(6.0),
+                                          color: Colors.black.withOpacity(0.75),
+                                          borderRadius: BorderRadius.circular(4.0),
                                         ),
                                         child: Text(
                                           video['duration']!,
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 10.5,
+                                            fontSize: 9.0,
                                             fontWeight: FontWeight.w800,
                                           ),
                                         ),
@@ -540,7 +549,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(12.0),
+                                padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 8.0, bottom: 4.0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -549,39 +558,60 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        fontSize: 13.5,
+                                        fontSize: 11.5,
                                         fontWeight: FontWeight.w800,
                                         color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                                        height: 1.25,
+                                        height: 1.2,
                                       ),
                                     ),
-                                    const SizedBox(height: 14.0),
-                                    // Watch pill button matching screenshot "▶ Watch"
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF0B3C5D), // Match gorgeous dark-blue pill
-                                        borderRadius: BorderRadius.circular(50.0),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Icon(
-                                            Icons.play_arrow_rounded,
-                                            color: Colors.white,
-                                            size: 13,
+                                    const SizedBox(height: 6.0),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Watch pill button matching screenshot "▶ Watch"
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF0B3C5D), // Match gorgeous dark-blue pill
+                                            borderRadius: BorderRadius.circular(50.0),
                                           ),
-                                          const SizedBox(width: 4.0),
-                                          const Text(
-                                            "Watch",
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.play_arrow_rounded,
+                                                color: Colors.white,
+                                                size: 11,
+                                              ),
+                                              const SizedBox(width: 2.0),
+                                              const Text(
+                                                "Watch",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 10.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Companion badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(
+                                            "Lesson",
                                             style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11.5,
+                                              fontSize: 9,
                                               fontWeight: FontWeight.bold,
+                                              color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
