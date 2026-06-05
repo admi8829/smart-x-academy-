@@ -128,15 +128,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 1200),
     );
     
-    // Replicating tutorial video with standard Youtube embedded controller
-    _loadBannerAd();
+    // Replicating tutorial video with standard Youtube embedded controller    _loadBannerAd();
     _fadeController.forward();
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _bannerAd?.dispose();
+    _fadeController.dispose();    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -275,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               BoxShadow(
                 color: isLight 
                     ? const Color(0xFF0F1B2B).withValues(alpha: 0.08) 
-                    : Colors.black.withValues(alpha: 0.45),
+                    : Colors.black.withValues(alpha: 0.4),
                 blurRadius: 28.0,
                 offset: const Offset(0, 10),
                 spreadRadius: 0,
@@ -597,8 +595,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          const SizedBox(height: 32.0),
+                    const SizedBox(height: 32.0),
 
+
+          
           // Index 1: Free standing Explore Header (DECOUPLED AS REQUESTED!)
           _animateItem(
             index: 1,
@@ -954,6 +954,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ],
     );
   }
+
+
 
   void _navigateToGradeScreen(int grade) {
     Navigator.of(context).push(
