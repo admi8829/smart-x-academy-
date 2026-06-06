@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
@@ -26,6 +27,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _fadeController;
+
+  // Dynamic User Profile Fields loaded from SharedPreferences
+  String _userName = "Abebe Bekele";
+  String _userGradeStr = "Grade 12 Student";
+  String _userSchoolName = "Yeka Secondary School";
+  String _userPhoneNumber = "+251 911 234 567";
+  String _userEmail = "abebe@smartx.com";
+  bool _isPremiumUser = true;
+  bool _profileImageRemoved = false;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -124,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    _loadProfileData();
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -132,6 +143,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     // Replicating tutorial video with standard Youtube embedded controller
     _loadBannerAd();
     _fadeController.forward();
+  }
+
+  Future<void> _loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_fullName') ?? "Abebe Bekele";
+      final gradeVal = prefs.getString('user_grade') ?? "Grade 12";
+      _userGradeStr = gradeVal.endsWith("Student") ? gradeVal : "$gradeVal Student";
+      _userSchoolName = prefs.getString('user_schoolName') ?? "Yeka Secondary School";
+      _userPhoneNumber = prefs.getString('user_phoneNumber') ?? "+251 911 234 567";
+      _userEmail = prefs.getString('user_email') ?? "abebe@smartx.com";
+      _isPremiumUser = prefs.getBool('user_isPremium') ?? true;
+      _profileImageRemoved = prefs.getBool('user_imageRemoved') ?? false;
+    });
+  }
+
+  Future<void> _removeProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('user_imageRemoved', true);
+    setState(() {
+      _profileImageRemoved = true;
+    });
+  }
+
+  Future<void> _restoreProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('user_imageRemoved', false);
+    setState(() {
+      _profileImageRemoved = false;
+    });
   }
 
   @override
@@ -1061,19 +1102,154 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildProfileScreen(bool isLight) {
+    // Generate lovely initials for the initials-fallback avatar
+    String initials = "SU";
+    if (_userName.trim().isNotEmpty) {
+      final parts = _userName.trim().split(" ");
+      if (parts.length > 1) {
+        initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      } else if (_userName.trim().length > 1) {
+        initials = _userName.trim().substring(0, 2).toUpperCase();
+      } else {
+        initials = _userName.trim()[0].toUpperCase();
+      }
+    }
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20.0),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       child: Center(
         child: Column(
           children: [
-            const CircleAvatar(
-              radius: 46,
-              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+            // USER AVATAR WITH DIRECT REMOVAL PORTAL
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: _isPremiumUser 
+                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)] // Gold halo
+                          : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)], // Blue halo
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: 48,
+                    backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
+                    backgroundImage: _profileImageRemoved 
+                        ? null 
+                        : const NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+                    child: _profileImageRemoved 
+                        ? Text(
+                            initials,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: _isPremiumUser ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                // Direct Remove Avatar Action
+                if (!_profileImageRemoved)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        _removeProfileImage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Profile image removed successfully!"),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 28,
+                        width: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 15),
+                      ),
+                    ),
+                  ),
+                // Restore button icon if deleted
+                if (_profileImageRemoved)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        _restoreProfileImage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Profile image restored!"),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 28,
+                        width: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.teal,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text("Abebe Bekele", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isLight ? const Color(0xFF0D2353) : Colors.white)),
-            const Text("Grade 12 Student | Smart X Enthusiast", style: TextStyle(fontSize: 13, color: Colors.grey)),
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
+
+            // Dynamic user name and primary status label with PREMIUM STAR integration
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _userName,
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                  ),
+                ),
+                if (_isPremiumUser) ...[
+                  const SizedBox(width: 6),
+                  const Icon(Icons.verified_rounded, color: Color(0xFFF59E0B), size: 18),
+                ],
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              "$_userGradeStr | $_userSchoolName",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12.5, color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 18),
+
+            // STATS COLUMNS ROW OF SMART X
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -1082,8 +1258,117 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _buildStatColumn("Avg Score", "94%", Icons.emoji_events_outlined, Colors.purple),
               ],
             ),
-            const SizedBox(height: 32),
-            // Beautiful interactive Firebase Register/Profile Settings Entry
+            const SizedBox(height: 24),
+
+            // STUNNING PREMIUM PRO MEMBER REWORK BANNER DISPLAY
+            if (_isPremiumUser)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)], // Warm honey highlights
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4), width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.bolt_rounded, color: Color(0xFFD97706), size: 24),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "ACTIVE PRO PREMIUM STUDENT",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFB45309),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          Text(
+                            widget.languageCode == 'en'
+                                ? "Full syllabus content and video portal unlocked with unlimited access."
+                                : "የቪዲዮ ማብራሪያዎች እና ሙሉውን የ9-12ኛ ማጠቃለያዎች ተከፍተዋል።",
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              color: Color(0xFF78350F),
+                              fontWeight: FontWeight.bold,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(22.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.languageCode == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const Divider(height: 20, thickness: 1),
+                  
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም',
+                    value: _userName,
+                    icon: Icons.person_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
+                    value: _userSchoolName,
+                    icon: Icons.apartment_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Grade / Class' : 'ክፍል',
+                    value: _userGradeStr,
+                    icon: Icons.school_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
+                    value: _userPhoneNumber,
+                    icon: Icons.phone_android_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
+                    value: _userEmail,
+                    icon: Icons.mail_rounded,
+                    isLight: isLight,
+                  ),
+                ],
+              ),
+            ),
+
+            // REGISTER / EDIT PROFILE BUTTON BOX
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -1096,7 +1381,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.2),
+                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.2),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -1107,13 +1392,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   Icon(
                     Icons.security_rounded,
                     color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                    size: 36,
+                    size: 32,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Text(
-                    widget.languageCode == 'en' ? 'Auth & Secure Synchronization' : 'ደህንነት እና ማመሳሰል',
+                    widget.languageCode == 'en' ? 'Credential Sync & Updates' : 'ማመሳሰል እና ማስተካከያ',
                     style: TextStyle(
-                      fontSize: 16.0,
+                      fontSize: 15.0,
                       fontWeight: FontWeight.bold,
                       color: isLight ? const Color(0xFF0D2353) : Colors.white,
                     ),
@@ -1121,11 +1406,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   const SizedBox(height: 6),
                   Text(
                     widget.languageCode == 'en' 
-                        ? 'Link your profile using Google Sign-In for cloud record tracking & progress state backup.' 
-                        : 'የጥናት እድገትዎን በደመና ላይ ለማስቀመጥ እና ለመቆጣጠር መገለጫዎን እዚህ ያገናኙ።',
+                        ? 'Update your details or link using safe, cloud-based synchronization.' 
+                        : 'የትምህርት መረጃዎን ለማሻሻል ወይም ለመመዝገብ ከታች ያለውን መቆጣጠሪያ ይጫኑ።',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 12.0,
+                      fontSize: 11.5,
                       height: 1.4,
                       color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                     ),
@@ -1151,11 +1436,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                               onToggleLanguage: widget.onToggleLanguage,
                             ),
                           ),
-                        );
+                        ).then((_) {
+                          // REFRESH dynamic details from SharedPreferences instantly when popped back!
+                          _loadProfileData();
+                        });
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                        foregroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.0),
                         ),
@@ -1167,6 +1455,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildProfileDetailRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    required bool isLight,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey, size: 18),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 1.5),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
