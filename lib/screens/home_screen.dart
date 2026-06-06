@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
-import '../services/auth_service.dart';
-import '../main.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import 'video_player_screen.dart';
-import 'unit_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -30,7 +26,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
-  int _selectedUnitsGrade = 12; // Track selected grade filter for Units tab
   late AnimationController _fadeController;
 
   // Dynamic User Profile Fields loaded from SharedPreferences
@@ -41,9 +36,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _userEmail = "abebe@smartx.com";
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
-  bool _isLoggedWithGoogle = false;
-  String _googlePhotoUrl = "";
-  bool _isAuthLoading = false;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -155,30 +147,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
-    final bool loggedIn = await AuthService.isUserLoggedIn();
-    final firebaseUser = AuthService.currentUser;
-
     setState(() {
-      _isLoggedWithGoogle = loggedIn;
-      if (loggedIn) {
-        _userName = prefs.getString('user_fullName') ?? '';
-        if (_userName.isEmpty) {
-          _userName = firebaseUser?.displayName ?? "Habtamu Yifiru";
-        }
-        _userEmail = prefs.getString('user_email') ?? '';
-        if (_userEmail.isEmpty) {
-          _userEmail = firebaseUser?.email ?? "habtamu.yifiru.official@gmail.com";
-        }
-        _googlePhotoUrl = prefs.getString('user_photoUrl') ?? firebaseUser?.photoURL ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150";
-      } else {
-        _userName = "Guest Student";
-        _userEmail = "guest@smartx.com";
-        _googlePhotoUrl = "";
-      }
+      _userName = prefs.getString('user_fullName') ?? "Abebe Bekele";
       final gradeVal = prefs.getString('user_grade') ?? "Grade 12";
       _userGradeStr = gradeVal.endsWith("Student") ? gradeVal : "$gradeVal Student";
-      _userSchoolName = prefs.getString('user_schoolName') ?? "Smart X Academy Excellence";
+      _userSchoolName = prefs.getString('user_schoolName') ?? "Yeka Secondary School";
       _userPhoneNumber = prefs.getString('user_phoneNumber') ?? "+251 911 234 567";
+      _userEmail = prefs.getString('user_email') ?? "abebe@smartx.com";
       _isPremiumUser = prefs.getBool('user_isPremium') ?? true;
       _profileImageRemoved = prefs.getBool('user_imageRemoved') ?? false;
     });
@@ -198,299 +173,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() {
       _profileImageRemoved = false;
     });
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    setState(() {
-      _isAuthLoading = true;
-    });
-    try {
-      debugPrint("HomeScreen: Initiating Google Sign-In button click flow...");
-      final user = await AuthService.signInWithGoogle();
-      
-      if (user != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                widget.languageCode == 'en' 
-                    ? "Successfully logged in with Google!" 
-                    : "በGoogle በተሳካ ሁኔታ ገብተዋል!",
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } else {
-        // User cancelled or silent cancel
-        debugPrint("HomeScreen: Google Sign-In returned null (user likely cancelled).");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                widget.languageCode == 'en'
-                    ? "Google Sign-In was cancelled."
-                    : "በGoogle መግባት ተሰርዟል።",
-              ),
-              backgroundColor: Colors.orange,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } catch (e, stackTrace) {
-      debugPrint("HomeScreen: Catching exception in _handleGoogleSignIn: $e");
-      debugPrint("HomeScreen Exception StackTrace:\n$stackTrace");
-
-      if (mounted) {
-        // Extract extra detailed logs specifically if it is a PlatformException
-        String errorCode = "unknown_code";
-        String errorMessage = e.toString();
-        String errorDetails = "";
-
-        if (e is PlatformException) {
-          errorCode = e.code;
-          errorMessage = e.message ?? e.toString();
-          errorDetails = e.details?.toString() ?? "";
-        }
-
-        showDialog(
-          context: context,
-          barrierDismissible: true,
-          builder: (BuildContext dialogContext) {
-            final isLight = Theme.of(dialogContext).brightness == Brightness.light;
-            final dialogBg = isLight ? Colors.white : const Color(0xFF1E293B);
-            final dialogTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-            final dialogSubColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
-
-            return AlertDialog(
-              backgroundColor: dialogBg,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-                side: BorderSide(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.5,
-                ),
-              ),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.error_outline_rounded,
-                      color: Colors.red,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      widget.languageCode == 'en' ? "Sign-In Alert" : "የጉግል መግቢያ ማሳሰቢያ",
-                      style: TextStyle(
-                        color: dialogTextColor,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.languageCode == 'en'
-                          ? "We encountered a dynamic connection or platform configuration exception while attempting Google Sign-In:"
-                          : "በጉግል ለመግባት ሲሞከር የግንኙነት ወይም የፕላትፎርም ውቅር ስህተት አጋጥሟል፡",
-                      style: TextStyle(
-                        color: dialogSubColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText(
-                            "Error: $errorMessage",
-                            style: TextStyle(
-                              fontFamily: 'Courier',
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.redAccent[700],
-                            ),
-                          ),
-                          if (errorCode != "unknown_code") ...[
-                            const SizedBox(height: 6),
-                            SelectableText(
-                              "Code: $errorCode",
-                              style: const TextStyle(
-                                fontFamily: 'Courier',
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueAccent,
-                              ),
-                            ),
-                          ],
-                          if (errorDetails.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            SelectableText(
-                              "Details: $errorDetails",
-                              style: TextStyle(
-                                fontFamily: 'Courier',
-                                fontSize: 11,
-                                color: dialogSubColor,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      widget.languageCode == 'en'
-                          ? "This usually occurs during development due to SHA-1 hashes missing from GCP. Under no circumstances will this application crash. You can continue as a Guest Student, or activate the simulated high-fidelity offline session bypass."
-                          : "ይህ ብዙውን ጊዜ በልማት ወቅት የ SHA-1 ሃሽ ከ GCP በመጥፋቱ ምክንያት ይከሰታል። ማመልከቻው በምንም አይነት ሁኔታ አይዘጋም። በእንግዳ ተማሪነት መቀጠል ይችላሉ፣ ወይም አስመስሎ የተሰራውን የልምምድ ሁኔታ ማግበር ይችላሉ።",
-                      style: TextStyle(
-                        color: dialogTextColor.withOpacity(0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
-              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text(
-                    widget.languageCode == 'en' ? "Close" : "ዝጋ",
-                    style: TextStyle(
-                      color: dialogTextColor.withOpacity(0.6),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Start simulated Google Sign-In session
-                    Navigator.of(dialogContext).pop();
-                    setState(() {
-                      _isAuthLoading = true;
-                    });
-                    await AuthService.generateSimulatedGoogleUser();
-                    await _loadProfileData();
-                    if (mounted) {
-                      setState(() {
-                        _isAuthLoading = false;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            widget.languageCode == 'en'
-                                ? "Demo Offline Session Activated successfully!"
-                                : "የሙከራው ከመስመር ውጭ ክፍለ-ጊዜ በተሳካ ሁኔታ ተነቅቷል!",
-                          ),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.isDarkMode ? Colors.blueAccent : const Color(0xFF0D2353),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  ),
-                  child: Text(
-                    widget.languageCode == 'en' ? "Use Demo Session" : "የሙከራ ክፍለ-ጊዜ ተጠቀም",
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      }
-    } finally {
-      await _loadProfileData();
-      if (mounted) {
-        setState(() {
-          _isAuthLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _handleSignOut() async {
-    setState(() {
-      _isAuthLoading = true;
-    });
-    try {
-      await AuthService.signOut();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.languageCode == 'en' 
-                  ? "Logged out successfully." 
-                  : "በተሳካ ሁኔታ ወጥተዋል።",
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Sign Out Error: $e"),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } finally {
-      await _loadProfileData();
-      if (mounted) {
-        setState(() {
-          _isAuthLoading = false;
-        });
-      }
-    }
   }
 
   @override
@@ -537,10 +219,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final appState = AppStateProvider.of(context);
-    final bool isDark = appState.isDarkMode;
-    final bool isLight = !isDark;
-    final String currentLang = appState.languageCode;
+    bool isLight = !widget.isDarkMode;
 
     return Scaffold(
       backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
@@ -558,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           onPressed: () {},
         ),
         title: Text(
-          _localizedValues[currentLang]?['title'] ?? 'Smart X Academy',
+          _local('title'),
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w800,
@@ -570,16 +249,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           // Light/Dark Theme Switcher (Represents custom dark mode icon)
           IconButton(
             icon: Icon(
-              isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
+              widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
               color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
               size: 24,
             ),
-            onPressed: appState.onToggleTheme,
+            onPressed: widget.onToggleTheme,
           ),
           
           // Compact, elegant language globe button matching design with EN/አማ
           GestureDetector(
-            onTap: appState.onToggleLanguage,
+            onTap: widget.onToggleLanguage,
             child: Container(
               margin: const EdgeInsets.only(right: 16, left: 4),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -622,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
           ),
         ),
-        child: _buildCurrentTab(isLight, currentLang, appState),
+        child: _buildCurrentTab(isLight),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(18.0, 0.0, 18.0, 24.0),
@@ -674,31 +353,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.school_rounded,
+                      Icons.home_rounded,
                       size: 26,
                     ),
                   ),
-                  label: currentLang == 'en' ? 'Courses' : 'ኮርሶች',
+                  label: _local('nav_home'),
                 ),
                 BottomNavigationBarItem(
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.collections_bookmark_rounded,
+                      Icons.book_outlined,
                       size: 25,
                     ),
                   ),
-                  label: currentLang == 'en' ? 'Units' : 'ክፍሎች',
+                  label: _local('nav_courses'),
                 ),
                 BottomNavigationBarItem(
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.account_circle_rounded,
+                      Icons.person_outline_rounded,
                       size: 26,
                     ),
                   ),
-                  label: currentLang == 'en' ? 'Account' : 'መገለጫ',
+                  label: _local('nav_profile'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Padding(
+                    padding: EdgeInsets.only(bottom: 4.0),
+                    child: Icon(
+                      Icons.settings_outlined,
+                      size: 25,
+                    ),
+                  ),
+                  label: _local('nav_settings'),
                 ),
               ],
             ),
@@ -708,14 +397,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildCurrentTab(bool isLight, String currentLang, AppStateProvider appState) {
+  Widget _buildCurrentTab(bool isLight) {
     switch (_currentIndex) {
       case 0:
         return _buildHomeScreenContent(isLight);
       case 1:
-        return _buildUnitsExplorerTab(isLight, currentLang, appState);
+        return _buildCoursesScreen(isLight);
       case 2:
         return _buildProfileScreen(isLight);
+      case 3:
+        return _buildSettingsScreen(isLight);
       default:
         return _buildHomeScreenContent(isLight);
     }
@@ -1411,38 +1102,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildProfileScreen(bool isLight) {
-    final appState = AppStateProvider.of(context);
-    final String currentLang = appState.languageCode;
-    final bool isDark = appState.isDarkMode;
-
-    if (_isAuthLoading) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 80.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(
-                color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                currentLang == 'en' ? "Signing you in securely..." : "ደህንነቱ በተጠበቀ ሁኔታ እያስገባንዎት ነው...",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Generate initials fallback for Google profile photo / guest
-    String initials = "GU";
-    if (_userName.trim().isNotEmpty && _userName != "Guest Student") {
+    // Generate lovely initials for the initials-fallback avatar
+    String initials = "SU";
+    if (_userName.trim().isNotEmpty) {
       final parts = _userName.trim().split(" ");
       if (parts.length > 1) {
         initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -1459,173 +1121,147 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Center(
         child: Column(
           children: [
-            // GUEST (LOGGED OUT) SCREEN DESIGNS
-            if (!_isLoggedWithGoogle) ...[
-              const SizedBox(height: 16),
-              // Beautiful stylized Guest user avatar icon
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF38BDF8), Color(0xFF0D2353)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0D2353).withOpacity(0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+            // USER AVATAR WITH DIRECT REMOVAL PORTAL
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: _isPremiumUser 
+                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)] // Gold halo
+                          : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)], // Blue halo
                     ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.account_circle_rounded,
-                    size: 64,
-                    color: Colors.white,
+                  ),
+                  child: CircleAvatar(
+                    radius: 48,
+                    backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
+                    backgroundImage: _profileImageRemoved 
+                        ? null 
+                        : const NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
+                    child: _profileImageRemoved 
+                        ? Text(
+                            initials,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: _isPremiumUser ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
+                            ),
+                          )
+                        : null,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                currentLang == 'en' ? "Welcome, Guest Student" : "እንኳን ደህና መጡ, እንግዳ ተማሪ",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Text(
-                  currentLang == 'en' 
-                      ? "Sign in with your Google Account to synchronize your credentials, track academic progress, and unlock all lessons." 
-                      : "የትምህርት መረጃዎን ለማመሳሰል፣ ውጤት ለመከታተል እና ሙሉውን ለማንቃት በGoogle መለያዎ ይግቡ።",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                    height: 1.4,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Prominent "Continue with Google" sign-in button
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: ElevatedButton(
-                  onPressed: _handleGoogleSignIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
-                    foregroundColor: isLight ? const Color(0xFF334155) : Colors.white,
-                    minimumSize: const Size(double.infinity, 54),
-                    elevation: isLight ? 2.0 : 4.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                      side: BorderSide(
-                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                        width: 1.5,
-                      ),
-                    ),
-                    shadowColor: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.3),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ClipOval(
-                        child: Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.png',
-                          height: 20,
-                          width: 20,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.g_mobiledata_rounded, size: 24, color: Colors.blue);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        currentLang == 'en' ? "Continue with Google" : "በGoogle ይቀጥሉ",
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w900,
-                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ] else ...[
-              // LOGGED IN SCREEN DESIGNS
-              const SizedBox(height: 12),
-              // Google profile picture with a luminous gold active premium ring
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFEF08A), Color(0xFFF59E0B)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withOpacity(0.15),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 46,
-                  backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
-                  backgroundImage: _googlePhotoUrl.isNotEmpty ? NetworkImage(_googlePhotoUrl) : null,
-                  child: _googlePhotoUrl.isEmpty
-                      ? Text(
-                          initials,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFF59E0B),
+                // Direct Remove Avatar Action
+                if (!_profileImageRemoved)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        _removeProfileImage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Profile image removed successfully!"),
+                            behavior: SnackBarBehavior.floating,
                           ),
-                        )
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Logged-in credentials
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _userName,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        );
+                      },
+                      child: Container(
+                        height: 28,
+                        width: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 15),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 5),
-                  const Icon(Icons.verified_rounded, color: Color(0xFF10B981), size: 18),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _userEmail,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 24),
+                // Restore button icon if deleted
+                if (_profileImageRemoved)
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: GestureDetector(
+                      onTap: () {
+                        _restoreProfileImage();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Profile image restored!"),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 28,
+                        width: 28,
+                        decoration: BoxDecoration(
+                          color: Colors.teal,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                            )
+                          ],
+                        ),
+                        child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
 
-              // STUNNING PREMIUM MEMBER REWORK BANNER DISPLAY
+            // Dynamic user name and primary status label with PREMIUM STAR integration
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _userName,
+                  style: TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                  ),
+                ),
+                if (_isPremiumUser) ...[
+                  const SizedBox(width: 6),
+                  const Icon(Icons.verified_rounded, color: Color(0xFFF59E0B), size: 18),
+                ],
+              ],
+            ),
+            const SizedBox(height: 3),
+            Text(
+              "$_userGradeStr | $_userSchoolName",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12.5, color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 18),
+
+            // STATS COLUMNS ROW OF SMART X
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildStatColumn("Streak", "15 days", Icons.local_fire_department, Colors.orange),
+                _buildStatColumn("Completed", "18 lessons", Icons.check_circle_outline, Colors.green),
+                _buildStatColumn("Avg Score", "94%", Icons.emoji_events_outlined, Colors.purple),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // STUNNING PREMIUM PRO MEMBER REWORK BANNER DISPLAY
+            if (_isPremiumUser)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1648,14 +1284,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           const Text(
                             "ACTIVE PRO PREMIUM STUDENT",
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFB45309),
                               letterSpacing: 0.8,
                             ),
                           ),
                           Text(
-                            currentLang == 'en'
+                            widget.languageCode == 'en'
                                 ? "Full syllabus content and video portal unlocked with unlimited access."
                                 : "የቪዲዮ ማብራሪያዎች እና ሙሉውን የ9-12ኛ ማጠቃለያዎች ተከፍተዋል።",
                             style: const TextStyle(
@@ -1672,486 +1308,153 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
 
-              // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: isLight ? Colors.white : const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(22.0),
-                  border: Border.all(
-                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                    width: 1.0,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      currentLang == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                      ),
-                    ),
-                    const Divider(height: 20, thickness: 1),
-                    
-                    _buildProfileDetailRow(
-                      label: currentLang == 'en' ? 'Full Name' : 'ሙሉ ስም',
-                      value: _userName,
-                      icon: Icons.person_rounded,
-                      isLight: isLight,
-                    ),
-                    _buildProfileDetailRow(
-                      label: currentLang == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
-                      value: _userSchoolName,
-                      icon: Icons.apartment_rounded,
-                      isLight: isLight,
-                    ),
-                    _buildProfileDetailRow(
-                      label: currentLang == 'en' ? 'Grade / Class' : 'ክፍል',
-                      value: _userGradeStr,
-                      icon: Icons.school_rounded,
-                      isLight: isLight,
-                    ),
-                  ],
+            // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(22.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.0,
                 ),
               ),
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.languageCode == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const Divider(height: 20, thickness: 1),
+                  
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም',
+                    value: _userName,
+                    icon: Icons.person_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
+                    value: _userSchoolName,
+                    icon: Icons.apartment_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Grade / Class' : 'ክፍል',
+                    value: _userGradeStr,
+                    icon: Icons.school_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
+                    value: _userPhoneNumber,
+                    icon: Icons.phone_android_rounded,
+                    isLight: isLight,
+                  ),
+                  _buildProfileDetailRow(
+                    label: widget.languageCode == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
+                    value: _userEmail,
+                    icon: Icons.mail_rounded,
+                    isLight: isLight,
+                  ),
+                ],
+              ),
+            ),
 
-            // UNIVERSAL PREMIUM SETTINGS CARD
+            // REGISTER / EDIT PROFILE BUTTON BOX
             Container(
-              margin: const EdgeInsets.only(bottom: 24),
+              width: double.infinity,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: isLight ? Colors.white : const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(
                   color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.5,
+                  width: 1.0,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isLight 
-                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.02) 
-                        : Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
+                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.2),
+                    blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.settings_suggest_rounded,
-                        color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        currentLang == 'en' ? 'Settings & Choices' : 'ማስተካከያዎች እና አማራጮች',
-                        style: TextStyle(
-                          fontSize: 15.0,
-                          fontWeight: FontWeight.bold,
-                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.security_rounded,
+                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                    size: 32,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    widget.languageCode == 'en' ? 'Credential Sync & Updates' : 'ማመሳሰል እና ማስተካከያ',
+                    style: TextStyle(
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.bold,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.languageCode == 'en' 
+                        ? 'Update your details or link using safe, cloud-based synchronization.' 
+                        : 'የትምህርት መረጃዎን ለማሻሻል ወይም ለመመዝገብ ከታች ያለውን መቆጣጠሪያ ይጫኑ።',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      height: 1.4,
+                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Custom Redesigned Country/Language Selector Dropdown
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.language_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
-                          const SizedBox(width: 14),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                currentLang == 'en' ? "Language" : "ቋንቋ", 
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold, 
-                                  fontSize: 13.5, 
-                                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              Text(
-                                currentLang == 'en' ? "Amharic & English" : "አማርኛ እና እንግሊዝኛ", 
-                                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 18),
+                      label: Text(
+                        widget.languageCode == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
                       ),
-                      
-                      // Premium Select Dropdown
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                            width: 1.2,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegisterScreen(
+                              isDarkMode: widget.isDarkMode,
+                              languageCode: widget.languageCode,
+                              onToggleTheme: widget.onToggleTheme,
+                              onToggleLanguage: widget.onToggleLanguage,
+                            ),
                           ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: currentLang,
-                            icon: Icon(Icons.arrow_drop_down, color: isLight ? const Color(0xFF0D2353) : Colors.white, size: 20),
-                            dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
-                            onChanged: (String? newValue) {
-                              if (newValue != null && newValue != currentLang) {
-                                appState.onToggleLanguage();
-                              }
-                            },
-                            items: [
-                              DropdownMenuItem(
-                                value: 'en',
-                                child: Text(
-                                  'EN (English)',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'am',
-                                child: Text(
-                                  'አማርኛ (AM)',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 24),
-                  
-                  // Dark Mode toggle option switcher
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.dark_mode_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
-                    title: Text(
-                      currentLang == 'en' ? "Dark Theme Mode" : "ጨለማ ገጽታ", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
-                    ),
-                    subtitle: Text(
-                      isDark ? (currentLang == 'en' ? "Enabled" : "በርቷል") : (currentLang == 'en' ? "Disabled" : "ጠፍቷል"), 
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
-                    trailing: Switch(
-                      activeColor: const Color(0xFF38BDF8),
-                      activeTrackColor: const Color(0xFF0D2353),
-                      value: isDark,
-                      onChanged: (val) {
-                        appState.onToggleTheme();
+                        ).then((_) {
+                          // REFRESH dynamic details from SharedPreferences instantly when popped back!
+                          _loadProfileData();
+                        });
                       },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF2563EB),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                      ),
                     ),
-                  ),
-                  const Divider(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.info_outline_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
-                    title: Text(
-                      currentLang == 'en' ? "App Version" : "የመተግበሪያው ስሪት", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
-                    ),
-                    trailing: const Text("1.0.0+1", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.grey)),
                   ),
                 ],
               ),
             ),
-
-            // RED "SIGN OUT" BUTTON AT THE BOTTOM (If Logged In)
-            if (_isLoggedWithGoogle) ...[
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: OutlinedButton.icon(
-                  onPressed: _handleSignOut,
-                  icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 18),
-                  label: Text(
-                    currentLang == 'en' ? "Sign Out" : "ውጣ",
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 52),
-                    side: const BorderSide(color: Colors.redAccent, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16.0),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildUnitsExplorerTab(bool isLight, String currentLang, AppStateProvider appState) {
-    // List representing subjects with localization support
-    final List<Map<String, dynamic>> subjectsList = [
-      {
-        'id': 'Mathematics',
-        'enTitle': 'Mathematics',
-        'amTitle': 'ሂሳብ',
-        'color': const Color(0xFF0084FF),
-        'iconData': Icons.calculate_rounded,
-      },
-      {
-        'id': 'Biology',
-        'enTitle': 'Biology',
-        'amTitle': 'ስነ-ህይወት',
-        'color': const Color(0xFF2E7D32),
-        'iconData': Icons.biotech_rounded,
-      },
-      {
-        'id': 'Physics',
-        'enTitle': 'Physics',
-        'amTitle': 'ፊዚክስ',
-        'color': const Color(0xFFE53935),
-        'iconData': Icons.bolt_rounded,
-      },
-      {
-        'id': 'Chemistry',
-        'enTitle': 'Chemistry',
-        'amTitle': 'ኬሚስትሪ',
-        'color': const Color(0xFFEF6C00),
-        'iconData': Icons.science_rounded,
-      },
-      {
-        'id': 'Geography',
-        'enTitle': 'Geography',
-        'amTitle': 'ጂኦግራፊ',
-        'color': const Color(0xFF8E24AA),
-        'iconData': Icons.public_rounded,
-      },
-      {
-        'id': 'History',
-        'enTitle': 'History',
-        'amTitle': 'ታሪክ',
-        'color': const Color(0xFFF5B041),
-        'iconData': Icons.museum_rounded,
-      },
-      {
-        'id': 'Civics',
-        'enTitle': 'Civics',
-        'amTitle': 'ዜግነት',
-        'color': const Color(0xFF1E88E5),
-        'iconData': Icons.gavel_rounded,
-      },
-      {
-        'id': 'Agriculture',
-        'enTitle': 'Agriculture',
-        'amTitle': 'ግብርና',
-        'color': const Color(0xFF8D6E63),
-        'iconData': Icons.agriculture_rounded,
-      },
-    ];
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Elegant customized title header
-          Text(
-            currentLang == 'en' ? "Units Explorer" : "የትምህርት ክፍሎች ማውጫ",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: isLight ? const Color(0xFF0D2353) : Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            currentLang == 'en' 
-                ? "Select a class grade and subject to explore curriculum units offline." 
-                : "ከመስመር ውጭ ለመማር ክፍልዎን እና የትምህርት ዓይነትዎን ይምረጡ።",
-            style: TextStyle(
-              fontSize: 12.5,
-              color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Grade Selection Buttons Selector with smooth physical scaling
-          Row(
-            children: [9, 10, 11, 12].map((gradeNum) {
-              final isSelected = _selectedUnitsGrade == gradeNum;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedUnitsGrade = gradeNum;
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isSelected 
-                            ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8))
-                            : (isLight ? Colors.white : const Color(0xFF1E293B)),
-                        foregroundColor: isSelected 
-                            ? (isLight ? Colors.white : const Color(0xFF0F172A))
-                            : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-                        elevation: isSelected ? 3.0 : 0.0,
-                        padding: const EdgeInsets.symmetric(vertical: 12.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.0),
-                          side: BorderSide(
-                            color: isSelected 
-                                ? Colors.transparent 
-                                : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        currentLang == 'en' ? "G-$gradeNum" : "ክፍል-$gradeNum",
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-
-          // Grid View of Subjects mapping standard designs
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: subjectsList.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 14.0,
-              mainAxisSpacing: 14.0,
-              childAspectRatio: 1.15,
-            ),
-            itemBuilder: (context, idx) {
-              final sub = subjectsList[idx];
-              final String title = currentLang == 'en' ? sub['enTitle']! : sub['amTitle']!;
-              final Color color = sub['color'] as Color;
-              final IconData iconData = sub['iconData'] as IconData;
-
-              return InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => UnitSelectionScreen(
-                        grade: _selectedUnitsGrade,
-                        subjectId: sub['id']!,
-                        enTitle: sub['enTitle']!,
-                        amTitle: sub['amTitle']!,
-                        color: color,
-                        icon: Icon(iconData, size: 36, color: color),
-                        isDarkMode: appState.isDarkMode,
-                        languageCode: appState.languageCode,
-                        onToggleTheme: appState.onToggleTheme,
-                        onToggleLanguage: appState.onToggleLanguage,
-                      ),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(22.0),
-                child: Container(
-                  padding: const EdgeInsets.all(14.0),
-                  decoration: BoxDecoration(
-                    color: isLight ? Colors.white : const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(22.0),
-                    border: Border.all(
-                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isLight 
-                            ? const Color(0xFF0F1B2B).withValues(alpha: 0.02) 
-                            : Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(iconData, color: color, size: 24),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w900,
-                              color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            currentLang == 'en' ? "View Units" : "ክፍሎችን እይ",
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-        ],
       ),
     );
   }
