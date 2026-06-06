@@ -122,42 +122,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return translations[widget.languageCode]?[key] ?? translations['en']![key]!;
   }
 
-  // Handles real Firebase sign-up with fallback mock synchronization for seamless offline development
-  Future<void> _handleRegistration() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final fullName = _fullNameController.text.trim();
-    final phone = _phoneController.text.trim();
-
-    try {
-      // Create user on Firebase Auth
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      final user = userCredential.user;
-      if (user != null) {
-        // Save addition user data to Firestore
-        await _saveUserToDatabase(user.uid, fullName, email, phone);
-      } else {
-        throw Exception("Created user was null.");
-      }
-    } catch (e) {
-      debugPrint("Firebase Real Auth Bypass triggered: $e");
-      // Seamless interactive development preview sandbox fallback
-      _handleSandboxRegisterFallback(fullName, email, phone);
-    }
-  }
-
   Future<void> _saveLocalSession({
     required String fullName,
     required String email,
