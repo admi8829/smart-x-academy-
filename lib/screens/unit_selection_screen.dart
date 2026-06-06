@@ -489,6 +489,77 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
+  IconData _getUnitIcon(String subjectId, int index) {
+    switch (subjectId) {
+      case 'Mathematics':
+        return [
+          Icons.calculate_rounded,
+          Icons.functions_rounded,
+          Icons.analytics_rounded,
+          Icons.architecture_rounded,
+          Icons.bubble_chart_rounded,
+        ][index % 5];
+      case 'Biology':
+        return [
+          Icons.biotech_rounded,
+          Icons.science_rounded,
+          Icons.spa_rounded,
+          Icons.favorite_rounded,
+          Icons.eco_rounded,
+        ][index % 5];
+      case 'Physics':
+        return [
+          Icons.speed_rounded,
+          Icons.bolt_rounded,
+          Icons.wb_iridescent_rounded,
+          Icons.cyclone_rounded,
+          Icons.thermostat_rounded,
+        ][index % 5];
+      case 'Chemistry':
+        return [
+          Icons.opacity_rounded,
+          Icons.science_outlined,
+          Icons.scale_rounded,
+          Icons.invert_colors_rounded,
+          Icons.bubble_chart_outlined,
+        ][index % 5];
+      case 'Geography':
+        return [
+          Icons.map_rounded,
+          Icons.terrain_rounded,
+          Icons.explore_rounded,
+          Icons.people_alt_rounded,
+          Icons.layers_rounded,
+        ][index % 5];
+      case 'History':
+        return [
+          Icons.menu_book_rounded,
+          Icons.gavel_rounded,
+          Icons.fort_rounded,
+          Icons.auto_stories_rounded,
+          Icons.public_rounded,
+        ][index % 5];
+      case 'Civics':
+        return [
+          Icons.gavel_rounded,
+          Icons.account_balance_rounded,
+          Icons.corporate_fare_rounded,
+          Icons.diversity_3_rounded,
+          Icons.language_rounded,
+        ][index % 5];
+      case 'Agriculture':
+        return [
+          Icons.grass_rounded,
+          Icons.water_drop_rounded,
+          Icons.bug_report_rounded,
+          Icons.forest_rounded,
+          Icons.precision_manufacturing_rounded,
+        ][index % 5];
+      default:
+        return Icons.menu_book_rounded;
+    }
+  }
+
   String _searchQuery = "";
 
   void _simulateDownload(String unitId) {
@@ -918,297 +989,322 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                   ),
                 )
               else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  itemCount: filteredUnits.length,
-                  itemBuilder: (context, index) {
-                    final unit = filteredUnits[index];
-                    final String unitId = unit['id'];
-                    final bool isDownloaded = _downloadedUnits.contains(unitId);
-                    final double? progress = _downloadProgress[unitId];
-
-                    final String title = languageCode == 'en' ? unit['enUnit'] : unit['amUnit'];
-                    final String desc = languageCode == 'en' ? unit['enDesc'] : unit['amDesc'];
-
-                    final indexFactor = index * 100;
-                    return TweenAnimationBuilder<double>(
-                      tween: Tween<double>(begin: 0.0, end: 1.0),
-                      duration: Duration(milliseconds: 300 + indexFactor),
-                      curve: Curves.easeOutCubic,
-                      builder: (context, animValue, animChild) {
-                        return Transform.translate(
-                          offset: Offset(0.0, 30.0 * (1.1 - animValue)),
-                          child: Opacity(
-                            opacity: animValue,
-                            child: animChild,
-                          ),
-                        );
-                      },
-                      child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: cardBgColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isLight 
-                              ? const Color(0xFFE2E8F0) 
-                              : const Color(0xFF334155),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isLight 
-                                ? Colors.black.withValues(alpha: 0.02) 
-                                : Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double screenWidth = constraints.maxWidth;
+                    final bool isWide = screenWidth > 640;
+                    final int crossAxisCount = isWide ? 2 : 1;
+                    
+                    // Highly responsive aspect ratio model: keeps card height constant while width scales
+                    final double cardHeight = languageCode == 'am' ? 245.0 : 235.0;
+                    final double cardWidth = isWide ? (screenWidth - 56) / 2 : (screenWidth - 40);
+                    final double childAspectRatio = cardWidth / cardHeight;
+                    
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: childAspectRatio,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Stack(
-                          children: [
-                            // Accent line decor indicator on left
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              bottom: 0,
-                              width: 5,
-                              child: Container(
-                                color: widget.color.withValues(alpha: isDownloaded ? 1.0 : 0.4),
+                      itemCount: filteredUnits.length,
+                      itemBuilder: (context, index) {
+                        final unit = filteredUnits[index];
+                        final String unitId = unit['id'];
+                        final bool isDownloaded = _downloadedUnits.contains(unitId);
+                        final double? progress = _downloadProgress[unitId];
+
+                        final String title = languageCode == 'en' ? unit['enUnit'] : unit['amUnit'];
+                        final String desc = languageCode == 'en' ? unit['enDesc'] : unit['amDesc'];
+                        
+                        final int topicsCount = 4 + (index * 2) % 5 + 3; // e.g. 7, 4, 6...
+                        final String topicsText = languageCode == 'en' ? '$topicsCount Topics' : '$topicsCount አርዕስቶች';
+                        
+                        final double studyProgress = isDownloaded 
+                            ? 1.0 
+                            : ((index * 25) % 100) / 100.0; // Realistic values like 0%, 25%, 50%, 75%
+                        final int studyProgressPercent = (studyProgress * 100).toInt();
+
+                        final indexFactor = index * 100;
+                        return TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          duration: Duration(milliseconds: 300 + indexFactor),
+                          curve: Curves.easeOutCubic,
+                          builder: (context, animValue, child) {
+                            return Transform.translate(
+                              offset: Offset(0.0, 30.0 * (1.1 - animValue)),
+                              child: Opacity(
+                                opacity: animValue,
+                                child: child,
                               ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: cardBgColor,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: isLight 
+                                    ? const Color(0xFFE2E8F0) 
+                                    : const Color(0xFF334155),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isLight 
+                                      ? Colors.black.withValues(alpha: 0.02) 
+                                      : Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Stack(
                                 children: [
-                                  // Unit designation label
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: widget.color.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          languageCode == 'en'
-                                              ? 'UNIT 0${index + 1}'
-                                              : 'ክፍል 0${index + 1}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: widget.color,
-                                          ),
-                                        ),
-                                      ),
-                                      if (isDownloaded)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.download_done_rounded, color: Color(0xFF10B981), size: 10),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                _local('downloaded').toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF10B981),
-                                                ),
+                                  // Left side dynamic theme indicator bar
+                                  Positioned(
+                                    left: 0,
+                                    top: 0,
+                                    bottom: 0,
+                                    width: 5,
+                                    child: Container(
+                                      color: widget.color.withValues(alpha: isDownloaded ? 1.0 : 0.4),
+                                    ),
+                                  ),
+                                  
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        // Top Row: Custom Unit Icon, Details, and Download Badge
+                                        Row(
+                                          children: [
+                                            // The specified clean unit-associated icon
+                                            Container(
+                                              width: 38,
+                                              height: 38,
+                                              decoration: BoxDecoration(
+                                                color: widget.color.withValues(alpha: 0.08),
+                                                shape: BoxShape.circle,
                                               ),
-                                            ],
+                                              child: Icon(
+                                                _getUnitIcon(widget.subjectId, index),
+                                                color: widget.color,
+                                                size: 20,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    languageCode == 'en' ? 'UNIT 0${index + 1}' : 'ክፍል 0${index + 1}',
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: widget.color.withValues(alpha: 0.8),
+                                                      letterSpacing: 0.8,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 1),
+                                                  Text(
+                                                    title,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 14.5,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: headerTextColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        
+                                        // Unit description
+                                        Text(
+                                          desc,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            height: 1.35,
+                                            fontWeight: FontWeight.w500,
+                                            color: descColor,
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  // Unit Title
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: headerTextColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  // Unit description
-                                  Text(
-                                    desc,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                      color: descColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  // Horizontal Divider line
-                                  Container(
-                                    height: 1,
-                                    color: isLight 
-                                        ? const Color(0xFFE2E8F0) 
-                                        : const Color(0xFF334155),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  // Bottom Row of Custom Controls (Download + Start Practice)
-                                  Row(
-                                    children: [
-                                      // Customizable Box of Unit Download button
-                                      Expanded(
-                                        child: progress != null
-                                            ? Container(
-                                                height: 40,
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  color: widget.color.withValues(alpha: 0.05),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                        
+                                        // Topics and learning progress section
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
                                                   children: [
-                                                    SizedBox(
-                                                      width: 14,
-                                                      height: 14,
-                                                      child: CircularProgressIndicator(
-                                                        value: progress,
-                                                        strokeWidth: 2,
-                                                        color: widget.color,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
+                                                    Icon(Icons.topic_rounded, size: 13, color: descColor.withValues(alpha: 0.8)),
+                                                    const SizedBox(width: 4),
                                                     Text(
-                                                      _local('downloading'),
+                                                      topicsText,
                                                       style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: widget.color,
+                                                        fontSize: 11,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: descColor,
                                                       ),
                                                     ),
                                                   ],
                                                 ),
-                                              )
-                                            : InkWell(
-                                                onTap: () => _simulateDownload(unitId),
+                                                Text(
+                                                  languageCode == 'en' ? "$studyProgressPercent% Done" : "$studyProgressPercent% ተጠናቋል",
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w800,
+                                                    color: widget.color,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: studyProgress,
+                                                backgroundColor: widget.color.withValues(alpha: 0.1),
+                                                valueColor: AlwaysStoppedAnimation<Color>(
+                                                  studyProgress == 1.0 ? const Color(0xFF10B981) : widget.color,
+                                                ),
+                                                minHeight: 5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        
+                                        // Custom Action row: Start Practice taking most width, with a beautiful circular download trigger
+                                        Row(
+                                          children: [
+                                            // Start Practice button
+                                            Expanded(
+                                              child: InkWell(
+                                                onTap: () {
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (context) => QuizScreen(
+                                                        grade: widget.grade,
+                                                        subject: widget.subjectId,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                                 borderRadius: BorderRadius.circular(12),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                                child: Container(
+                                                  height: 38,
                                                   alignment: Alignment.center,
                                                   decoration: BoxDecoration(
-                                                    color: isDownloaded
-                                                        ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                                                        : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
+                                                    color: widget.color,
                                                     borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(
-                                                      color: isDownloaded
-                                                          ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                                                          : Colors.transparent,
-                                                      width: 1,
-                                                    ),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: widget.color.withValues(alpha: 0.25),
+                                                        blurRadius: 6,
+                                                        offset: const Offset(0, 2),
+                                                      )
+                                                    ],
                                                   ),
                                                   child: Row(
                                                     mainAxisAlignment: MainAxisAlignment.center,
                                                     children: [
-                                                      Icon(
-                                                        isDownloaded 
-                                                            ? Icons.cloud_done_rounded 
-                                                            : Icons.cloud_download_outlined,
+                                                      const Icon(
+                                                        Icons.play_arrow_rounded,
                                                         size: 16,
-                                                        color: isDownloaded 
-                                                            ? const Color(0xFF10B981) 
-                                                            : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                                                        color: Colors.white,
                                                       ),
-                                                      const SizedBox(width: 6),
+                                                      const SizedBox(width: 4),
                                                       Text(
-                                                        isDownloaded ? _local('downloaded') : _local('download'),
-                                                        style: TextStyle(
-                                                          fontSize: 12.5,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: isDownloaded 
-                                                              ? const Color(0xFF10B981) 
-                                                              : (isLight ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                                        _local('start_quiz'),
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.w900,
+                                                          color: Colors.white,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                 ),
                                               ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Start Practice / Quiz Screen Arena
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => QuizScreen(
-                                                  grade: widget.grade,
-                                                  subject: widget.subjectId,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              color: widget.color,
-                                              borderRadius: BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: widget.color.withValues(alpha: 0.25),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 3),
-                                                )
-                                              ],
                                             ),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  size: 16,
-                                                  color: Colors.white,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  _local('start_quiz'),
-                                                  style: const TextStyle(
-                                                    fontSize: 12.5,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                            const SizedBox(width: 10),
+                                            
+                                            // Beautiful space-saving offline download trigger
+                                            progress != null
+                                                ? Container(
+                                                    width: 38,
+                                                    height: 38,
+                                                    padding: const EdgeInsets.all(10),
+                                                    decoration: BoxDecoration(
+                                                      color: widget.color.withValues(alpha: 0.05),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: CircularProgressIndicator(
+                                                      value: progress,
+                                                      strokeWidth: 2,
+                                                      color: widget.color,
+                                                    ),
+                                                  )
+                                                : InkWell(
+                                                    onTap: () => _simulateDownload(unitId),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                    child: AnimatedContainer(
+                                                      duration: const Duration(milliseconds: 200),
+                                                      width: 38,
+                                                      height: 38,
+                                                      decoration: BoxDecoration(
+                                                        color: isDownloaded
+                                                            ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                                            : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
+                                                        borderRadius: BorderRadius.circular(12),
+                                                        border: Border.all(
+                                                          color: isDownloaded
+                                                              ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                                                              : Colors.transparent,
+                                                          width: 1,
+                                                        ),
+                                                      ),
+                                                      child: Icon(
+                                                        isDownloaded 
+                                                            ? Icons.cloud_done_rounded 
+                                                            : Icons.cloud_download_rounded,
+                                                        size: 16,
+                                                        color: isDownloaded 
+                                                            ? const Color(0xFF10B981) 
+                                                            : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               const SizedBox(height: 32),
             ],
           ),
