@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
@@ -38,15 +36,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _userEmail = "abebe@smartx.com";
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
-
-  // Inline Profile Edit Form key, controllers and select states
-  final _profileFormKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
-  final _schoolNameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  String _selectedSex = 'Male';
-  int _selectedGrade = 12;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;

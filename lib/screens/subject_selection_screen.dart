@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart';
 import 'unit_selection_screen.dart';
 
 class SubjectSelectionScreen extends StatefulWidget {
@@ -22,21 +23,21 @@ class SubjectSelectionScreen extends StatefulWidget {
 }
 
 class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
-  // Translate title helper
-  String _local(String key) {
+  // Translate title helper dynamically retrieving the language code
+  String _local(String key, String languageCode) {
     final Map<String, Map<String, String>> localized = {
       'en': {
-        'title': 'GRADE ${widget.grade}: SUBJECT SELECTION',
+        'title': 'GRADE ${widget.grade}: SUBJECTS',
         'subtitle': 'Select your subject to access courses and resources.',
-        'btn_start': 'START COURSE',
+        'btn_start': 'START',
       },
       'am': {
-        'title': 'ክፍል ${widget.grade}: የትምህርት ምርጫ',
+        'title': 'ክፍል ${widget.grade}: የትምህርት ምድቦች',
         'subtitle': 'የትምህርት ዓይነቶችዎን ለመምረጥ ከዚህ በታች ይጫኑ።',
-        'btn_start': 'ኮርሱን ጀምር',
+        'btn_start': 'ጀምር',
       }
     };
-    return localized[widget.languageCode]?[key] ?? key;
+    return localized[languageCode]?[key] ?? key;
   }
 
   // Define subjects with Amharic & English representation plus custom coloring/drawing style
@@ -101,7 +102,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     ];
   }
 
-  void _navigateToUnitSelectionScreen(Map<String, dynamic> subject) {
+  void _navigateToUnitSelectionScreen(Map<String, dynamic> subject, AppStateProvider appState) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => UnitSelectionScreen(
@@ -111,10 +112,10 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           amTitle: subject['amTitle'],
           color: subject['color'],
           icon: subject['illustration'],
-          isDarkMode: widget.isDarkMode,
-          languageCode: widget.languageCode,
-          onToggleTheme: widget.onToggleTheme,
-          onToggleLanguage: widget.onToggleLanguage,
+          isDarkMode: appState.isDarkMode,
+          languageCode: appState.languageCode,
+          onToggleTheme: appState.onToggleTheme,
+          onToggleLanguage: appState.onToggleLanguage,
         ),
       ),
     );
@@ -122,7 +123,11 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isLight = !widget.isDarkMode;
+    // Dynamically retrieve the latest real-time application values to bypass stale attributes
+    final appState = AppStateProvider.of(context);
+    final bool isDark = appState.isDarkMode;
+    final bool isLight = !isDark;
+    final String currentLang = appState.languageCode;
     final subjects = _getSubjects();
 
     // Matching responsive top UI alignment and clean off-white platform canvas background
@@ -139,10 +144,10 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          _local('title'),
+          _local('title', currentLang),
           style: TextStyle(
             fontSize: 16.0,
-            fontWeight: FontWeight.w900,
+            fontWeight: FontWeight.w950,
             color: headerTextColor,
             letterSpacing: 0.5,
           ),
@@ -161,22 +166,22 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                   Icon(Icons.g_translate_rounded, size: 14, color: headerTextColor),
                   const SizedBox(width: 4),
                   Text(
-                    widget.languageCode.toUpperCase(),
+                    currentLang.toUpperCase(),
                     style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: headerTextColor),
                   ),
                 ],
               ),
             ),
-            onPressed: widget.onToggleLanguage,
+            onPressed: appState.onToggleLanguage,
           ),
           // Elegant theme mode toggles
           IconButton(
             icon: Icon(
-              widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nightlight_round_outlined,
+              isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round_outlined,
               color: headerTextColor,
               size: 20,
             ),
-            onPressed: widget.onToggleTheme,
+            onPressed: appState.onToggleTheme,
           ),
           const SizedBox(width: 4),
         ],
@@ -197,75 +202,129 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Beautiful descriptive subtitle
-              Padding(
-                padding: const EdgeInsets.only(bottom: 22.0),
-                child: Text(
-                  _local('subtitle'),
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Beautiful descriptive subtitle
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 22.0),
+                  child: Text(
+                    _local('subtitle', currentLang),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
-              ),
 
-              // 2-Column Responsive Bento Grid matching requested design aspect perfectly
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 18.0,
-                  childAspectRatio: 0.98, // Ideal aspect ratio for cards so we fit all text plus floating button beautifully
+                // 2-Column Responsive Bento Grid matching requested design aspect perfectly
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 18.0,
+                    childAspectRatio: 0.94, // Refined aspect ratio so we fit start button and titles beautifully
+                  ),
+                  itemCount: subjects.length,
+                  itemBuilder: (context, index) {
+                    final subject = subjects[index];
+                    return _InteractiveSubjectCard(
+                      amTitle: subject['amTitle'],
+                      enTitle: subject['enTitle'],
+                      color: subject['color'],
+                      illustration: subject['illustration'],
+                      isLight: isLight,
+                      btnStartText: _local('btn_start', currentLang),
+                      onTap: () => _navigateToUnitSelectionScreen(subject, appState),
+                    );
+                  },
                 ),
-                itemCount: subjects.length,
-                itemBuilder: (context, index) {
-                  final subject = subjects[index];
-                  return _buildSubjectCard(
-                    amTitle: subject['amTitle'],
-                    enTitle: subject['enTitle'],
-                    color: subject['color'],
-                    illustration: subject['illustration'],
-                    isLight: isLight,
-                    onTap: () => _navigateToUnitSelectionScreen(subject),
-                  );
-                },
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
-  Widget _buildSubjectCard({
-    required String amTitle,
-    required String enTitle,
-    required Color color,
-    required Widget illustration,
-    required bool isLight,
-    required VoidCallback onTap,
-  }) {
+// 3D Tilt Card Widget for premium physics transitions
+class _InteractiveSubjectCard extends StatefulWidget {
+  final String amTitle;
+  final String enTitle;
+  final Color color;
+  final Widget illustration;
+  final bool isLight;
+  final String btnStartText;
+  final VoidCallback onTap;
+
+  const _InteractiveSubjectCard({
+    required this.amTitle,
+    required this.enTitle,
+    required this.color,
+    required this.illustration,
+    required this.isLight,
+    required this.btnStartText,
+    required this.onTap,
+  });
+
+  @override
+  State<_InteractiveSubjectCard> createState() => _InteractiveSubjectCardState();
+}
+
+class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> {
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+  double _scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
+      onTapDown: (_) {
+        setState(() {
+          _scale = 0.95;
+          _tiltX = -0.04;
+          _tiltY = 0.04;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _scale = 1.0;
+          _tiltX = 0.0;
+          _tiltY = 0.0;
+        });
+        widget.onTap();
+      },
+      onTapCancel: () {
+        setState(() {
+          _scale = 1.0;
+          _tiltX = 0.0;
+          _tiltY = 0.0;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001) // perspective
+          ..scale(_scale)
+          ..rotateX(_tiltX)
+          ..rotateY(_tiltY),
+        transformAlignment: Alignment.center,
         decoration: BoxDecoration(
           // Soft warm cream beige color or elegant dark slate
-          color: isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
+          color: widget.isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(26.0),
           boxShadow: [
             BoxShadow(
-              color: isLight 
-                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
-                  : Colors.black.withValues(alpha: 0.35),
-              blurRadius: 24.0,
-              offset: const Offset(0, 10),
+              color: widget.isLight 
+                  ? const Color(0xFF0F1B2B).withOpacity(0.04) 
+                  : Colors.black.withOpacity(0.35),
+              blurRadius: 20.0,
+              offset: const Offset(0, 8),
               spreadRadius: 0,
             )
           ],
@@ -284,26 +343,26 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          amTitle,
+                          widget.amTitle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                            fontSize: 17.5,
+                            fontWeight: FontWeight.bold,
+                            color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
                             height: 1.15,
                             letterSpacing: -0.3,
                           ),
                         ),
                         const SizedBox(height: 3.0),
                         Text(
-                          enTitle,
+                          widget.enTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.bold,
-                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w800,
+                            color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                           ),
                         ),
                       ],
@@ -315,7 +374,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     width: 48,
                     child: FittedBox(
                       fit: BoxFit.contain,
-                      child: illustration,
+                      child: widget.illustration,
                     ),
                   ),
                 ],
@@ -323,37 +382,41 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
             ),
             const SizedBox(height: 12.0),
 
-            // Premium solid full-width rectangular start course button with customized vibrant background and glowing shadow
+            // Premium rectangular START button styled WHITE as requested, accented by its primary color
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: color, // Attractive subject-specific background color!
-                borderRadius: BorderRadius.zero, // Sleek rectangular format - removed border radius!
+                color: Colors.white, // Sleek premium white format!
+                borderRadius: BorderRadius.circular(16), // Rounded rectangle style
+                border: Border.all(
+                  color: widget.isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.45),
-                    blurRadius: 12.0,
-                    offset: const Offset(0, 5),
-                    spreadRadius: 1,
+                    color: widget.color.withOpacity(0.12),
+                    blurRadius: 10.0,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 0,
                   )
                 ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.play_circle_fill_rounded,
-                    color: Colors.white,
-                    size: 15,
+                  Icon(
+                    Icons.play_circle_fill_rounded, // play circle icon
+                    color: widget.color, // Accented color
+                    size: 16,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 5),
                   Text(
-                    _local('btn_start'),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    widget.btnStartText,
+                    style: TextStyle(
+                      color: widget.color, // Color matched cleanly
                       fontSize: 12.5,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.bold, // bold weigh font!
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -365,6 +428,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
       ),
     );
   }
+}
 }
 
 // ============================================================================
