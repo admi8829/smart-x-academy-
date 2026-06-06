@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'quiz_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
@@ -31,10 +32,38 @@ class UnitSelectionScreen extends StatefulWidget {
   State<UnitSelectionScreen> createState() => _UnitSelectionScreenState();
 }
 
-class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
+class _UnitSelectionScreenState extends State<UnitSelectionScreen> with SingleTickerProviderStateMixin {
   // Simple in-memory tracker for downloaded units & download progress states
   final Set<String> _downloadedUnits = {};
   final Map<String, double> _downloadProgress = {}; // unitId -> 0.0 to 1.0
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+
+    // Bootstrap initial offline values to demonstrate completed states
+    _downloadedUnits.addAll({
+      'math_u1', 'math_u2', 'math_u3', 'math_u4',
+      'bio_u1', 'bio_u2', 'bio_u3', 'bio_u4',
+      'phys_u1', 'phys_u2', 'phys_u3', 'phys_u4',
+      'chem_u1', 'chem_u2', 'chem_u3', 'chem_u4',
+      'geo_u1', 'geo_u2', 'geo_u3', 'geo_u4',
+      'hist_u1', 'hist_u2', 'hist_u3', 'hist_u4',
+      'civ_u1', 'civ_u2', 'civ_u3', 'civ_u4',
+      'agri_u1', 'agri_u2', 'agri_u3', 'agri_u4'
+    });
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   // Bilingual translation helper
   String _local(String key) {
@@ -574,13 +603,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
 
-    final allUnits = _getUnits();
-    final filteredUnits = allUnits.where((u) {
-      final text = widget.languageCode == 'en' 
-          ? '${u['enUnit']} ${u['enDesc']}'.toLowerCase()
-          : '${u['amUnit']} ${u['amDesc']}'.toLowerCase();
-      return text.contains(_searchQuery.toLowerCase());
-    }).toList();
+    // Dynamic extraction of subject units
+    final rawUnits = List<Map<String, dynamic>>.from(_getUnits());
+    
+    // Ensure we have exactly 6 units for the map steps. If there are fewer, append capstone mock items.
+    while (rawUnits.length < 6) {
+      final int nextIndex = rawUnits.length + 1;
+      rawUnits.add({
+        'id': 'u${nextIndex}_capstone_${widget.subjectId.toLowerCase()}',
+        'grade': widget.grade,
+        'enUnit': 'Unit $nextIndex: Advanced Capstone Topics',
+        'amUnit': 'ክፍል $nextIndex: የላቁ ማጠቃለያ አርዕስቶች',
+        'enDesc': 'Comprehensive core syllabus testing block with smart micro feedback.',
+        'amDesc': 'ሁሉንም የትምህርት ይዘቶች ያካተተ የተጠቃለለ የስልጠና ፈተና።',
+      });
+    }
+    
+    final List<Map<String, dynamic>> allUnits = rawUnits.take(6).toList();
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -601,9 +640,30 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline_rounded, color: headerTextColor, size: 20),
-            onPressed: _showInfoSheet,
+          // Points Counter Badge
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3), width: 1),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.monetization_on_rounded, color: Color(0xFFF59E0B), size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  widget.languageCode == 'en' ? '20 PTS' : '20 ነጥብ',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD97706),
+                  ),
+                ),
+              ],
+            ),
           ),
           IconButton(
             icon: Icon(
@@ -621,498 +681,141 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           color: bgColor,
-          image: DecorationImage(
-            image: const AssetImage('assets/images/education_bg_pattern.png'),
-            repeat: ImageRepeat.repeat,
-            opacity: isLight ? 0.09 : 0.03,
-            colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
-          ),
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Beautiful Hero section with Subject Card presentation
-              Container(
-                decoration: BoxDecoration(
-                  color: isLight ? Colors.white : const Color(0xFF1E293B),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(32),
-                    bottomRight: Radius.circular(32),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isLight
-                          ? Colors.black.withValues(alpha: 0.03)
-                          : Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    )
-                  ],
-                ),
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Dynamic scaled illustration in unique background box
-                        Container(
-                          width: 85,
-                          height: 85,
-                          decoration: BoxDecoration(
-                            color: widget.color.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Center(
-                            child: SizedBox(
-                              width: 55,
-                              height: 55,
-                              child: widget.icon,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 18),
-                        // Titles and Grade
-                        Expanded(
-                          child: Column(
+              // Scrollable Journey map area
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // TITLE HEADER BANNER OF JOURNEY MAP (English: LEARNING JOURNEY / Amharic: የጥናት ጉዞ)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: widget.color.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  widget.languageCode == 'en'
-                                      ? 'GRADE ${widget.grade}'
-                                      : 'ክፍል ${widget.grade}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
-                                    color: widget.color,
-                                    letterSpacing: 1.0,
-                                  ),
+                              Text(
+                                widget.languageCode == 'en' ? 'LEARNING JOURNEY' : 'የጥናት ጉዞ',
+                                style: const TextStyle(
+                                  letterSpacing: 1.0,
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.w950,
+                                  color: Color(0xFF1E293B),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 2),
                               Text(
-                                widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
+                                widget.languageCode == 'en' 
+                                    ? 'Grade ${widget.grade} • Interactive Quiz Progression'
+                                    : 'ክፍል ${widget.grade} • በፈተናዎች የተመሰረተ እድገት',
                                 style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w900,
-                                  color: headerTextColor,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                widget.languageCode == 'en'
-                                    ? 'High-quality comprehensive unit reviews'
-                                    : 'ምርጥ ከመስመር ውጭ የትምህርት ክፍሎች',
-                                style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 12.0,
                                   fontWeight: FontWeight.w500,
                                   color: descColor,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Divider(height: 1, thickness: 1),
-                    const SizedBox(height: 20),
-                    // Progress metric section
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _local('progress_label'),
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: headerTextColor),
-                        ),
-                        Text(
-                          widget.languageCode == 'en'
-                              ? '${_downloadedUnits.length} / ${allUnits.length} Offline'
-                              : '${_downloadedUnits.length} / ${allUnits.length} ወርዷል',
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w700,
-                            color: widget.color,
+                          Container(
+                            height: 38,
+                            width: 38,
+                            decoration: BoxDecoration(
+                              color: widget.color.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.map_rounded, color: widget.color, size: 20),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Custom layout ProgressBar
-                    Stack(
-                      children: [
-                        Container(
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: widget.color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 500),
-                          height: 7,
-                          width: MediaQuery.of(context).size.width * 
-                              (allUnits.isEmpty ? 0 : (_downloadedUnits.length / allUnits.length)) * 0.85,
-                          decoration: BoxDecoration(
-                            color: widget.color,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
 
-              // Search field in workspace layout
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        height: 48,
+                      // UNIT PROGRESS HOVER CARD WITH COMPACT PROGRESS WHEEL
+                      Container(
+                        padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
                           color: cardBgColor,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(24.0),
                           border: Border.all(
-                            color: isLight 
-                                ? const Color(0xFFE2E8F0) 
-                                : const Color(0xFF334155),
-                            width: 1,
+                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                            width: 1.2,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(isLight ? 0.03 : 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.search_rounded, color: descColor, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                onChanged: (v) => setState(() => _searchQuery = v),
-                                style: TextStyle(color: headerTextColor, fontSize: 14),
-                                decoration: InputDecoration(
-                                  hintText: _local('search_hint'),
-                                  hintStyle: TextStyle(color: descColor.withValues(alpha: 0.6), fontSize: 13.5),
-                                  border: InputBorder.none,
-                                  isDense: true,
+                            // 70px Custom Progress ring
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  height: 62,
+                                  width: 62,
+                                  child: CircularProgressIndicator(
+                                    value: 4 / 6,
+                                    strokeWidth: 6,
+                                    color: const Color(0xFF10B981),
+                                    backgroundColor: widget.color.withOpacity(0.12),
+                                  ),
                                 ),
-                              ),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text(
+                                      '4/6',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFF10B981),
+                                      ),
+                                    ),
+                                    Text(
+                                      widget.languageCode == 'en' ? 'DONE' : 'አልቅቋል',
+                                      style: TextStyle(
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: descColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Subject count text label
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: Text(
-                  '${_local('units_count')} (${filteredUnits.length})',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w800,
-                    color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                  ),
-                ),
-              ),
-
-              // Filtered list of Units
-              if (filteredUnits.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-                  child: Column(
-                    children: [
-                      Icon(Icons.search_off_rounded, color: descColor.withValues(alpha: 0.4), size: 48),
-                      const SizedBox(height: 12),
-                      Text(
-                        _local('no_results'),
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: descColor, fontSize: 14, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  itemCount: filteredUnits.length,
-                  itemBuilder: (context, index) {
-                    final unit = filteredUnits[index];
-                    final String unitId = unit['id'];
-                    final bool isDownloaded = _downloadedUnits.contains(unitId);
-                    final double? progress = _downloadProgress[unitId];
-
-                    final String title = widget.languageCode == 'en' ? unit['enUnit'] : unit['amUnit'];
-                    final String desc = widget.languageCode == 'en' ? unit['enDesc'] : unit['amDesc'];
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: cardBgColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isLight 
-                              ? const Color(0xFFE2E8F0) 
-                              : const Color(0xFF334155),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: isLight 
-                                ? Colors.black.withValues(alpha: 0.02) 
-                                : Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Stack(
-                          children: [
-                            // Accent line decor indicator on left
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              bottom: 0,
-                              width: 5,
-                              child: Container(
-                                color: widget.color.withValues(alpha: isDownloaded ? 1.0 : 0.4),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                            const SizedBox(width: 16),
+                            Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Unit designation label
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: widget.color.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          widget.languageCode == 'en'
-                                              ? 'UNIT 0${index + 1}'
-                                              : 'ክፍል 0${index + 1}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: widget.color,
-                                          ),
-                                        ),
-                                      ),
-                                      if (isDownloaded)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.download_done_rounded, color: Color(0xFF10B981), size: 10),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                _local('downloaded').toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF10B981),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  // Unit Title
                                   Text(
-                                    title,
+                                    widget.languageCode == 'en' ? 'Excellent Progress!' : 'በጣም ድንቅ እድገት!',
                                     style: TextStyle(
-                                      fontSize: 16.5,
+                                      fontSize: 14.0,
                                       fontWeight: FontWeight.w900,
                                       color: headerTextColor,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  // Unit description
+                                  const SizedBox(height: 3),
                                   Text(
-                                    desc,
+                                    widget.languageCode == 'en' 
+                                        ? 'You have mastered 4 units! Ready to unlock Intermediate Techniques.'
+                                        : '4 ክፍሎችን ጨርሰዋል! ወደ መካከለኛ ደረጃ ትምህርቶች ለማለፍ ዝግጁ ተደርገዋል።',
                                     style: TextStyle(
-                                      fontSize: 13,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
+                                      fontSize: 11.5,
+                                      height: 1.35,
                                       color: descColor,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  // Horizontal Divider line
-                                  Container(
-                                    height: 1,
-                                    color: isLight 
-                                        ? const Color(0xFFE2E8F0) 
-                                        : const Color(0xFF334155),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  // Bottom Row of Custom Controls (Download + Start Practice)
-                                  Row(
-                                    children: [
-                                      // Customizable Box of Unit Download button
-                                      Expanded(
-                                        child: progress != null
-                                            ? Container(
-                                                height: 40,
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  color: widget.color.withValues(alpha: 0.05),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 14,
-                                                      height: 14,
-                                                      child: CircularProgressIndicator(
-                                                        value: progress,
-                                                        strokeWidth: 2,
-                                                        color: widget.color,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _local('downloading'),
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: widget.color,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              )
-                                            : InkWell(
-                                                onTap: () => _simulateDownload(unitId),
-                                                borderRadius: BorderRadius.circular(12),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                                  alignment: Alignment.center,
-                                                  decoration: BoxDecoration(
-                                                    color: isDownloaded
-                                                        ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                                                        : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(
-                                                      color: isDownloaded
-                                                          ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                                                          : Colors.transparent,
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Icon(
-                                                        isDownloaded 
-                                                            ? Icons.cloud_done_rounded 
-                                                            : Icons.cloud_download_outlined,
-                                                        size: 16,
-                                                        color: isDownloaded 
-                                                            ? const Color(0xFF10B981) 
-                                                            : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        isDownloaded ? _local('downloaded') : _local('download'),
-                                                        style: TextStyle(
-                                                          fontSize: 12.5,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: isDownloaded 
-                                                              ? const Color(0xFF10B981) 
-                                                              : (isLight ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      // Start Practice / Quiz Screen Arena
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => QuizScreen(
-                                                  grade: widget.grade,
-                                                  subject: widget.subjectId,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              color: widget.color,
-                                              borderRadius: BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: widget.color.withValues(alpha: 0.25),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 3),
-                                                )
-                                              ],
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  size: 16,
-                                                  color: Colors.white,
-                                                ),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  _local('start_quiz'),
-                                                  style: const TextStyle(
-                                                    fontSize: 12.5,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
@@ -1120,15 +823,570 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ],
                         ),
                       ),
-                    );
-                  },
+                      const SizedBox(height: 24),
+
+                      // PLAYFUL MAP PROGRESS WINDING BOARD SECTION
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final double mapWidth = constraints.maxWidth;
+                          const double mapHeight = 990.0; // Fixed spacious vertical layout height
+                          const double stepY = mapHeight / 6;
+
+                          return SizedBox(
+                            height: mapHeight,
+                            width: mapWidth,
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                // BACKROUND LAYER: Dash curving Bezier path
+                                Positioned.fill(
+                                  child: CustomPaint(
+                                    painter: WindingPathPainter(
+                                      count: 6,
+                                      activeColor: const Color(0xFF3B82F6),
+                                      completedColor: const Color(0xFF10B981),
+                                      lockedColor: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                                      isDarkMode: widget.isDarkMode,
+                                    ),
+                                  ),
+                                ),
+
+                                // INTERMEDIATE PATH SEGMENT PERCENTAGE BULB BADGES ON CENTER LINE
+                                ...List.generate(5, (index) {
+                                  final double midY = (index + 1) * stepY;
+                                  
+                                  // Content indicator based on path progression index
+                                  Widget badgeChild;
+                                  Color badgeColor;
+                                  Color txtColor;
+                                  
+                                  if (index < 3) {
+                                    badgeChild = const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.check_rounded, color: Colors.white, size: 10),
+                                        SizedBox(width: 3),
+                                        Text('100%', style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold)),
+                                      ],
+                                    );
+                                    badgeColor = const Color(0xFF10B981);
+                                    txtColor = Colors.white;
+                                  } else if (index == 3) {
+                                    badgeChild = const Text(
+                                      'NEXT',
+                                      style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                                    );
+                                    badgeColor = const Color(0xFF3B82F6);
+                                    txtColor = Colors.white;
+                                  } else {
+                                    badgeChild = Icon(Icons.lock_rounded, color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B), size: 12);
+                                    badgeColor = isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155);
+                                    txtColor = Colors.grey;
+                                  }
+
+                                  return Positioned(
+                                    left: mapWidth / 2 - 28,
+                                    top: midY - 11,
+                                    child: Container(
+                                      height: 22,
+                                      width: 56,
+                                      decoration: BoxDecoration(
+                                        color: badgeColor,
+                                        borderRadius: BorderRadius.circular(10.0),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.08),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          )
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: badgeChild,
+                                    ),
+                                  );
+                                }),
+
+                                // FOREGROUND LAYER: Interactive circular nodes and textual sidecards
+                                ...List.generate(6, (index) {
+                                  final unit = allUnits[index];
+                                  final String unitId = unit['id'];
+                                  final bool isDownloaded = _downloadedUnits.contains(unitId);
+
+                                  final String title = widget.languageCode == 'en' ? unit['enUnit'] : unit['amUnit'];
+                                  final String desc = widget.languageCode == 'en' ? unit['enDesc'] : unit['amDesc'];
+
+                                  // Status mapping: Index 0-3 = "completed", Index 4 = "active", Index 5+ = "locked"
+                                  final String status = index < 4 
+                                      ? 'completed' 
+                                      : (index == 4 ? 'active' : 'locked');
+
+                                  // Y coordinates calculating
+                                  final double centerY = (index + 0.5) * stepY;
+                                  final double circleSize = 64.0;
+                                  final double topY = centerY - (circleSize / 2);
+
+                                  final bool isEven = index % 2 == 0;
+                                  final double circleX = isEven 
+                                      ? (mapWidth * 0.22 - (circleSize / 2)) 
+                                      : (mapWidth * 0.78 - (circleSize / 2));
+
+                                  // Visual settings based on status
+                                  Color circleBorderColor;
+                                  Color circleInnerBg;
+                                  IconData mathIcon;
+                                  Color mathIconColor;
+                                  
+                                  if (status == 'completed') {
+                                    circleBorderColor = const Color(0xFF10B981);
+                                    circleInnerBg = isLight ? const Color(0xFFECFDF5) : const Color(0xFF064E3B);
+                                    mathIconColor = const Color(0xFF10B981);
+                                    
+                                    // Illustrative icon mapping
+                                    if (index == 0) mathIcon = Icons.star_rounded;
+                                    else if (index == 1) mathIcon = Icons.explore_rounded;
+                                    else if (index == 2) mathIcon = Icons.science_rounded;
+                                    else mathIcon = Icons.psychology_rounded;
+                                  } else if (status == 'active') {
+                                    circleBorderColor = const Color(0xFF3B82F6);
+                                    circleInnerBg = isLight ? const Color(0xFFEFF6FF) : const Color(0xFF172554);
+                                    mathIconColor = const Color(0xFF3B82F6);
+                                    mathIcon = Icons.extension_rounded;
+                                  } else {
+                                    circleBorderColor = isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+                                    circleInnerBg = isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B).withOpacity(0.4);
+                                    mathIconColor = isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+                                    mathIcon = Icons.grid_view_rounded;
+                                  }
+
+                                  return Stack(
+                                    children: [
+                                      // 1. Connection node circle clickable button representation
+                                      Positioned(
+                                        left: circleX,
+                                        top: topY,
+                                        child: InkWell(
+                                          onTap: () {
+                                            if (status == 'locked') {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    widget.languageCode == 'en'
+                                                        ? 'This Unit is locked! Complete preceding modules or upgrade to PRO.'
+                                                        : 'ይህ ክፍል አልተከፈተም! መጀመሪያ ቀዳሚ ማጠቃለያዎችን ይጨርሱ።',
+                                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                                  ),
+                                                  backgroundColor: widget.color,
+                                                  behavior: SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            } else {
+                                              // Launch practice quiz directly for this unit
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (context) => QuizScreen(
+                                                    grade: widget.grade,
+                                                    subject: widget.subjectId,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          borderRadius: BorderRadius.circular(100),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              // Inner glowing halo rings
+                                              if (status == 'active')
+                                                ValueListenableBuilder(
+                                                  valueListenable: _pulseController,
+                                                  builder: (context, pulseVal, child) {
+                                                    return Container(
+                                                      height: circleSize + (16 * _pulseController.value),
+                                                      width: circleSize + (16 * _pulseController.value),
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color: const Color(0xFF3B82F6).withOpacity(0.12 * (1.0 - _pulseController.value)),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              Container(
+                                                height: circleSize,
+                                                width: circleSize,
+                                                decoration: BoxDecoration(
+                                                  color: circleInnerBg,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(color: circleBorderColor, width: 3.5),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: circleBorderColor.withOpacity(isLight ? 0.08 : 0.25),
+                                                      blurRadius: status == 'active' ? 12 : 6,
+                                                      offset: const Offset(0, 3),
+                                                    )
+                                                  ],
+                                                ),
+                                                child: Center(
+                                                  child: Icon(mathIcon, color: mathIconColor, size: 28),
+                                                ),
+                                              ),
+
+                                              // Small badge anchored in bottom-right corner representing node conditions
+                                              Positioned(
+                                                bottom: 0,
+                                                right: 0,
+                                                child: Container(
+                                                  height: 20,
+                                                  width: 20,
+                                                  decoration: BoxDecoration(
+                                                    color: status == 'completed' 
+                                                        ? const Color(0xFF10B981) 
+                                                        : (status == 'active' ? const Color(0xFF3B82F6) : const Color(0xFF94A3B8)),
+                                                    shape: BoxShape.circle,
+                                                    border: Border.all(color: cardBgColor, width: 2),
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: status == 'completed'
+                                                      ? const Icon(Icons.check_rounded, color: Colors.white, size: 12)
+                                                      : (status == 'active' 
+                                                          ? Transform.rotate(
+                                                              angle: 0.7,
+                                                              child: const Icon(Icons.navigation_rounded, color: Colors.white, size: 10),
+                                                            )
+                                                          : const Icon(Icons.lock_rounded, color: Colors.white, size: 9)),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+
+                                      // 2. Info Description card adjacent to the map nodes
+                                      Positioned(
+                                        left: isEven ? circleX + circleSize + 14 : 14,
+                                        right: isEven ? 14 : (mapWidth - circleX) + 14,
+                                        top: topY - 14,
+                                        child: AnimatedOpacity(
+                                          duration: const Duration(milliseconds: 300),
+                                          opacity: status == 'locked' ? 0.65 : 1.0,
+                                          child: InkWell(
+                                            onTap: () {
+                                              if (status != 'locked') {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) => QuizScreen(
+                                                      grade: widget.grade,
+                                                      subject: widget.subjectId,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                              decoration: BoxDecoration(
+                                                color: cardBgColor,
+                                                borderRadius: BorderRadius.circular(20),
+                                                border: Border.all(
+                                                  color: status == 'active' 
+                                                      ? const Color(0xFF1E3A8A).withOpacity(0.15) 
+                                                      : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+                                                  width: status == 'active' ? 1.5 : 1.0,
+                                                ),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black.withOpacity(isLight ? 0.02 : 0.1),
+                                                    blurRadius: 6,
+                                                    offset: const Offset(0, 3),
+                                                  )
+                                                ],
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  // Unit label identifier tag
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: circleBorderColor.withOpacity(0.08),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      widget.languageCode == 'en' 
+                                                          ? 'UNIT 0${index + 1}' 
+                                                          : 'ክፍል 0${index + 1}',
+                                                      style: TextStyle(
+                                                        color: circleBorderColor,
+                                                        fontSize: 9.5,
+                                                        fontWeight: FontWeight.w900,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  // Title
+                                                  Text(
+                                                    title,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 13.5,
+                                                      color: headerTextColor,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  // Description subtitle
+                                                  Text(
+                                                    desc,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      height: 1.3,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: descColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              const SizedBox(height: 32),
+              ),
+
+              // STICKY BOTTOM BUTTON PANEL WITH ATTRACTIVE GRADIENT BUTTON
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                decoration: BoxDecoration(
+                  color: cardBgColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isLight ? 0.04 : 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    )
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // Offline download button configuration for Unit 5
+                    Expanded(
+                      flex: 4,
+                      child: InkWell(
+                        onTap: () => _simulateDownload('u5_intermediate_pkg'),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.arrow_downward_rounded, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.languageCode == 'en' ? 'OFFLINE' : 'ያውርዱ',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: headerTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    
+                    // START NEXT UNIT: Glowing pulse animations active selector button
+                    Expanded(
+                      flex: 7,
+                      child: ValueListenableBuilder(
+                        valueListenable: _pulseController,
+                        builder: (context, val, child) {
+                          final double pulseScale = 1.0 + (_pulseController.value * 0.04);
+                          return Transform.scale(
+                            scale: pulseScale,
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3B82F6), Color(0xFF10B981)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF3B82F6).withOpacity(0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => QuizScreen(
+                                    grade: widget.grade,
+                                    subject: widget.subjectId,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  widget.languageCode == 'en' ? 'START NEXT UNIT' : 'ቀጣዩን ክፍል ጀምር',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w950,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
+
+// ==========================================
+// CUSTOM BOARD-GAME MAP WINDING PATH PAINTER
+// ==========================================
+class WindingPathPainter extends CustomPainter {
+  final int count;
+  final Color activeColor;
+  final Color completedColor;
+  final Color lockedColor;
+  final bool isDarkMode;
+
+  WindingPathPainter({
+    required this.count,
+    required this.activeColor,
+    required this.completedColor,
+    required this.lockedColor,
+    required this.isDarkMode,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (count <= 1) return;
+
+    final Paint linePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+
+    final double stepY = size.height / count;
+
+    // Calculate the coordinates of node centers
+    final List<Offset> points = [];
+    for (int i = 0; i < count; i++) {
+      final double y = (i + 0.5) * stepY;
+      final double x = (i % 2 == 0) ? size.width * 0.22 : size.width * 0.78;
+      points.add(Offset(x, y));
+    }
+
+    // Connect nodes using beautiful S-shaped curves
+    for (int i = 0; i < count - 1; i++) {
+      final Offset p0 = points[i];
+      final Offset p1 = points[i + 1];
+
+      // Styling based on milestone completion rules:
+      // Line segments connected to completed index nodes are completed, active index to next is active
+      Color segmentColor;
+      if (i < 3) {
+        segmentColor = completedColor;
+      } else if (i == 3) {
+        segmentColor = activeColor;
+      } else {
+        segmentColor = lockedColor;
+      }
+
+      linePaint.color = segmentColor;
+
+      // Draw continuous bezier path curves
+      final Path path = Path();
+      path.moveTo(p0.dx, p0.dy);
+
+      final double midY = (p0.dy + p1.dy) / 2;
+      
+      // Control points alternate side curves
+      final double controlX = size.width / 2;
+      path.cubicTo(
+        controlX, p0.dy + 25, 
+        controlX, p1.dy - 25, 
+        p1.dx, p1.dy,
+      );
+
+      _drawDashedPath(canvas, path, linePaint);
+    }
+  }
+
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
+    const double dashWidth = 8.0;
+    const double dashSpace = 6.0;
+
+    final Path dashPath = Path();
+    for (final PathMetric metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        dashPath.addPath(
+          metric.extractPath(distance, distance + dashWidth),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
