@@ -705,7 +705,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> with SingleTi
                                 style: const TextStyle(
                                   letterSpacing: 1.0,
                                   fontSize: 20.0,
-                                  fontWeight: FontWeight.w950,
+                                  fontWeight: FontWeight.w900,
                                   color: Color(0xFF1E293B),
                                 ),
                               ),
@@ -1271,7 +1271,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> with SingleTi
                                   widget.languageCode == 'en' ? 'START NEXT UNIT' : 'ቀጣዩን ክፍል ጀምር',
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w950,
+                                    fontWeight: FontWeight.w900,
                                     color: Colors.white,
                                     letterSpacing: 0.5,
                                   ),
