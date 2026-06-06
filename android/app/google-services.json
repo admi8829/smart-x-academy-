@@ -12,7 +12,20 @@
           "package_name": "com.smartx.edu"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "417855560753-fqv06u3lervjm3jlkt8mus4mcdkj8npu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.smartx.edu",
+            "certificate_hash": "4e3391f9e1cb96dcb449ad6cdbc6d43eefa9d8b9"
+          }
+        },
+        {
+          "client_id": "417855560753-edpoqsghaipdvn3cdpdqio290bs2qlmp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB04-rJn024K5N-296z1mLJK8_9WobCjAE"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "417855560753-edpoqsghaipdvn3cdpdqio290bs2qlmp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

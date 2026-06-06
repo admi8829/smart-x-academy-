@@ -1696,30 +1696,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
     );
-  }(0xFF1E88E5),
-                      value: isDark,
-                      onChanged: (val) {
-                        appState.onToggleTheme();
-                      },
-                    ),
-                  ),
-                  const Divider(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.info_outline_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
-                    title: Text(
-                      currentLang == 'en' ? "App Version" : "የመተግበሪያው ስሪት", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
-                    ),
-                    trailing: const Text("1.0.0+1", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildUnitsExplorerTab(bool isLight, String currentLang, AppStateProvider appState) {
