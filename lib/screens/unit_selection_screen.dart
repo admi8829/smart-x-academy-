@@ -1205,9 +1205,10 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ],
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 32),
             ],
           ),

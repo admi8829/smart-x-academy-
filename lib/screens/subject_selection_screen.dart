@@ -147,7 +147,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           _local('title', currentLang),
           style: TextStyle(
             fontSize: 16.0,
-            fontWeight: FontWeight.w950,
+            fontWeight: FontWeight.w900,
             color: headerTextColor,
             letterSpacing: 0.5,
           ),
@@ -428,7 +428,6 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> {
       ),
     );
   }
-}
 }
 
 // ============================================================================
