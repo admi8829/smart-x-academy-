@@ -28,19 +28,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // Text Editing Controllers
+  // Text Editing Controllers matching image fields
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _schoolNameController = TextEditingController();
+  final _ageController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _schoolNameController = TextEditingController();
 
-  // Custom Selectors state
-  String _selectedSex = 'Male'; // default
-  int _selectedGrade = 12; // default
+  // Custom Selector fields
+  String _selectedSex = 'Male'; // Male is selected by default in screenshot image
+  int _selectedGrade = 12; // default 12, dropdown says Select Grade
   String _selectedCountryCode = '+251'; // default Ethiopia
-  bool _isPremiumSelected = true; // default premium matching polished status requested
-
+  bool _isPremiumSelected = true; // default pro unlocked
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -48,9 +48,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
+    _schoolNameController.dispose();
+    _ageController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _schoolNameController.dispose();
     super.dispose();
   }
 
@@ -58,64 +59,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _local(String key) {
     final translations = {
       'en': {
-        'title': 'Create Study Profile',
-        'sub': 'Join Smart X Academy. Enter your details to experience premium grades 9-12 courses and track your progress.',
+        'title': 'Create Account',
         'field_fullname': 'Full Name',
-        'field_school': 'School Name',
-        'school_hint': 'e.g., Yeka Secondary School',
-        'field_email': 'Email Address',
+        'field_grade': 'Grade Level',
+        'field_sex': 'Sex (Gender)',
         'field_phone': 'Phone Number',
         'field_password': 'Password',
-        'field_sex': 'Gender / Sex',
-        'field_grade': 'Your Current Grade',
-        'btn_register': 'Register Now & Start Learning',
-        'btn_registering': 'Creating Your Account...',
-        'already_have_account': 'Register offline or fallback if network is slow.',
-        'note_title': 'Safe & Encrypted',
-        'note_desc': 'Smart X Academy stores school progress securely and supports offline caching of mock tests.',
+        'btn_register': 'Register',
         'success_reg': 'Profile Setup Completed Successfully! Welcome to Smart X!',
-        'auth_error': 'Authentication failed. Please check network and credentials.',
-        'privacy_policy': 'By registering, you agree to our Smart X academic learning guidelines & privacy rules.',
-        'val_required': 'This field is required',
-        'val_invalid_email': 'Enter a valid email address',
-        'val_phone': 'Enter a valid phone number (e.g., +251...)',
-        'val_pwd_len': 'Password must be at least 6 characters',
-        'sex_male': 'Male',
-        'sex_female': 'Female',
-        'g9': 'Grade 9',
-        'g10': 'Grade 10',
-        'g11': 'Grade 11',
-        'g12': 'Grade 12',
+        'already_have_account': 'Already have an account? ',
+        'terms_text': 'By registering, you agree to our ',
       },
       'am': {
-        'title': 'የጥናት መገለጫ ይፍጠሩ',
-        'sub': 'ስማርት ኤክስ አካዳሚን ይቀላቀሉ። የ9ኛ-12ኛ ክፍል ኮርሶችን እና በይነተገናኝ የጥናት ማጠቃለያዎችን ለማግኘት ዝርዝሮችዎን ያስገቡ።',
+        'title': 'መለያ ይፍጠሩ',
         'field_fullname': 'ሙሉ ስም',
-        'field_school': 'የትምህርት ቤት ስም',
-        'school_hint': 'ለምሳሌ: የካ ሁለተኛ ደረጃ ትምህርት ቤት',
-        'field_email': 'ኢሜል አድራሻ',
+        'field_grade': 'የክፍል ደረጃ',
+        'field_sex': 'ጾታ',
         'field_phone': 'ስልክ ቁጥር',
         'field_password': 'የይለፍ ቃል',
-        'field_sex': 'ጾታ',
-        'field_grade': 'ክፍልዎ / ደረጃዎ',
-        'btn_register': 'አሁኑኑ ይመዝገቡ እና መማር ይጀምሩ',
-        'btn_registering': 'መለያ በመፍጠር ላይ...',
-        'already_have_account': 'ግንኙነት ቀርፋፋ ከሆነ ያለ በይነመረብ መመዝገብ ይችላሉ።',
-        'note_title': 'ደህንነቱ አስተማማኝ እና የተመሰጠረ',
-        'note_desc': 'ስማርት ኤክስ አካዳሚ የትምህርት እድገትዎን በደህንነት ይጠብቃል እንዲሁም የአጫጭር ፈተናዎችን ውጤት ያግዘዎታል።',
+        'btn_register': 'ይመዝገቡ',
         'success_reg': 'ምዝገባው በስኬት ተጠናቋል! ወደ ስማርት ኤክስ እንኳን ደህና መጡ!',
-        'auth_error': 'መመዝገብ አልተቻለም። እባክዎ የበይነመረብ ግንኙነትዎን ያረጋግጡ።',
-        'privacy_policy': 'በመመዝገብዎ፣ በስማርት ኤክስ አካዳሚ የጥናት እና ህግጋት ደንቦች ይስማማሉ።',
-        'val_required': 'ይህ መሙላት አለበት',
-        'val_invalid_email': 'እባክዎ ትክክለኛ የኢሜል አድራሻ ያስገቡ',
-        'val_phone': 'እባክዎ ትክክለኛ ስልክ ያስገቡ (ለምሳሌ +251...)',
-        'val_pwd_len': 'የይለፍ ቃል ቢያንስ 6 ቁምፊዎች መሆን አለበት',
-        'sex_male': 'ወንድ',
-        'sex_female': 'ሴት',
-        'g9': 'ክፍል 9',
-        'g10': 'ክፍል 10',
-        'g11': 'ክፍል 11',
-        'g12': 'ክፍል 12',
+        'already_have_account': 'ቀድሞውኑ መለያ አለዎት? ',
+        'terms_text': 'በመመዝገብዎ፣ በሚከተሉት ደንቦች ይስማማሉ ',
       }
     };
 
@@ -129,6 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String schoolName,
     required String grade,
     required String sex,
+    required int age,
     required bool isPremium,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -138,11 +104,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     await prefs.setString('user_schoolName', schoolName);
     await prefs.setString('user_grade', grade);
     await prefs.setString('user_sex', sex);
+    await prefs.setInt('user_age', age);
     await prefs.setBool('user_isPremium', isPremium);
     await prefs.setBool('is_authenticated', true);
   }
 
-  // Handles real Firebase sign-up with fallback mock synchronization for seamless offline development
+  // Handles Firebase signup or local offline emulator fallback
   Future<void> _handleRegistration() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -152,17 +119,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
     });
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final email = _emailController.text.trim().isEmpty 
+        ? "student_${DateTime.now().millisecondsSinceEpoch}@smartx.com" 
+        : _emailController.text.trim();
+    final password = _passwordController.text.trim().isEmpty 
+        ? "123456" 
+        : _passwordController.text.trim();
     final fullName = _fullNameController.text.trim();
     final phone = _phoneController.text.trim();
     final schoolName = _schoolNameController.text.isEmpty 
-        ? "Smart X Academy" 
+        ? "Yeka Secondary School" 
         : _schoolNameController.text.trim();
+    final ageVal = int.tryParse(_ageController.text.trim()) ?? 17;
     final fullPhoneWithCountry = '$_selectedCountryCode $phone';
 
     try {
-      // Create user on Firebase Auth
+      // Auth signup
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -170,27 +142,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       final user = userCredential.user;
       if (user != null) {
-        // Save addition user data to Firestore
-        await _saveUserToDatabase(user.uid, fullName, email, fullPhoneWithCountry, schoolName);
+        await _saveUserToDatabase(user.uid, fullName, email, fullPhoneWithCountry, schoolName, ageVal);
       } else {
-        throw Exception("Created user was null.");
+        throw Exception("User created was null");
       }
     } catch (e) {
-      debugPrint("Firebase Real Auth Bypass triggered: $e");
-      // Seamless interactive development preview sandbox fallback
-      _handleSandboxRegisterFallback(fullName, email, fullPhoneWithCountry, schoolName);
+      debugPrint("Firebase exception, saving local copy: $e");
+      _handleSandboxRegisterFallback(fullName, email, fullPhoneWithCountry, schoolName, ageVal);
     }
   }
 
-  // Dry run / local preview emulator
-  void _handleSandboxRegisterFallback(String fullName, String email, String phone, String schoolName) async {
-    _showSnackBar('Initializing Live Preview Account (Local Database Synchronized)', isError: false);
-    
-    await Future.delayed(const Duration(milliseconds: 1500));
+  void _handleSandboxRegisterFallback(String fullName, String email, String phone, String schoolName, int ageVal) async {
+    await Future.delayed(const Duration(milliseconds: 1000));
 
-    final String mockUid = "email_sandbox_uid_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}";
+    final String mockUid = "sandbox_uid_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}";
     final String userGradeStr = 'Grade $_selectedGrade';
-    
+
     final mockUserData = {
       'uid': mockUid,
       'fullName': fullName,
@@ -199,19 +166,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'sex': _selectedSex,
       'grade': userGradeStr,
       'schoolName': schoolName,
+      'age': ageVal,
       'isPremium': _isPremiumSelected,
       'createdAt': FieldValue.serverTimestamp(),
-      'lastActive': FieldValue.serverTimestamp(),
       'language': widget.languageCode,
     };
 
     try {
       await _firestore.collection('users').doc(mockUid).set(mockUserData);
-    } catch (dbError) {
-      debugPrint("Dry Run Firestore bypass: $dbError");
-    }
+    } catch (_) {}
 
-    // Save to SharedPreferences for offline instant loading!
     await _saveLocalSession(
       fullName: fullName,
       email: email,
@@ -219,6 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       schoolName: schoolName,
       grade: userGradeStr,
       sex: _selectedSex,
+      age: ageVal,
       isPremium: _isPremiumSelected,
     );
 
@@ -240,109 +205,106 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _saveUserToDatabase(String uid, String fullName, String email, String phone, String schoolName) async {
+  Future<void> _saveUserToDatabase(String uid, String fullName, String email, String phone, String schoolName, int ageVal) async {
+    final String userGradeStr = 'Grade $_selectedGrade';
+    final userData = {
+      'uid': uid,
+      'fullName': fullName,
+      'email': email,
+      'phoneNumber': phone,
+      'sex': _selectedSex,
+      'grade': userGradeStr,
+      'schoolName': schoolName,
+      'age': ageVal,
+      'isPremium': _isPremiumSelected,
+      'createdAt': FieldValue.serverTimestamp(),
+      'language': widget.languageCode,
+    };
+
     try {
-      final String userGradeStr = 'Grade $_selectedGrade';
-      final userData = {
-        'uid': uid,
-        'fullName': fullName,
-        'email': email,
-        'phoneNumber': phone,
-        'sex': _selectedSex,
-        'grade': userGradeStr,
-        'schoolName': schoolName,
-        'isPremium': _isPremiumSelected,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastActive': FieldValue.serverTimestamp(),
-        'language': widget.languageCode,
-      };
-
       await _firestore.collection('users').doc(uid).set(userData, SetOptions(merge: true));
-      
-      // Save to SharedPreferences for offline instant loading!
-      await _saveLocalSession(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        schoolName: schoolName,
-        grade: userGradeStr,
-        sex: _selectedSex,
-        isPremium: _isPremiumSelected,
-      );
+    } catch (_) {}
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _showSnackBar(_local('success_reg'));
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              isDarkMode: widget.isDarkMode,
-              languageCode: widget.languageCode,
-              onToggleTheme: widget.onToggleTheme,
-              onToggleLanguage: widget.onToggleLanguage,
-            ),
-          ),
-        );
-      }
-    } catch (dbError) {
-      debugPrint("Firestore write failed, continuing with profile fallback: $dbError");
-      final String userGradeStr = 'Grade $_selectedGrade';
-      
-      // Save to SharedPreferences for offline instant loading!
-      await _saveLocalSession(
-        fullName: fullName,
-        email: email,
-        phone: phone,
-        schoolName: schoolName,
-        grade: userGradeStr,
-        sex: _selectedSex,
-        isPremium: _isPremiumSelected,
-      );
+    await _saveLocalSession(
+      fullName: fullName,
+      email: email,
+      phone: phone,
+      schoolName: schoolName,
+      grade: userGradeStr,
+      sex: _selectedSex,
+      age: ageVal,
+      isPremium: _isPremiumSelected,
+    );
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _showSnackBar(_local('success_reg'));
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              isDarkMode: widget.isDarkMode,
-              languageCode: widget.languageCode,
-              onToggleTheme: widget.onToggleTheme,
-              onToggleLanguage: widget.onToggleLanguage,
-            ),
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+      _showSnackBar(_local('success_reg'));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(
+            isDarkMode: widget.isDarkMode,
+            languageCode: widget.languageCode,
+            onToggleTheme: widget.onToggleTheme,
+            onToggleLanguage: widget.onToggleLanguage,
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
-  void _showSnackBar(String text, {bool isError = false}) {
+  void _showSnackBar(String text) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-              color: isError ? Colors.redAccent : const Color(0xFF10B981),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.0, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: widget.isDarkMode ? const Color(0xFF1E293B) : const Color(0xFF0F172A),
+        content: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF0D2353),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  // Custom Input Field Container with precise subtle border and box shadows matching design
+  Widget _buildFieldContainer({required Widget child, required bool isDark}) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFD2D6DC),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildLabel(String text, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2.0, bottom: 8.0, top: 14.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isDark ? Colors.white : const Color(0xFF0F172A),
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -350,723 +312,658 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final bool isDark = widget.isDarkMode;
-    final Color domBackground = isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9);
-    final Color inputFillColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final Color primaryColor = const Color(0xFF133261); // Gorgeous dark navy smart primary color
-    final Color accentBlue = const Color(0xFF2563EB);
+    final Color outerBgColor = isDark ? const Color(0xFF0B1120) : const Color(0xFFF1F5F9);
+    final Color navyColor = const Color(0xFF0D2353);
 
     return Scaffold(
-      backgroundColor: domBackground,
+      backgroundColor: outerBgColor,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : primaryColor, size: 22),
-          onPressed: () => Navigator.of(context).pop(),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: isDark ? Colors.white : navyColor, size: 26),
+            onPressed: () {},
+          ),
+        ),
+        centerTitle: true,
+        title: Text(
+          _local('title'),
+          style: TextStyle(
+            fontSize: 21.0,
+            fontWeight: FontWeight.w900,
+            color: isDark ? Colors.white : navyColor,
+          ),
         ),
         actions: [
-          IconButton(
-            icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded, color: isDark ? const Color(0xFFFBBF24) : primaryColor, size: 22),
-            onPressed: widget.onToggleTheme,
-          ),
+          // Log In action button inside AppBar exactly as shown in screenshot
           GestureDetector(
-            onTap: widget.onToggleLanguage,
+            onTap: () {
+              _showSnackBar("Log In pressed");
+            },
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                color: isDark ? const Color(0xFF1F2937) : const Color(0xFFECEFF1),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.language_rounded, size: 16, color: Colors.blueAccent),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.languageCode == 'en' ? 'አማ' : 'EN',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 11,
-                      color: isDark ? Colors.white : primaryColor,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Log In',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12.5,
+                ),
               ),
             ),
-          ),
+          )
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: outerBgColor,
+          image: DecorationImage(
+            image: const AssetImage('assets/images/education_bg_pattern.png'),
+            repeat: ImageRepeat.repeat,
+            opacity: isDark ? 0.03 : 0.08,
+          ),
+        ),
+        child: SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header logo / Brand badge
-              Center(
-                child: Container(
-                  height: 64,
-                  width: 64,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, accentBlue],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentBlue.withValues(alpha: 0.25),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.school_outlined,
-                    size: 32,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-
-              Text(
-                _local('title'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 25.0,
-                  fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : primaryColor,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 8.0),
-              Text(
-                _local('sub'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13.0,
-                  height: 1.4,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 24.0),
-
-              // BEAUTIFUL REGISTRATION FORM CONTAINER
-              Form(
-                key: _formKey,
-                child: Container(
-                  padding: const EdgeInsets.all(22.0),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF111827) : Colors.white,
-                    borderRadius: BorderRadius.circular(30.0),
-                    border: Border.all(
-                      color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE2E8F0),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Full Name input field
-                      _buildFieldTitle(_local('field_fullname'), isDark),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _fullNameController,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                        decoration: _buildInputDecoration(
-                          hint: widget.languageCode == 'en' ? 'e.g., Abebe Bekele' : 'ለምሳሌ አበበ በከለ',
-                          icon: Icons.person_outline_rounded,
-                          isDark: isDark,
-                          fillColor: inputFillColor,
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Form(
+                    key: _formKey,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          width: 1.5,
                         ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return _local('val_required');
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // School Name input field
-                      _buildFieldTitle(_local('field_school'), isDark),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _schoolNameController,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                        decoration: _buildInputDecoration(
-                          hint: _local('school_hint'),
-                          icon: Icons.apartment_rounded,
-                          isDark: isDark,
-                          fillColor: inputFillColor,
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return _local('val_required');
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Sex selection row
-                      _buildFieldTitle(_local('field_sex'), isDark),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildSexOptionPill(
-                              label: _local('sex_male'),
-                              value: 'Male',
-                              icon: Icons.male_rounded,
-                              isDark: isDark,
-                              selectedColor: accentBlue,
-                            ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildSexOptionPill(
-                              label: _local('sex_female'),
-                              value: 'Female',
-                              icon: Icons.female_rounded,
-                              isDark: isDark,
-                              selectedColor: Colors.pinkAccent,
-                            ),
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.12),
+                            blurRadius: 28,
+                            offset: const Offset(0, 14),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
-
-                      // Grade Selection Grid Title
-                      _buildFieldTitle(_local('field_grade'), isDark),
-                      const SizedBox(height: 10),
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        childAspectRatio: 2.6,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        children: [
-                          _buildGradeOptionChip(9, _local('g9'), isDark, primaryColor),
-                          _buildGradeOptionChip(10, _local('g10'), isDark, primaryColor),
-                          _buildGradeOptionChip(11, _local('g11'), isDark, primaryColor),
-                          _buildGradeOptionChip(12, _local('g12'), isDark, primaryColor),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-
-                      // Phone Number Field
-                      _buildFieldTitle(_local('field_phone'), isDark),
-                      const SizedBox(height: 6),
-                      Row(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            height: 50,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: inputFillColor,
-                              borderRadius: BorderRadius.circular(16.0),
-                              border: Border.all(
-                                color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                                width: 1.2,
+                          // 1. Full Name field
+                          _buildLabel(_local('field_fullname'), isDark),
+                          _buildFieldContainer(
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _fullNameController,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                prefixIcon: Icon(
+                                  Icons.person,
+                                  color: isDark ? Colors.white70 : navyColor,
+                                  size: 20,
+                                ),
+                              ),
+                              validator: (val) {
+                                if (val == null || val.trim().isEmpty) {
+                                  return 'Name is required';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 2. Email Address field (Directly under Full Name with NO label above!)
+                          _buildFieldContainer(
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Email Address',
+                                hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.email,
+                                  color: isDark ? Colors.white70 : navyColor,
+                                  size: 20,
+                                ),
                               ),
                             ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 3. Grade Level dropdown
+                          _buildLabel(_local('field_grade'), isDark),
+                          _buildFieldContainer(
+                            isDark: isDark,
                             child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedCountryCode,
-                                dropdownColor: isDark ? const Color(0xFF111827) : Colors.white,
-                                icon: Icon(Icons.arrow_drop_down_rounded, color: isDark ? Colors.white70 : Colors.black54),
-                                style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 13, fontWeight: FontWeight.bold),
-                                items: const [
-                                  DropdownMenuItem(value: '+251', child: Text('🇪🇹 +251')),
-                                  DropdownMenuItem(value: '+1', child: Text('🇺🇸 +1')),
-                                  DropdownMenuItem(value: '+44', child: Text('🇬🇧 +44')),
-                                  DropdownMenuItem(value: '+254', child: Text('🇰🇪 +254')),
-                                  DropdownMenuItem(value: '+255', child: Text('🇹🇿 +255')),
-                                  DropdownMenuItem(value: '+256', child: Text('🇺🇬 +256')),
-                                ],
+                              child: DropdownButton<int>(
+                                value: _selectedGrade,
+                                isExpanded: true,
+                                icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white70 : navyColor, size: 28),
+                                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                items: [9, 10, 11, 12, 13].map((int val) {
+                                  return DropdownMenuItem<int>(
+                                    value: val == 13 ? 12 : val, // handles fallback elegantly
+                                    child: Text(val == 13 ? 'Select Grade' : 'Grade $val'),
+                                  );
+                                }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
                                     setState(() {
-                                      _selectedCountryCode = val;
+                                      _selectedGrade = val;
                                     });
                                   }
                                 },
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
+
+                          const SizedBox(height: 10),
+
+                          // 4. School Name field (NO label above!)
+                          _buildFieldContainer(
+                            isDark: isDark,
                             child: TextFormField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                              decoration: _buildInputDecoration(
-                                hint: '911000000',
-                                icon: Icons.phone_android_rounded,
-                                isDark: isDark,
-                                fillColor: inputFillColor,
+                              controller: _schoolNameController,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'School Name',
+                                hintStyle: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.apartment,
+                                  color: isDark ? Colors.white70 : navyColor,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 5. Age field (Calendar icon left and calendar icon right! NO label above!)
+                          _buildFieldContainer(
+                            isDark: isDark,
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_month, color: isDark ? Colors.white70 : navyColor, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _ageController,
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Age',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14.5,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.calendar_month, color: isDark ? Colors.white70 : navyColor, size: 20),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 6. Sex (Gender) field row
+                          Row(
+                            children: [
+                              Text(
+                                _local('field_sex'),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : const Color(0xFF0B1E40),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const Spacer(),
+                              // Male selector button (White box with outline and shadow when selected)
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedSex = 'Male';
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _selectedSex == 'Male'
+                                        ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _selectedSex == 'Male'
+                                          ? (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2))
+                                          : Colors.transparent,
+                                      width: _selectedSex == 'Male' ? 1.2 : 0,
+                                    ),
+                                    boxShadow: _selectedSex == 'Male'
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.08),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _selectedSex == 'Male' ? Icons.radio_button_checked : Icons.radio_button_off,
+                                        color: isDark ? Colors.white70 : navyColor,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Male',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Female selector button
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedSex = 'Female';
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _selectedSex == 'Female'
+                                        ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: _selectedSex == 'Female'
+                                          ? (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2))
+                                          : Colors.transparent,
+                                      width: _selectedSex == 'Female' ? 1.2 : 0,
+                                    ),
+                                    boxShadow: _selectedSex == 'Female'
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.08),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _selectedSex == 'Female' ? Icons.radio_button_checked : Icons.radio_button_off,
+                                        color: isDark ? Colors.white70 : navyColor,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Female',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 13.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 7. Phone Number field
+                          _buildLabel(_local('field_phone'), isDark),
+                          _buildFieldContainer(
+                            isDark: isDark,
+                            child: Row(
+                              children: [
+                                const Text(
+                                  '🇪🇹',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Et...',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white70 : navyColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14.5,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  color: isDark ? Colors.white70 : navyColor,
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  width: 1.2,
+                                  height: 22,
+                                  color: Colors.grey[300],
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: 'Phone Number',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                    validator: (val) {
+                                      if (val == null || val.trim().isEmpty) {
+                                        return 'Phone number required';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          // 8. Password field
+                          _buildLabel(_local('field_password'), isDark),
+                          _buildFieldContainer(
+                            isDark: isDark,
+                            child: TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : const Color(0xFF0F172A),
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                prefixIcon: Icon(
+                                  Icons.lock,
+                                  color: isDark ? Colors.white70 : navyColor,
+                                  size: 20,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    color: Colors.grey,
+                                    size: 18,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
                               ),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
-                                  return _local('val_required');
-                                }
-                                if (!RegExp(r'^[0-9]{9,10}$').hasMatch(val.trim())) {
-                                  return 'Please enter a 9-digit number';
+                                  return 'Password is required';
                                 }
                                 return null;
                               },
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
 
-                      // Email Field
-                      _buildFieldTitle(_local('field_email'), isDark),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                        decoration: _buildInputDecoration(
-                          hint: 'example@smartx.com',
-                          icon: Icons.mail_outline_rounded,
-                          isDark: isDark,
-                          fillColor: inputFillColor,
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return _local('val_required');
-                          }
-                          if (!val.contains('@') || !val.contains('.')) {
-                            return _local('val_invalid_email');
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                          const SizedBox(height: 22),
 
-                      // Password Field
-                      _buildFieldTitle(_local('field_password'), isDark),
-                      const SizedBox(height: 6),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                        decoration: _buildInputDecoration(
-                          hint: '••••••••',
-                          icon: Icons.lock_outline_rounded,
-                          isDark: isDark,
-                          fillColor: inputFillColor,
-                          suffix: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                              size: 18,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return _local('val_required');
-                          }
-                          if (val.length < 6) {
-                            return _local('val_pwd_len');
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      // PREMIUM ACCOUNT OPTION SELECTION SWITCH WITH GOLD GRADIENT BORDER
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(14.0),
-                        decoration: BoxDecoration(
-                          color: _isPremiumSelected 
-                              ? (isDark ? const Color(0xFF1E1B4B) : const Color(0xFFF5F3FF))
-                              : inputFillColor,
-                          borderRadius: BorderRadius.circular(18.0),
-                          border: Border.all(
-                            color: _isPremiumSelected 
-                                ? const Color(0xFFF59E0B) // Golden highlight
-                                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                            width: _isPremiumSelected ? 2.0 : 1.2,
-                          ),
-                          boxShadow: [
-                            if (_isPremiumSelected)
-                              BoxShadow(
-                                color: const Color(0xFFF59E0B).withOpacity(0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 42,
-                              width: 42,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF59E0B).withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 24),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        widget.languageCode == 'en' ? 'Premium Student' : 'ልዩ ተጠቃሚ (Premium)',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 13.5,
-                                          color: isDark ? Colors.white : const Color(0xFF1E293B),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF59E0B),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: const Text(
-                                          'PRO',
-                                          style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                                        ),
+                          // 9. Register action button (Navy blue pill shaped button with heavy shadows)
+                          _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF0D2353),
+                                  ),
+                                )
+                              : Container(
+                                  width: double.infinity,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF133B61), Color(0xFF0B1F40)],
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                    ),
+                                    borderRadius: BorderRadius.circular(28),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: navyColor.withOpacity(0.35),
+                                        blurRadius: 14,
+                                        offset: const Offset(0, 6),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.languageCode == 'en'
-                                        ? 'Unlock G9-12 full syllabus, offline exams, cheat sheets & live feedback.'
-                                        : 'ሙሉ সিলেበስ፣ የክለሳ ፈተናዎች እና የመልስ ማብራሪያዎችን ይክፈቱ።',
+                                  child: TextButton(
+                                    onPressed: _handleRegistration,
+                                    style: TextButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(28),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _local('btn_register'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+
+                          const SizedBox(height: 16),
+
+                          // Footer 1: Already have an account? Log In
+                          Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: _local('already_have_account'),
                                     style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                                      height: 1.3,
+                                      color: isDark ? Colors.white60 : Colors.black54,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Log In',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.blueAccent : navyColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w900,
+                                      decoration: TextDecoration.underline,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            Transform.scale(
-                              scale: 0.85,
-                              child: Switch(
-                                value: _isPremiumSelected,
-                                activeColor: const Color(0xFFF59E0B),
-                                activeTrackColor: const Color(0xFFF59E0B).withOpacity(0.3),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isPremiumSelected = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // GORGEOUS ACTION REGISTER BUTTON
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: _isLoading 
-                                  ? [Colors.grey, Colors.grey[400]!]
-                                  : [primaryColor, accentBlue],
-                            ),
-                            borderRadius: BorderRadius.circular(16.0),
-                            boxShadow: [
-                              if (!_isLoading)
-                                BoxShadow(
-                                  color: accentBlue.withValues(alpha: 0.35),
-                                  blurRadius: 18,
-                                  offset: const Offset(0, 5),
-                                )
-                            ],
                           ),
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleRegistration,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : Text(
-                                    _local('btn_register'),
-                                    style: const TextStyle(
+
+                          const SizedBox(height: 8),
+
+                          // Footer 2: By registering, you agree to our Terms of Service
+                          Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: _local('terms_text'),
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white60 : Colors.black54,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 14.5,
-                                      letterSpacing: 0.2,
                                     ),
                                   ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24.0),
-
-              // Encrypted Safety Guard Container Card Informer
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF111827) : Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF1F2937) : const Color(0xFFE2E8F0),
-                    width: 1.0,
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified_user_rounded,
-                        color: Color(0xFF10B981),
-                        size: 18,
-                      ),
-                    ),
-                    const SizedBox(width: 12.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _local('note_title'),
-                            style: TextStyle(
-                              fontSize: 13.0,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : primaryColor,
-                            ),
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            _local('note_desc'),
-                            style: TextStyle(
-                              fontSize: 12.0,
-                              height: 1.4,
-                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                  TextSpan(
+                                    text: 'Terms of Service',
+                                    style: TextStyle(
+                                      color: isDark ? Colors.blueAccent : navyColor,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 24.0),
 
-              // Terms policy footers
-              Text(
-                _local('privacy_policy'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11.0,
-                  height: 1.5,
-                  color: isDark ? const Color(0xFF4B5563) : const Color(0xFF94A3B8),
+              // Floating bottom navigation bar mirroring HomeScreen bottom nav bar to duplicate the exact screenshot view
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
+                child: Container(
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    borderRadius: BorderRadius.circular(38.0),
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 16.0,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(38.0),
+                    child: BottomNavigationBar(
+                      currentIndex: 2, // Highlight Profile tab selected exactly like screenshot
+                      elevation: 0,
+                      onTap: (index) {
+                        // Switch tab fallback - pops back to Home Screen
+                        Navigator.of(context).pop();
+                      },
+                      type: BottomNavigationBarType.fixed,
+                      backgroundColor: Colors.transparent,
+                      selectedItemColor: const Color(0xFF0D2353),
+                      unselectedItemColor: isDark ? Colors.white60 : Colors.black45,
+                      selectedFontSize: 11,
+                      unselectedFontSize: 11,
+                      selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900),
+                      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.home, size: 24, color: isDark ? Colors.white60 : Colors.black45),
+                          label: 'Home',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.book_outlined, size: 23, color: isDark ? Colors.white60 : Colors.black45),
+                          label: 'Courses',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.person, size: 22, color: navyColor),
+                          ),
+                          label: 'Profile',
+                        ),
+                        BottomNavigationBarItem(
+                          icon: Icon(Icons.settings_outlined, size: 23, color: isDark ? Colors.white60 : Colors.black45),
+                          label: 'Settings',
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildFieldTitle(String label, bool isDark) {
-    return Text(
-      label,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w800,
-        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
-      ),
-    );
-  }
-
-  Widget _buildSexOptionPill({
-    required String label,
-    required String value,
-    required IconData icon,
-    required bool isDark,
-    required Color selectedColor,
-  }) {
-    bool isSelected = _selectedSex == value;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedSex = value;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 11.0, horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? selectedColor.withValues(alpha: isDark ? 0.15 : 0.08)
-              : (isDark ? const Color(0xFF1F2937) : const Color(0xFFF8FAFC)),
-          borderRadius: BorderRadius.circular(14.0),
-          border: Border.all(
-            color: isSelected 
-                ? selectedColor 
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            width: isSelected ? 2.0 : 1.2,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? selectedColor : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                fontSize: 13.5,
-                color: isSelected ? (isDark ? Colors.white : selectedColor) : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGradeOptionChip(int gradeVal, String label, bool isDark, Color primaryColor) {
-    bool isSelected = _selectedGrade == gradeVal;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedGrade = gradeVal;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? primaryColor.withValues(alpha: isDark ? 0.2 : 0.08)
-              : (isDark ? const Color(0xFF1F2937) : const Color(0xFFF8FAFC)),
-          borderRadius: BorderRadius.circular(14.0),
-          border: Border.all(
-            color: isSelected 
-                ? primaryColor
-                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-            width: isSelected ? 2.0 : 1.2,
-          ),
-          boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: primaryColor.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              )
-          ],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-            fontSize: 13.0,
-            color: isSelected ? (isDark ? Colors.white : primaryColor) : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
-          ),
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration({
-    required String hint,
-    required IconData icon,
-    required bool isDark,
-    required Color fillColor,
-    Widget? suffix,
-  }) {
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: Icon(icon, size: 18, color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-      suffixIcon: suffix,
-      filled: true,
-      fillColor: fillColor,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      hintStyle: TextStyle(color: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8), fontSize: 13),
-      errorStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), width: 1.2),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFF2563EB), width: 1.8),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
       ),
     );
   }

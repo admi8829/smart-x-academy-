@@ -37,6 +37,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
 
+  // Profile Form Controllers matching screenshot fields
+  late TextEditingController _fullNameController;
+  late TextEditingController _emailController;
+  late TextEditingController _schoolNameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _passwordController;
+  late TextEditingController _ageController;
+
+  String _selectedSex = 'Male';
+  int _selectedGrade = 12;
+  String _selectedCountryCode = '+251';
+  bool _isProfileLoading = false;
+  bool _obscurePassword = true;
+
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
@@ -134,6 +148,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
+    _fullNameController = TextEditingController();
+    _emailController = TextEditingController();
+    _schoolNameController = TextEditingController();
+    _phoneController = TextEditingController();
+    _passwordController = TextEditingController();
+    _ageController = TextEditingController();
+
     _loadProfileData();
     _fadeController = AnimationController(
       vsync: this,
@@ -156,6 +177,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _userEmail = prefs.getString('user_email') ?? "abebe@smartx.com";
       _isPremiumUser = prefs.getBool('user_isPremium') ?? true;
       _profileImageRemoved = prefs.getBool('user_imageRemoved') ?? false;
+
+      // Populate text controllers
+      _fullNameController.text = _userName;
+      _emailController.text = _userEmail;
+      _schoolNameController.text = _userSchoolName;
+      _phoneController.text = _userPhoneNumber.replaceAll(RegExp(r'^\+251\s*'), ''); // parse local digits
+      _passwordController.text = "•••••••••";
+      _ageController.text = prefs.getInt('user_age')?.toString() ?? "17";
+      _selectedSex = prefs.getString('user_sex') ?? "Male";
+      
+      // parse grade number
+      final numStr = _userGradeStr.replaceAll(RegExp(r'[^0-9]'), '');
+      _selectedGrade = int.tryParse(numStr) ?? 12;
     });
   }
 
@@ -177,6 +211,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _schoolNameController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _ageController.dispose();
     _fadeController.dispose();
     _bannerAd?.dispose();
     super.dispose();
@@ -220,6 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     bool isLight = !widget.isDarkMode;
+    final bool isProfileActive = _currentIndex == 2;
 
     return Scaffold(
       backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
@@ -237,57 +278,90 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           onPressed: () {},
         ),
         title: Text(
-          _local('title'),
+          isProfileActive 
+              ? (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ')
+              : _local('title'),
           style: TextStyle(
             fontSize: 21,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
             color: isLight ? const Color(0xFF0D2353) : Colors.white,
             letterSpacing: -0.3,
           ),
         ),
-        actions: [
-          // Light/Dark Theme Switcher (Represents custom dark mode icon)
-          IconButton(
-            icon: Icon(
-              widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
-              color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
-              size: 24,
-            ),
-            onPressed: widget.onToggleTheme,
-          ),
-          
-          // Compact, elegant language globe button matching design with EN/አማ
-          GestureDetector(
-            onTap: widget.onToggleLanguage,
-            child: Container(
-              margin: const EdgeInsets.only(right: 16, left: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.public_outlined,
-                    size: 18,
-                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    "EN/አማ",
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+        actions: isProfileActive
+            ? [
+                // Log In action button inside AppBar exactly as shown in screenshot representation
+                GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Log In pressed"),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFECEFF1) : const Color(0xFF1F2937),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'Log In',
+                      style: TextStyle(
+                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        fontWeight: FontWeight.w850,
+                        fontSize: 12.5,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          )
-        ],
+                )
+              ]
+            : [
+                // Light/Dark Theme Switcher (Represents custom dark mode icon)
+                IconButton(
+                  icon: Icon(
+                    widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
+                    color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
+                    size: 24,
+                  ),
+                  onPressed: widget.onToggleTheme,
+                ),
+                
+                // Compact, elegant language globe button matching design with EN/አማ
+                GestureDetector(
+                  onTap: widget.onToggleLanguage,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 16, left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.public_outlined,
+                          size: 18,
+                          color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "EN/አማ",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
       ),
       body: Container(
         width: double.infinity,
@@ -1101,359 +1175,593 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildProfileScreen(bool isLight) {
-    // Generate lovely initials for the initials-fallback avatar
-    String initials = "SU";
-    if (_userName.trim().isNotEmpty) {
-      final parts = _userName.trim().split(" ");
-      if (parts.length > 1) {
-        initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      } else if (_userName.trim().length > 1) {
-        initials = _userName.trim().substring(0, 2).toUpperCase();
-      } else {
-        initials = _userName.trim()[0].toUpperCase();
-      }
+  Future<void> _handleProfileFormSave() async {
+    setState(() {
+      _isProfileLoading = true;
+    });
+
+    final String fullName = _fullNameController.text.trim();
+    final String email = _emailController.text.trim();
+    final String schoolName = _schoolNameController.text.trim();
+    final String phone = _phoneController.text.trim();
+    final int ageVal = int.tryParse(_ageController.text.trim()) ?? 17;
+    final String fullPhoneWithCountry = '$_selectedCountryCode $phone';
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_fullName', fullName);
+    await prefs.setString('user_email', email);
+    await prefs.setString('user_phoneNumber', fullPhoneWithCountry);
+    await prefs.setString('user_schoolName', schoolName);
+    await prefs.setString('user_grade', 'Grade $_selectedGrade');
+    await prefs.setString('user_sex', _selectedSex);
+    await prefs.setInt('user_age', ageVal);
+
+    setState(() {
+      _userName = fullName;
+      _userGradeStr = "Grade $_selectedGrade Student";
+      _userSchoolName = schoolName;
+      _userPhoneNumber = fullPhoneWithCountry;
+      _userEmail = email;
+      _isProfileLoading = false;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.languageCode == 'en'
+                ? "Profile details updated successfully! Welcome to Smart X!"
+                : "የመገለጫ መረጃዎ በስኬት ተስተካክሏል! ወደ ስማርት ኤክስ እንኳን ደህና መጡ!",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: const Color(0xFF0D2353),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
     }
+  }
+
+  Widget _buildFieldContainer({required Widget child, required bool isDark}) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildLabel(String text, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2.0, bottom: 8.0, top: 12.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isDark ? Colors.white : const Color(0xFF0B1E40),
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileScreen(bool isLight) {
+    final bool isDark = !isLight;
+    final Color navyColor = const Color(0xFF0D2353);
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-      child: Center(
-        child: Column(
-          children: [
-            // USER AVATAR WITH DIRECT REMOVAL PORTAL
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: _isPremiumUser 
-                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)] // Gold halo
-                          : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)], // Blue halo
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 48,
-                    backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
-                    backgroundImage: _profileImageRemoved 
-                        ? null 
-                        : const NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
-                    child: _profileImageRemoved 
-                        ? Text(
-                            initials,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: _isPremiumUser ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
-                            ),
-                          )
-                        : null,
-                  ),
-                ),
-                // Direct Remove Avatar Action
-                if (!_profileImageRemoved)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        _removeProfileImage();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profile image removed successfully!"),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 28,
-                        width: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                            )
-                          ],
-                        ),
-                        child: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 15),
-                      ),
-                    ),
-                  ),
-                // Restore button icon if deleted
-                if (_profileImageRemoved)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        _restoreProfileImage();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profile image restored!"),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 28,
-                        width: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.teal,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                            )
-                          ],
-                        ),
-                        child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 14),
-                      ),
-                    ),
-                  ),
-              ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Form(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1D283C) : Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              width: 1.5,
             ),
-            const SizedBox(height: 14),
-
-            // Dynamic user name and primary status label with PREMIUM STAR integration
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _userName,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.12),
+                blurRadius: 28,
+                offset: const Offset(0, 14),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Full Name field
+              _buildLabel(widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም', isDark),
+              _buildFieldContainer(
+                isDark: isDark,
+                child: TextFormField(
+                  controller: _fullNameController,
                   style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      Icons.person,
+                      color: isDark ? Colors.white70 : navyColor,
+                      size: 20,
+                    ),
                   ),
                 ),
-                if (_isPremiumUser) ...[
-                  const SizedBox(width: 6),
-                  const Icon(Icons.verified_rounded, color: Color(0xFFF59E0B), size: 18),
-                ],
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              "$_userGradeStr | $_userSchoolName",
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12.5, color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 18),
+              ),
 
-            // STATS COLUMNS ROW OF SMART X
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStatColumn("Streak", "15 days", Icons.local_fire_department, Colors.orange),
-                _buildStatColumn("Completed", "18 lessons", Icons.check_circle_outline, Colors.green),
-                _buildStatColumn("Avg Score", "94%", Icons.emoji_events_outlined, Colors.purple),
-              ],
-            ),
-            const SizedBox(height: 24),
+              const SizedBox(height: 10),
 
-            // STUNNING PREMIUM PRO MEMBER REWORK BANNER DISPLAY
-            if (_isPremiumUser)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)], // Warm honey highlights
+              // 2. Email Address field (Directly under Full Name with NO label above!)
+              _buildFieldContainer(
+                isDark: isDark,
+                child: TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4), width: 1),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'Email Address',
+                    hintStyle: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.email,
+                      color: isDark ? Colors.white70 : navyColor,
+                      size: 20,
+                    ),
+                  ),
                 ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 3. Grade Level dropdown
+              _buildLabel(widget.languageCode == 'en' ? 'Grade Level' : 'የክፍል ደረጃ', isDark),
+              _buildFieldContainer(
+                isDark: isDark,
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<int>(
+                    value: _selectedGrade,
+                    isExpanded: true,
+                    icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white70 : navyColor, size: 28),
+                    dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    items: [9, 10, 11, 12, 13].map((int val) {
+                      return DropdownMenuItem<int>(
+                        value: val == 13 ? 12 : val,
+                        child: Text(val == 13 ? 'Select Grade' : 'Grade $val'),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() {
+                          _selectedGrade = val;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 4. School Name field (NO label above!)
+              _buildFieldContainer(
+                isDark: isDark,
+                child: TextFormField(
+                  controller: _schoolNameController,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: 'School Name',
+                    hintStyle: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.apartment,
+                      color: isDark ? Colors.white70 : navyColor,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 5. Age field (Calendar icon left and calendar icon right! NO label above!)
+              _buildFieldContainer(
+                isDark: isDark,
                 child: Row(
                   children: [
-                    const Icon(Icons.bolt_rounded, color: Color(0xFFD97706), size: 24),
-                    const SizedBox(width: 10),
+                    Icon(Icons.calendar_month, color: isDark ? Colors.white70 : navyColor, size: 20),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "ACTIVE PRO PREMIUM STUDENT",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFFB45309),
-                              letterSpacing: 0.8,
-                            ),
+                      child: TextFormField(
+                        controller: _ageController,
+                        keyboardType: TextInputType.number,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Age',
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.calendar_month, color: isDark ? Colors.white70 : navyColor, size: 20),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 6. Sex (Gender) field row
+              Row(
+                children: [
+                  Text(
+                    widget.languageCode == 'en' ? 'Sex (Gender)' : 'ጾታ',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF0B1E40),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const Spacer(),
+                  // Male selector button
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedSex = 'Male';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _selectedSex == 'Male'
+                            ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _selectedSex == 'Male'
+                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2))
+                              : Colors.transparent,
+                          width: _selectedSex == 'Male' ? 1.2 : 0,
+                        ),
+                        boxShadow: _selectedSex == 'Male'
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _selectedSex == 'Male' ? Icons.radio_button_checked : Icons.radio_button_off,
+                            color: isDark ? Colors.white70 : navyColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
                           Text(
-                            widget.languageCode == 'en'
-                                ? "Full syllabus content and video portal unlocked with unlimited access."
-                                : "የቪዲዮ ማብራሪያዎች እና ሙሉውን የ9-12ኛ ማጠቃለያዎች ተከፍተዋል።",
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              color: Color(0xFF78350F),
-                              fontWeight: FontWeight.bold,
-                              height: 1.3,
+                            'Male',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13.5,
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Female selector button
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedSex = 'Female';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _selectedSex == 'Female'
+                            ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _selectedSex == 'Female'
+                              ? (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2))
+                              : Colors.transparent,
+                          width: _selectedSex == 'Female' ? 1.2 : 0,
+                        ),
+                        boxShadow: _selectedSex == 'Female'
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _selectedSex == 'Female' ? Icons.radio_button_checked : Icons.radio_button_off,
+                            color: isDark ? Colors.white70 : navyColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Female',
+                            style: TextStyle(
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 10),
+
+              // 7. Phone Number field
+              _buildLabel(widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር', isDark),
+              _buildFieldContainer(
+                isDark: isDark,
+                child: Row(
+                  children: [
+                    const Text(
+                      '🇪🇹',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Et...',
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : navyColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.5,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: isDark ? Colors.white70 : navyColor,
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 1.2,
+                      height: 22,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Phone Number',
+                          hintStyle: TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
 
-            // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(22.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.0,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.languageCode == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    ),
-                  ),
-                  const Divider(height: 20, thickness: 1),
-                  
-                  _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም',
-                    value: _userName,
-                    icon: Icons.person_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
-                    value: _userSchoolName,
-                    icon: Icons.apartment_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Grade / Class' : 'ክፍል',
-                    value: _userGradeStr,
-                    icon: Icons.school_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
-                    value: _userPhoneNumber,
-                    icon: Icons.phone_android_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
-                    value: _userEmail,
-                    icon: Icons.mail_rounded,
-                    isLight: isLight,
-                  ),
-                ],
-              ),
-            ),
+              const SizedBox(height: 10),
 
-            // REGISTER / EDIT PROFILE BUTTON BOX
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(24.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+              // 8. Password field
+              _buildLabel(widget.languageCode == 'en' ? 'Password' : 'የይለፍ ቃል', isDark),
+              _buildFieldContainer(
+                isDark: isDark,
+                child: TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.security_rounded,
-                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                    size: 32,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.languageCode == 'en' ? 'Credential Sync & Updates' : 'ማመሳሰል እና ማስተካከያ',
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.bold,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      Icons.lock,
+                      color: isDark ? Colors.white70 : navyColor,
+                      size: 20,
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.languageCode == 'en' 
-                        ? 'Update your details or link using safe, cloud-based synchronization.' 
-                        : 'የትምህርት መረጃዎን ለማሻሻል ወይም ለመመዝገብ ከታች ያለውን መቆጣጠሪያ ይጫኑ።',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      height: 1.4,
-                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 18),
-                      label: Text(
-                        widget.languageCode == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                        size: 18,
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegisterScreen(
-                              isDarkMode: widget.isDarkMode,
-                              languageCode: widget.languageCode,
-                              onToggleTheme: widget.onToggleTheme,
-                              onToggleLanguage: widget.onToggleLanguage,
-                            ),
-                          ),
-                        ).then((_) {
-                          // REFRESH dynamic details from SharedPreferences instantly when popped back!
-                          _loadProfileData();
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
                         });
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // 9. Save details / Register action button
+              _isProfileLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF0D2353),
+                      ),
+                    )
+                  : Container(
+                      width: double.infinity,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF133B61), Color(0xFF0B1F40)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: navyColor.withOpacity(0.35),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: TextButton(
+                        onPressed: _handleProfileFormSave,
+                        style: TextButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                        child: Text(
+                          widget.languageCode == 'en' ? 'Register' : 'ይመዝገቡ',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ),
+
+              const SizedBox(height: 16),
+
+              // Footer 1: Already have an account? Log In
+              Center(
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: widget.languageCode == 'en' ? 'Already have an account? ' : 'ቀድሞውኑ መለያ አለዎት? ',
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Log In',
+                        style: TextStyle(
+                          color: isDark ? Colors.blueAccent : navyColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 8),
+
+              // Footer 2: By registering, you agree to our Terms of Service
+              Center(
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: widget.languageCode == 'en' ? 'By registering, you agree to our ' : 'በመመዝገብዎ፣ በሚከተሉት ደንቦች ይስማማሉ ',
+                        style: TextStyle(
+                          color: isDark ? Colors.white60 : Colors.black54,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: TextStyle(
+                          color: isDark ? Colors.blueAccent : navyColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
