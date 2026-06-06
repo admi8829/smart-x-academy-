@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
@@ -40,22 +41,19 @@ class AuthService {
         await _saveUserToPrefs(user);
       }
       return user;
-    } catch (e) {
-      debugPrint("AuthService: Sign in failed: $e");
-      
-      // Since native Google Sign-In requires SHA-1 configuration on GCP/Firebase Console which is 
-      // typically only present in custom production key bundles, we provide a seamless, robust 
-      // simulated user generation fallback so the user's logged in interface/flow is fully testable in the sandbox.
-      final User? simulatedUser = await _generateSimulatedGoogleUser();
-      if (simulatedUser != null) {
-        await _saveUserToPrefs(simulatedUser);
-      }
-      return simulatedUser;
+    } on PlatformException catch (e, stackTrace) {
+      debugPrint("AuthService: Google Sign-In failed with PlatformException: $e");
+      debugPrint("AuthService PlatformException StackTrace:\n$stackTrace");
+      rethrow;
+    } catch (e, stackTrace) {
+      debugPrint("AuthService: Google Sign-In failed with dynamic/generic exception: $e");
+      debugPrint("AuthService Exception StackTrace:\n$stackTrace");
+      rethrow;
     }
   }
 
   // Fallback demo user to ensure testability in sandbox
-  static Future<User?> _generateSimulatedGoogleUser() async {
+  static Future<User?> generateSimulatedGoogleUser() async {
     debugPrint("AuthService: Using simulated high-fidelity Google session");
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_fullName', 'Habtamu Yifiru');

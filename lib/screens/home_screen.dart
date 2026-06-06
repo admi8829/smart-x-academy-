@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
@@ -204,28 +205,244 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _isAuthLoading = true;
     });
     try {
+      debugPrint("HomeScreen: Initiating Google Sign-In button click flow...");
       final user = await AuthService.signInWithGoogle();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.languageCode == 'en' 
-                  ? "Successfully logged in with Google!" 
-                  : "በGoogle በተሳካ ሁኔታ ገብተዋል!",
+      
+      if (user != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.languageCode == 'en' 
+                    ? "Successfully logged in with Google!" 
+                    : "በGoogle በተሳካ ሁኔታ ገብተዋል!",
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+          );
+        }
+      } else {
+        // User cancelled or silent cancel
+        debugPrint("HomeScreen: Google Sign-In returned null (user likely cancelled).");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.languageCode == 'en'
+                    ? "Google Sign-In was cancelled."
+                    : "በGoogle መግባት ተሰርዟል።",
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint("HomeScreen: Catching exception in _handleGoogleSignIn: $e");
+      debugPrint("HomeScreen Exception StackTrace:\n$stackTrace");
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Authentication Error: $e"),
-            backgroundColor: Colors.redAccent,
-            behavior: SnackBarBehavior.floating,
-          ),
+        // Extract extra detailed logs specifically if it is a PlatformException
+        String errorCode = "unknown_code";
+        String errorMessage = e.toString();
+        String errorDetails = "";
+
+        if (e is PlatformException) {
+          errorCode = e.code;
+          errorMessage = e.message ?? e.toString();
+          errorDetails = e.details?.toString() ?? "";
+        }
+
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext dialogContext) {
+            final isLight = Theme.of(dialogContext).brightness == Brightness.light;
+            final dialogBg = isLight ? Colors.white : const Color(0xFF1E293B);
+            final dialogTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+            final dialogSubColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+
+            return AlertDialog(
+              backgroundColor: dialogBg,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.5,
+                ),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.error_outline_rounded,
+                      color: Colors.red,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.languageCode == 'en' ? "Sign-In Alert" : "የጉግል መግቢያ ማሳሰቢያ",
+                      style: TextStyle(
+                        color: dialogTextColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.languageCode == 'en'
+                          ? "We encountered a dynamic connection or platform configuration exception while attempting Google Sign-In:"
+                          : "በጉግል ለመግባት ሲሞከር የግንኙነት ወይም የፕላትፎርም ውቅር ስህተት አጋጥሟል፡",
+                      style: TextStyle(
+                        color: dialogSubColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SelectableText(
+                            "Error: $errorMessage",
+                            style: TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent[700],
+                            ),
+                          ),
+                          if (errorCode != "unknown_code") ...[
+                            const SizedBox(height: 6),
+                            SelectableText(
+                              "Code: $errorCode",
+                              style: const TextStyle(
+                                fontFamily: 'Courier',
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
+                          ],
+                          if (errorDetails.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            SelectableText(
+                              "Details: $errorDetails",
+                              style: TextStyle(
+                                fontFamily: 'Courier',
+                                fontSize: 11,
+                                color: dialogSubColor,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      widget.languageCode == 'en'
+                          ? "This usually occurs during development due to SHA-1 hashes missing from GCP. Under no circumstances will this application crash. You can continue as a Guest Student, or activate the simulated high-fidelity offline session bypass."
+                          : "ይህ ብዙውን ጊዜ በልማት ወቅት የ SHA-1 ሃሽ ከ GCP በመጥፋቱ ምክንያት ይከሰታል። ማመልከቻው በምንም አይነት ሁኔታ አይዘጋም። በእንግዳ ተማሪነት መቀጠል ይችላሉ፣ ወይም አስመስሎ የተሰራውን የልምምድ ሁኔታ ማግበር ይችላሉ።",
+                      style: TextStyle(
+                        color: dialogTextColor.withOpacity(0.8),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text(
+                    widget.languageCode == 'en' ? "Close" : "ዝጋ",
+                    style: TextStyle(
+                      color: dialogTextColor.withOpacity(0.6),
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Start simulated Google Sign-In session
+                    Navigator.of(dialogContext).pop();
+                    setState(() {
+                      _isAuthLoading = true;
+                    });
+                    await AuthService.generateSimulatedGoogleUser();
+                    await _loadProfileData();
+                    if (mounted) {
+                      setState(() {
+                        _isAuthLoading = false;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            widget.languageCode == 'en'
+                                ? "Demo Offline Session Activated successfully!"
+                                : "የሙከራው ከመስመር ውጭ ክፍለ-ጊዜ በተሳካ ሁኔታ ተነቅቷል!",
+                          ),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.isDarkMode ? Colors.blueAccent : const Color(0xFF0D2353),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  child: Text(
+                    widget.languageCode == 'en' ? "Use Demo Session" : "የሙከራ ክፍለ-ጊዜ ተጠቀም",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       }
     } finally {
