@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
+import '../main.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import 'video_player_screen.dart';
+import 'unit_selection_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -26,6 +28,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  int _selectedUnitsGrade = 12; // Track selected grade filter for Units tab
   late AnimationController _fadeController;
 
   // Dynamic User Profile Fields loaded from SharedPreferences
@@ -219,7 +222,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    bool isLight = !widget.isDarkMode;
+    final appState = AppStateProvider.of(context);
+    final bool isDark = appState.isDarkMode;
+    final bool isLight = !isDark;
+    final String currentLang = appState.languageCode;
 
     return Scaffold(
       backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
@@ -237,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           onPressed: () {},
         ),
         title: Text(
-          _local('title'),
+          _localizedValues[currentLang]?['title'] ?? 'Smart X Academy',
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w800,
@@ -249,16 +255,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           // Light/Dark Theme Switcher (Represents custom dark mode icon)
           IconButton(
             icon: Icon(
-              widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
+              isDark ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
               color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
               size: 24,
             ),
-            onPressed: widget.onToggleTheme,
+            onPressed: appState.onToggleTheme,
           ),
           
           // Compact, elegant language globe button matching design with EN/አማ
           GestureDetector(
-            onTap: widget.onToggleLanguage,
+            onTap: appState.onToggleLanguage,
             child: Container(
               margin: const EdgeInsets.only(right: 16, left: 4),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -301,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
           ),
         ),
-        child: _buildCurrentTab(isLight),
+        child: _buildCurrentTab(isLight, currentLang, appState),
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(18.0, 0.0, 18.0, 24.0),
@@ -353,41 +359,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.home_rounded,
+                      Icons.school_rounded,
                       size: 26,
                     ),
                   ),
-                  label: _local('nav_home'),
+                  label: currentLang == 'en' ? 'Courses' : 'ኮርሶች',
                 ),
                 BottomNavigationBarItem(
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.book_outlined,
+                      Icons.collections_bookmark_rounded,
                       size: 25,
                     ),
                   ),
-                  label: _local('nav_courses'),
+                  label: currentLang == 'en' ? 'Units' : 'ክፍሎች',
                 ),
                 BottomNavigationBarItem(
                   icon: const Padding(
                     padding: EdgeInsets.only(bottom: 4.0),
                     child: Icon(
-                      Icons.person_outline_rounded,
+                      Icons.account_circle_rounded,
                       size: 26,
                     ),
                   ),
-                  label: _local('nav_profile'),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Padding(
-                    padding: EdgeInsets.only(bottom: 4.0),
-                    child: Icon(
-                      Icons.settings_outlined,
-                      size: 25,
-                    ),
-                  ),
-                  label: _local('nav_settings'),
+                  label: currentLang == 'en' ? 'Account' : 'መገለጫ',
                 ),
               ],
             ),
@@ -397,16 +393,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildCurrentTab(bool isLight) {
+  Widget _buildCurrentTab(bool isLight, String currentLang, AppStateProvider appState) {
     switch (_currentIndex) {
       case 0:
         return _buildHomeScreenContent(isLight);
       case 1:
-        return _buildCoursesScreen(isLight);
+        return _buildUnitsExplorerTab(isLight, currentLang, appState);
       case 2:
         return _buildProfileScreen(isLight);
-      case 3:
-        return _buildSettingsScreen(isLight);
       default:
         return _buildHomeScreenContent(isLight);
     }
@@ -1102,6 +1096,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildProfileScreen(bool isLight) {
+    final appState = AppStateProvider.of(context);
+    final String currentLang = appState.languageCode;
+    final bool isDark = appState.isDarkMode;
+
     // Generate lovely initials for the initials-fallback avatar
     String initials = "SU";
     if (_userName.trim().isNotEmpty) {
@@ -1291,7 +1289,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ),
                           ),
                           Text(
-                            widget.languageCode == 'en'
+                            currentLang == 'en'
                                 ? "Full syllabus content and video portal unlocked with unlimited access."
                                 : "የቪዲዮ ማብራሪያዎች እና ሙሉውን የ9-12ኛ ማጠቃለያዎች ተከፍተዋል።",
                             style: const TextStyle(
@@ -1325,7 +1323,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.languageCode == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
+                    currentLang == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
@@ -1335,31 +1333,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   const Divider(height: 20, thickness: 1),
                   
                   _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም',
+                    label: currentLang == 'en' ? 'Full Name' : 'ሙሉ ስም',
                     value: _userName,
                     icon: Icons.person_rounded,
                     isLight: isLight,
                   ),
                   _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
+                    label: currentLang == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
                     value: _userSchoolName,
                     icon: Icons.apartment_rounded,
                     isLight: isLight,
                   ),
                   _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Grade / Class' : 'ክፍል',
+                    label: currentLang == 'en' ? 'Grade / Class' : 'ክፍል',
                     value: _userGradeStr,
                     icon: Icons.school_rounded,
                     isLight: isLight,
                   ),
                   _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
+                    label: currentLang == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
                     value: _userPhoneNumber,
                     icon: Icons.phone_android_rounded,
                     isLight: isLight,
                   ),
                   _buildProfileDetailRow(
-                    label: widget.languageCode == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
+                    label: currentLang == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
                     value: _userEmail,
                     icon: Icons.mail_rounded,
                     isLight: isLight,
@@ -1405,7 +1403,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    widget.languageCode == 'en' 
+                    currentLang == 'en' 
                         ? 'Update your details or link using safe, cloud-based synchronization.' 
                         : 'የትምህርት መረጃዎን ለማሻሻል ወይም ለመመዝገብ ከታች ያለውን መቆጣጠሪያ ይጫኑ።',
                     textAlign: TextAlign.center,
@@ -1422,7 +1420,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 18),
                       label: Text(
-                        widget.languageCode == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
+                        currentLang == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
                       ),
                       onPressed: () {
@@ -1430,10 +1428,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           context,
                           MaterialPageRoute(
                             builder: (context) => RegisterScreen(
-                              isDarkMode: widget.isDarkMode,
-                              languageCode: widget.languageCode,
-                              onToggleTheme: widget.onToggleTheme,
-                              onToggleLanguage: widget.onToggleLanguage,
+                              isDarkMode: appState.isDarkMode,
+                              languageCode: appState.languageCode,
+                              onToggleTheme: appState.onToggleTheme,
+                              onToggleLanguage: appState.onToggleLanguage,
                             ),
                           ),
                         ).then((_) {
@@ -1453,8 +1451,345 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
             ),
+            
+            // Integrated Settings & Choices Section to provide complete, instant updates
+            Container(
+              margin: const EdgeInsets.only(top: 20, bottom: 24),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isLight 
+                        ? const Color(0xFF0F1B2B).withValues(alpha: 0.02) 
+                        : Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.settings_suggest_rounded,
+                        color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        currentLang == 'en' ? 'Settings & Choices' : 'ማስተካከያዎች እና አማራጮች',
+                        style: TextStyle(
+                          fontSize: 15.0,
+                          fontWeight: FontWeight.bold,
+                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.language, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
+                    title: Text(
+                      currentLang == 'en' ? "Language Toggle" : "ቋንቋ መቀያየሪያ", 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+                    ),
+                    subtitle: Text(
+                      currentLang == 'en' ? "Currently English" : "በአማርኛ", 
+                      style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                    ),
+                    trailing: Switch(
+                      activeColor: const Color(0xFF1E88E5),
+                      value: currentLang == 'am',
+                      onChanged: (val) {
+                        appState.onToggleLanguage();
+                      },
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.dark_mode_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
+                    title: Text(
+                      currentLang == 'en' ? "Dark Theme Mode" : "ጨለማ ገጽታ", 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+                    ),
+                    subtitle: Text(
+                      isDark ? (currentLang == 'en' ? "Enabled" : "በርቷል") : (currentLang == 'en' ? "Disabled" : "ጠፍቷል"), 
+                      style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                    ),
+                    trailing: Switch(
+                      activeColor: const Color(0xFF1E88E5),
+                      value: isDark,
+                      onChanged: (val) {
+                        appState.onToggleTheme();
+                      },
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.info_outline_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
+                    title: Text(
+                      currentLang == 'en' ? "App Version" : "የመተግበሪያው ስሪት", 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+                    ),
+                    trailing: const Text("1.0.0+1", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildUnitsExplorerTab(bool isLight, String currentLang, AppStateProvider appState) {
+    // List representing subjects with localization support
+    final List<Map<String, dynamic>> subjectsList = [
+      {
+        'id': 'Mathematics',
+        'enTitle': 'Mathematics',
+        'amTitle': 'ሂሳብ',
+        'color': const Color(0xFF0084FF),
+        'iconData': Icons.calculate_rounded,
+      },
+      {
+        'id': 'Biology',
+        'enTitle': 'Biology',
+        'amTitle': 'ስነ-ህይወት',
+        'color': const Color(0xFF2E7D32),
+        'iconData': Icons.biotech_rounded,
+      },
+      {
+        'id': 'Physics',
+        'enTitle': 'Physics',
+        'amTitle': 'ፊዚክስ',
+        'color': const Color(0xFFE53935),
+        'iconData': Icons.bolt_rounded,
+      },
+      {
+        'id': 'Chemistry',
+        'enTitle': 'Chemistry',
+        'amTitle': 'ኬሚስትሪ',
+        'color': const Color(0xFFEF6C00),
+        'iconData': Icons.science_rounded,
+      },
+      {
+        'id': 'Geography',
+        'enTitle': 'Geography',
+        'amTitle': 'ጂኦግራፊ',
+        'color': const Color(0xFF8E24AA),
+        'iconData': Icons.public_rounded,
+      },
+      {
+        'id': 'History',
+        'enTitle': 'History',
+        'amTitle': 'ታሪክ',
+        'color': const Color(0xFFF5B041),
+        'iconData': Icons.museum_rounded,
+      },
+      {
+        'id': 'Civics',
+        'enTitle': 'Civics',
+        'amTitle': 'ዜግነት',
+        'color': const Color(0xFF1E88E5),
+        'iconData': Icons.gavel_rounded,
+      },
+      {
+        'id': 'Agriculture',
+        'enTitle': 'Agriculture',
+        'amTitle': 'ግብርና',
+        'color': const Color(0xFF8D6E63),
+        'iconData': Icons.agriculture_rounded,
+      },
+    ];
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Elegant customized title header
+          Text(
+            currentLang == 'en' ? "Units Explorer" : "የትምህርት ክፍሎች ማውጫ",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: isLight ? const Color(0xFF0D2353) : Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            currentLang == 'en' 
+                ? "Select a class grade and subject to explore curriculum units offline." 
+                : "ከመስመር ውጭ ለመማር ክፍልዎን እና የትምህርት ዓይነትዎን ይምረጡ።",
+            style: TextStyle(
+              fontSize: 12.5,
+              color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Grade Selection Buttons Selector with smooth physical scaling
+          Row(
+            children: [9, 10, 11, 12].map((gradeNum) {
+              final isSelected = _selectedUnitsGrade == gradeNum;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectedUnitsGrade = gradeNum;
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isSelected 
+                            ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8))
+                            : (isLight ? Colors.white : const Color(0xFF1E293B)),
+                        foregroundColor: isSelected 
+                            ? (isLight ? Colors.white : const Color(0xFF0F172A))
+                            : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                        elevation: isSelected ? 3.0 : 0.0,
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.0),
+                          side: BorderSide(
+                            color: isSelected 
+                                ? Colors.transparent 
+                                : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        currentLang == 'en' ? "G-$gradeNum" : "ክፍል-$gradeNum",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+
+          // Grid View of Subjects mapping standard designs
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: subjectsList.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 14.0,
+              mainAxisSpacing: 14.0,
+              childAspectRatio: 1.15,
+            ),
+            itemBuilder: (context, idx) {
+              final sub = subjectsList[idx];
+              final String title = currentLang == 'en' ? sub['enTitle']! : sub['amTitle']!;
+              final Color color = sub['color'] as Color;
+              final IconData iconData = sub['iconData'] as IconData;
+
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => UnitSelectionScreen(
+                        grade: _selectedUnitsGrade,
+                        subjectId: sub['id']!,
+                        enTitle: sub['enTitle']!,
+                        amTitle: sub['amTitle']!,
+                        color: color,
+                        icon: Icon(iconData, size: 36, color: color),
+                        isDarkMode: appState.isDarkMode,
+                        languageCode: appState.languageCode,
+                        onToggleTheme: appState.onToggleTheme,
+                        onToggleLanguage: appState.onToggleLanguage,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(22.0),
+                child: Container(
+                  padding: const EdgeInsets.all(14.0),
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(22.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isLight 
+                            ? const Color(0xFF0F1B2B).withValues(alpha: 0.02) 
+                            : Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(iconData, color: color, size: 24),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w900,
+                              color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            currentLang == 'en' ? "View Units" : "ክፍሎችን እይ",
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
