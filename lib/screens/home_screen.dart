@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
+import '../services/auth_service.dart';
 import '../main.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
@@ -39,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _userEmail = "abebe@smartx.com";
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
+  bool _isLoggedWithGoogle = false;
+  String _googlePhotoUrl = "";
+  bool _isAuthLoading = false;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -150,13 +154,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
+    final bool loggedIn = await AuthService.isUserLoggedIn();
+    final firebaseUser = AuthService.currentUser;
+
     setState(() {
-      _userName = prefs.getString('user_fullName') ?? "Abebe Bekele";
+      _isLoggedWithGoogle = loggedIn;
+      if (loggedIn) {
+        _userName = prefs.getString('user_fullName') ?? '';
+        if (_userName.isEmpty) {
+          _userName = firebaseUser?.displayName ?? "Habtamu Yifiru";
+        }
+        _userEmail = prefs.getString('user_email') ?? '';
+        if (_userEmail.isEmpty) {
+          _userEmail = firebaseUser?.email ?? "habtamu.yifiru.official@gmail.com";
+        }
+        _googlePhotoUrl = prefs.getString('user_photoUrl') ?? firebaseUser?.photoURL ?? "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150";
+      } else {
+        _userName = "Guest Student";
+        _userEmail = "guest@smartx.com";
+        _googlePhotoUrl = "";
+      }
       final gradeVal = prefs.getString('user_grade') ?? "Grade 12";
       _userGradeStr = gradeVal.endsWith("Student") ? gradeVal : "$gradeVal Student";
-      _userSchoolName = prefs.getString('user_schoolName') ?? "Yeka Secondary School";
+      _userSchoolName = prefs.getString('user_schoolName') ?? "Smart X Academy Excellence";
       _userPhoneNumber = prefs.getString('user_phoneNumber') ?? "+251 911 234 567";
-      _userEmail = prefs.getString('user_email') ?? "abebe@smartx.com";
       _isPremiumUser = prefs.getBool('user_isPremium') ?? true;
       _profileImageRemoved = prefs.getBool('user_imageRemoved') ?? false;
     });
@@ -176,6 +197,83 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() {
       _profileImageRemoved = false;
     });
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isAuthLoading = true;
+    });
+    try {
+      final user = await AuthService.signInWithGoogle();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.languageCode == 'en' 
+                  ? "Successfully logged in with Google!" 
+                  : "በGoogle በተሳካ ሁኔታ ገብተዋል!",
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Authentication Error: $e"),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      await _loadProfileData();
+      if (mounted) {
+        setState(() {
+          _isAuthLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleSignOut() async {
+    setState(() {
+      _isAuthLoading = true;
+    });
+    try {
+      await AuthService.signOut();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.languageCode == 'en' 
+                  ? "Logged out successfully." 
+                  : "በተሳካ ሁኔታ ወጥተዋል።",
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Sign Out Error: $e"),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      await _loadProfileData();
+      if (mounted) {
+        setState(() {
+          _isAuthLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -1100,9 +1198,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final String currentLang = appState.languageCode;
     final bool isDark = appState.isDarkMode;
 
-    // Generate lovely initials for the initials-fallback avatar
-    String initials = "SU";
-    if (_userName.trim().isNotEmpty) {
+    if (_isAuthLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 80.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(
+                color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                currentLang == 'en' ? "Signing you in securely..." : "ደህንነቱ በተጠበቀ ሁኔታ እያስገባንዎት ነው...",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Generate initials fallback for Google profile photo / guest
+    String initials = "GU";
+    if (_userName.trim().isNotEmpty && _userName != "Guest Student") {
       final parts = _userName.trim().split(" ");
       if (parts.length > 1) {
         initials = (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
@@ -1119,147 +1242,173 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Center(
         child: Column(
           children: [
-            // USER AVATAR WITH DIRECT REMOVAL PORTAL
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: _isPremiumUser 
-                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)] // Gold halo
-                          : [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)], // Blue halo
-                    ),
+            // GUEST (LOGGED OUT) SCREEN DESIGNS
+            if (!_isLoggedWithGoogle) ...[
+              const SizedBox(height: 16),
+              // Beautiful stylized Guest user avatar icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF38BDF8), Color(0xFF0D2353)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: CircleAvatar(
-                    radius: 48,
-                    backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
-                    backgroundImage: _profileImageRemoved 
-                        ? null 
-                        : const NetworkImage('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'),
-                    child: _profileImageRemoved 
-                        ? Text(
-                            initials,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              color: _isPremiumUser ? const Color(0xFFF59E0B) : const Color(0xFF3B82F6),
-                            ),
-                          )
-                        : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0D2353).withOpacity(0.15),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.account_circle_rounded,
+                    size: 64,
+                    color: Colors.white,
                   ),
                 ),
-                // Direct Remove Avatar Action
-                if (!_profileImageRemoved)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        _removeProfileImage();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profile image removed successfully!"),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 28,
-                        width: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                            )
-                          ],
-                        ),
-                        child: const Icon(Icons.delete_forever_rounded, color: Colors.white, size: 15),
-                      ),
-                    ),
-                  ),
-                // Restore button icon if deleted
-                if (_profileImageRemoved)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        _restoreProfileImage();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Profile image restored!"),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        height: 28,
-                        width: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.teal,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: isLight ? Colors.white : const Color(0xFF0F172A), width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              blurRadius: 4,
-                            )
-                          ],
-                        ),
-                        child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 14),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // Dynamic user name and primary status label with PREMIUM STAR integration
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _userName,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                currentLang == 'en' ? "Welcome, Guest Student" : "እንኳን ደህና መጡ, እንግዳ ተማሪ",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text(
+                  currentLang == 'en' 
+                      ? "Sign in with your Google Account to synchronize your credentials, track academic progress, and unlock all lessons." 
+                      : "የትምህርት መረጃዎን ለማመሳሰል፣ ውጤት ለመከታተል እና ሙሉውን ለማንቃት በGoogle መለያዎ ይግቡ።",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
-                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    fontSize: 12,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    height: 1.4,
                   ),
                 ),
-                if (_isPremiumUser) ...[
-                  const SizedBox(width: 6),
-                  const Icon(Icons.verified_rounded, color: Color(0xFFF59E0B), size: 18),
+              ),
+              const SizedBox(height: 24),
+              // Prominent "Continue with Google" sign-in button
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: ElevatedButton(
+                  onPressed: _handleGoogleSignIn,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                    foregroundColor: isLight ? const Color(0xFF334155) : Colors.white,
+                    minimumSize: const Size(double.infinity, 54),
+                    elevation: isLight ? 2.0 : 4.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                      side: BorderSide(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                        width: 1.5,
+                      ),
+                    ),
+                    shadowColor: isLight ? Colors.black.withOpacity(0.04) : Colors.black.withOpacity(0.3),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipOval(
+                        child: Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.png',
+                          height: 20,
+                          width: 20,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(Icons.g_mobiledata_rounded, size: 24, color: Colors.blue);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        currentLang == 'en' ? "Continue with Google" : "በGoogle ይቀጥሉ",
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w900,
+                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ] else ...[
+              // LOGGED IN SCREEN DESIGNS
+              const SizedBox(height: 12),
+              // Google profile picture with a luminous gold active premium ring
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFEF08A), Color(0xFFF59E0B)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withOpacity(0.15),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 46,
+                  backgroundColor: isLight ? Colors.grey[200] : const Color(0xFF1E293B),
+                  backgroundImage: _googlePhotoUrl.isNotEmpty ? NetworkImage(_googlePhotoUrl) : null,
+                  child: _googlePhotoUrl.isEmpty
+                      ? Text(
+                          initials,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFF59E0B),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Logged-in credentials
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _userName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  const Icon(Icons.verified_rounded, color: Color(0xFF10B981), size: 18),
                 ],
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              "$_userGradeStr | $_userSchoolName",
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12.5, color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 18),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _userEmail,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
 
-            // STATS COLUMNS ROW OF SMART X
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildStatColumn("Streak", "15 days", Icons.local_fire_department, Colors.orange),
-                _buildStatColumn("Completed", "18 lessons", Icons.check_circle_outline, Colors.green),
-                _buildStatColumn("Avg Score", "94%", Icons.emoji_events_outlined, Colors.purple),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // STUNNING PREMIUM PRO MEMBER REWORK BANNER DISPLAY
-            if (_isPremiumUser)
+              // STUNNING PREMIUM MEMBER REWORK BANNER DISPLAY
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1282,7 +1431,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           const Text(
                             "ACTIVE PRO PREMIUM STUDENT",
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFFB45309),
                               letterSpacing: 0.8,
@@ -1306,155 +1455,58 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
 
-            // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(22.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.0,
+              // DETAILS CONTAINER CARD FOR FULL CONTACT PROFILE DETAILS
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: isLight ? Colors.white : const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(22.0),
+                  border: Border.all(
+                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                    width: 1.0,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      currentLang == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                      ),
+                    ),
+                    const Divider(height: 20, thickness: 1),
+                    
+                    _buildProfileDetailRow(
+                      label: currentLang == 'en' ? 'Full Name' : 'ሙሉ ስም',
+                      value: _userName,
+                      icon: Icons.person_rounded,
+                      isLight: isLight,
+                    ),
+                    _buildProfileDetailRow(
+                      label: currentLang == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
+                      value: _userSchoolName,
+                      icon: Icons.apartment_rounded,
+                      isLight: isLight,
+                    ),
+                    _buildProfileDetailRow(
+                      label: currentLang == 'en' ? 'Grade / Class' : 'ክፍል',
+                      value: _userGradeStr,
+                      icon: Icons.school_rounded,
+                      isLight: isLight,
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    currentLang == 'en' ? 'Academic Information' : 'የትምህርት መረጃ',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    ),
-                  ),
-                  const Divider(height: 20, thickness: 1),
-                  
-                  _buildProfileDetailRow(
-                    label: currentLang == 'en' ? 'Full Name' : 'ሙሉ ስም',
-                    value: _userName,
-                    icon: Icons.person_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: currentLang == 'en' ? 'School / Academy' : 'ምንጮች / ትምህርት ቤት',
-                    value: _userSchoolName,
-                    icon: Icons.apartment_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: currentLang == 'en' ? 'Grade / Class' : 'ክፍል',
-                    value: _userGradeStr,
-                    icon: Icons.school_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: currentLang == 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
-                    value: _userPhoneNumber,
-                    icon: Icons.phone_android_rounded,
-                    isLight: isLight,
-                  ),
-                  _buildProfileDetailRow(
-                    label: currentLang == 'en' ? 'Email Address' : 'ኢሜል አድራሻ',
-                    value: _userEmail,
-                    icon: Icons.mail_rounded,
-                    isLight: isLight,
-                  ),
-                ],
-              ),
-            ),
+            ],
 
-            // REGISTER / EDIT PROFILE BUTTON BOX
+            // UNIVERSAL PREMIUM SETTINGS CARD
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(24.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.0,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.security_rounded,
-                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                    size: 32,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.languageCode == 'en' ? 'Credential Sync & Updates' : 'ማመሳሰል እና ማስተካከያ',
-                    style: TextStyle(
-                      fontSize: 15.0,
-                      fontWeight: FontWeight.bold,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    currentLang == 'en' 
-                        ? 'Update your details or link using safe, cloud-based synchronization.' 
-                        : 'የትምህርት መረጃዎን ለማሻሻል ወይም ለመመዝገብ ከታች ያለውን መቆጣጠሪያ ይጫኑ።',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      height: 1.4,
-                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 18),
-                      label: Text(
-                        currentLang == 'en' ? 'Register / Profile Settings' : 'ይመዝገቡ / መገለጫ ያዋቅሩ',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: Colors.white),
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegisterScreen(
-                              isDarkMode: appState.isDarkMode,
-                              languageCode: appState.languageCode,
-                              onToggleTheme: appState.onToggleTheme,
-                              onToggleLanguage: appState.onToggleLanguage,
-                            ),
-                          ),
-                        ).then((_) {
-                          // REFRESH dynamic details from SharedPreferences instantly when popped back!
-                          _loadProfileData();
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLight ? const Color(0xFF0D2353) : const Color(0xFF2563EB),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Integrated Settings & Choices Section to provide complete, instant updates
-            Container(
-              margin: const EdgeInsets.only(top: 20, bottom: 24),
+              margin: const EdgeInsets.only(bottom: 24),
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: isLight ? Colors.white : const Color(0xFF1E293B),
@@ -1494,40 +1546,157 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.language, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
-                    title: Text(
-                      currentLang == 'en' ? "Language Toggle" : "ቋንቋ መቀያየሪያ", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
-                    ),
-                    subtitle: Text(
-                      currentLang == 'en' ? "Currently English" : "በአማርኛ", 
-                      style: const TextStyle(fontSize: 11.5, color: Colors.grey),
-                    ),
-                    trailing: Switch(
-                      activeColor: const Color(0xFF1E88E5),
-                      value: currentLang == 'am',
-                      onChanged: (val) {
-                        appState.onToggleLanguage();
-                      },
-                    ),
+                  const SizedBox(height: 16),
+                  
+                  // Custom Redesigned Country/Language Selector Dropdown
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.language_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                currentLang == 'en' ? "Language" : "ቋንቋ", 
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold, 
+                                  fontSize: 13.5, 
+                                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                currentLang == 'en' ? "Amharic & English" : "አማርኛ እና እንግሊዝኛ", 
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      
+                      // Premium Select Dropdown
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: currentLang,
+                            icon: Icon(Icons.arrow_drop_down, color: isLight ? const Color(0xFF0D2353) : Colors.white, size: 20),
+                            dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                            onChanged: (String? newValue) {
+                              if (newValue != null && newValue != currentLang) {
+                                appState.onToggleLanguage();
+                              }
+                            },
+                            items: [
+                              DropdownMenuItem(
+                                value: 'en',
+                                child: Text(
+                                  'EN (English)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'am',
+                                child: Text(
+                                  'አማርኛ (AM)',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const Divider(height: 12),
+                  const Divider(height: 24),
+                  
+                  // Dark Mode toggle option switcher
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.dark_mode_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)),
+                    leading: Icon(Icons.dark_mode_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
                     title: Text(
                       currentLang == 'en' ? "Dark Theme Mode" : "ጨለማ ገጽታ", 
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
                     ),
                     subtitle: Text(
                       isDark ? (currentLang == 'en' ? "Enabled" : "በርቷል") : (currentLang == 'en' ? "Disabled" : "ጠፍቷል"), 
-                      style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     trailing: Switch(
-                      activeColor: const Color(0xFF1E88E5),
+                      activeColor: const Color(0xFF38BDF8),
+                      activeTrackColor: const Color(0xFF0D2353),
+                      value: isDark,
+                      onChanged: (val) {
+                        appState.onToggleTheme();
+                      },
+                    ),
+                  ),
+                  const Divider(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.info_outline_rounded, color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8), size: 22),
+                    title: Text(
+                      currentLang == 'en' ? "App Version" : "የመተግበሪያው ስሪት", 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+                    ),
+                    trailing: const Text("1.0.0+1", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5, color: Colors.grey)),
+                  ),
+                ],
+              ),
+            ),
+
+            // RED "SIGN OUT" BUTTON AT THE BOTTOM (If Logged In)
+            if (_isLoggedWithGoogle) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: OutlinedButton.icon(
+                  onPressed: _handleSignOut,
+                  icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 18),
+                  label: Text(
+                    currentLang == 'en' ? "Sign Out" : "ውጣ",
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ],
+        ),
+      ),
+    );
+  }(0xFF1E88E5),
                       value: isDark,
                       onChanged: (val) {
                         appState.onToggleTheme();
