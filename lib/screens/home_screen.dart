@@ -27,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
   late AnimationController _fadeController;
 
@@ -271,6 +272,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final bool isCustomDarkHeader = isMoreActive || isCoursesActive;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isCustomDarkHeader
           ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
           : (isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827)),
@@ -287,7 +289,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             color: isCustomDarkHeader ? Colors.white : (isLight ? const Color(0xFF0D2353) : Colors.white),
             size: 26,
           ),
-          onPressed: () {},
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer();
+          },
         ),
         title: Text(
           isCoursesActive
@@ -381,6 +385,127 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     )
                   ]),
       ),
+      drawer: Drawer(
+        backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+              decoration: BoxDecoration(
+                color: isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A),
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/education_bg_pattern.png'),
+                  repeat: ImageRepeat.repeat,
+                  opacity: 0.1,
+                ),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: isLight ? Colors.white : const Color(0xFF0D2353),
+                child: Icon(
+                  Icons.school_rounded,
+                  size: 36,
+                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                ),
+              ),
+              accountName: Text(
+                _userName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16.5,
+                  color: Colors.white,
+                ),
+              ),
+              accountEmail: Text(
+                _userEmail,
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 12.5,
+                  color: Colors.white70,
+                ),
+              ),
+            ),
+            _buildDrawerTile(
+              icon: Icons.home_rounded,
+              title: _local('nav_home'),
+              isSelected: _currentIndex == 0,
+              isLight: isLight,
+              onTap: () {
+                setState(() {
+                  _currentIndex = 0;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            _buildDrawerTile(
+              icon: Icons.book_outlined,
+              title: _local('nav_courses'),
+              isSelected: _currentIndex == 1,
+              isLight: isLight,
+              onTap: () {
+                setState(() {
+                  _currentIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            _buildDrawerTile(
+              icon: Icons.person_outline_rounded,
+              title: _local('nav_profile'),
+              isSelected: _currentIndex == 2,
+              isLight: isLight,
+              onTap: () {
+                setState(() {
+                  _currentIndex = 2;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            _buildDrawerTile(
+              icon: Icons.settings_rounded,
+              title: _local('nav_settings'),
+              isSelected: _currentIndex == 3,
+              isLight: isLight,
+              onTap: () {
+                setState(() {
+                  _currentIndex = 3;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Divider(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                height: 1.0,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.languageCode == 'en' ? 'Dark Mode' : 'የጨለማ ገጽታ',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: isLight ? const Color(0xFF334155) : Colors.white70,
+                    ),
+                  ),
+                  Switch(
+                    value: widget.isDarkMode,
+                    onChanged: (val) {
+                      widget.onToggleTheme();
+                    },
+                    activeColor: const Color(0xFF1E88E5),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -402,6 +527,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(18.0, 0.0, 18.0, 24.0),
         child: Container(
+          height: 64.0,
           decoration: BoxDecoration(
             color: isLight ? Colors.white : const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(38.0),
@@ -420,72 +546,29 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(38.0),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              elevation: 0,
-              onTap: (index) {
+          child: Center(
+            child: GestureDetector(
+              onTap: () {
                 setState(() {
-                  _currentIndex = index;
+                  _currentIndex = 3;
                 });
               },
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.transparent,
-              selectedItemColor: const Color(0xFF1E88E5),
-              unselectedItemColor: isLight ? const Color(0xFF2D3748) : const Color(0xFF94A3B8),
-              selectedFontSize: 12.5,
-              unselectedFontSize: 12.5,
-              selectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF1E88E5),
+              child: Container(
+                padding: const EdgeInsets.all(10.0),
+                decoration: BoxDecoration(
+                  color: _currentIndex == 3
+                      ? (isLight ? const Color(0xFFDBEAFE) : const Color(0xFF1E293B))
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.settings_rounded,
+                  color: _currentIndex == 3
+                      ? const Color(0xFF1E88E5)
+                      : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                  size: 28,
+                ),
               ),
-              unselectedLabelStyle: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: isLight ? const Color(0xFF212529) : const Color(0xFFA0AEC0),
-              ),
-              items: [
-                BottomNavigationBarItem(
-                  icon: const Padding(
-                    padding: EdgeInsets.only(bottom: 4.0),
-                    child: Icon(
-                      Icons.home_rounded,
-                      size: 26,
-                    ),
-                  ),
-                  label: _local('nav_home'),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Padding(
-                    padding: EdgeInsets.only(bottom: 4.0),
-                    child: Icon(
-                      Icons.book_outlined,
-                      size: 25,
-                    ),
-                  ),
-                  label: _local('nav_courses'),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Padding(
-                    padding: EdgeInsets.only(bottom: 4.0),
-                    child: Icon(
-                      Icons.person_outline_rounded,
-                      size: 26,
-                    ),
-                  ),
-                  label: _local('nav_profile'),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Padding(
-                    padding: EdgeInsets.only(bottom: 4.0),
-                    child: Icon(
-                      Icons.menu_rounded,
-                      size: 25,
-                    ),
-                  ),
-                  label: widget.languageCode == 'en' ? 'More' : 'ተጨማሪ',
-                ),
-              ],
             ),
           ),
         ),
@@ -506,6 +589,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       default:
         return _buildHomeScreenContent(isLight);
     }
+  }
+
+  Widget _buildDrawerTile({
+    required IconData icon,
+    required String title,
+    required bool isSelected,
+    required bool isLight,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: isSelected
+                ? const Color(0xFF1E88E5)
+                : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+            size: 24,
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isSelected
+                  ? const Color(0xFF1E88E5)
+                  : (isLight ? const Color(0xFF0F172A) : Colors.white),
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+              fontSize: 14.5,
+            ),
+          ),
+          onTap: onTap,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _animateItem({required Widget child, required int index}) {
