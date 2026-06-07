@@ -35,7 +35,7 @@ class HomeScreenWrapper extends HomeScreen {
   @override
   final String languageCode;
 
-  const HomeScreenWrapper({
+  HomeScreenWrapper({
     required this.actualWidget,
     required this.isDarkMode,
     required this.languageCode,

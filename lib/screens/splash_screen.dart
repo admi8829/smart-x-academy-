@@ -161,7 +161,7 @@ class SplashScreenWrapper extends SplashScreen {
   @override
   final String languageCode;
 
-  const SplashScreenWrapper({
+  SplashScreenWrapper({
     required this.actualWidget,
     required this.isDarkMode,
     required this.languageCode,
