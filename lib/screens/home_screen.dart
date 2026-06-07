@@ -5,6 +5,8 @@ import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import 'video_player_screen.dart';
+import 'unit_selection_screen.dart';
+import 'quiz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   String _selectedSex = 'Male';
   int _selectedGrade = 12;
+  int _selectedGradeForCourses = 9;
   String _selectedCountryCode = '+251';
   bool _isProfileLoading = false;
   bool _obscurePassword = true;
@@ -264,40 +267,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     bool isLight = !widget.isDarkMode;
     final bool isProfileActive = _currentIndex == 2;
     final bool isMoreActive = _currentIndex == 3;
+    final bool isCoursesActive = _currentIndex == 1;
+    final bool isCustomDarkHeader = isMoreActive || isCoursesActive;
 
     return Scaffold(
-      backgroundColor: isMoreActive
+      backgroundColor: isCustomDarkHeader
           ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
           : (isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827)),
       appBar: AppBar(
         scrolledUnderElevation: 0,
-        backgroundColor: isMoreActive
+        backgroundColor: isCustomDarkHeader
             ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
             : (isLight ? Colors.white : const Color(0xFF1F2937)),
-        elevation: isMoreActive ? 0 : 0.5,
-        centerTitle: isMoreActive ? false : true,
+        elevation: isCustomDarkHeader ? 0 : 0.5,
+        centerTitle: isCustomDarkHeader ? false : true,
         leading: IconButton(
           icon: Icon(
             Icons.menu,
-            color: isMoreActive ? Colors.white : (isLight ? const Color(0xFF0D2353) : Colors.white),
+            color: isCustomDarkHeader ? Colors.white : (isLight ? const Color(0xFF0D2353) : Colors.white),
             size: 26,
           ),
           onPressed: () {},
         ),
         title: Text(
-          isMoreActive
-              ? (widget.languageCode == 'en' ? 'More Options' : 'ተጨማሪ አማራጮች')
-              : (isProfileActive 
-                  ? (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ')
-                  : _local('title')),
+          isCoursesActive
+              ? (widget.languageCode == 'en' ? 'Browse Courses' : 'ኮርሶችን ያስሱ')
+              : (isMoreActive
+                  ? (widget.languageCode == 'en' ? 'More Options' : 'ተጨማሪ አማራጮች')
+                  : (isProfileActive 
+                      ? (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ')
+                      : _local('title'))),
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w900,
-            color: isMoreActive ? Colors.white : (isLight ? const Color(0xFF0D2353) : Colors.white),
+            color: isCustomDarkHeader ? Colors.white : (isLight ? const Color(0xFF0D2353) : Colors.white),
             letterSpacing: -0.3,
           ),
         ),
-        actions: isMoreActive
+        actions: isCustomDarkHeader
             ? null
             : (isProfileActive
                 ? [
@@ -378,10 +385,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          color: isMoreActive
+          color: isCustomDarkHeader
               ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
               : (isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827)),
-          image: isMoreActive
+          image: isCustomDarkHeader
               ? null
               : DecorationImage(
                   image: const AssetImage('assets/images/education_bg_pattern.png'),
@@ -1125,67 +1132,691 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  // Placeholder screen structures for secondary tabs
-  Widget _buildCoursesScreen(bool isLight) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(18.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("All Academy Courses", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isLight ? const Color(0xFF0D2353) : Colors.white)),
-          const SizedBox(height: 12),
-          TextField(
-            decoration: InputDecoration(
-              hintText: "Search courses...",
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: isLight ? Colors.white : const Color(0xFF1F2937),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-            ),
+  List<Map<String, dynamic>> _getCoursesData(int grade) {
+    if (grade == 9) {
+      return [
+        {
+          'subjectId': 'Biology',
+          'enTitle': 'Biology',
+          'amTitle': 'ስነ-ህይወት',
+          'title': 'Biology',
+          'icon': Icons.biotech_rounded,
+          'color': const Color(0xFF2E7D32),
+          'videosCount': '30+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '15\nQuizzes',
+          'useThumbnail': false,
+          'thumbnailUrl': '',
+          'playlist': [
+            {'title': 'Biology Grade 9 - Unit 1: Introduction to Biology', 'duration': '45:15', 'id': 'coH023k00D8'},
+            {'title': 'Biology Grade 9 - Unit 2: Cell Structure & Theory', 'duration': '1:12:40', 'id': '8IlzKkJbWRQ'},
+            {'title': 'Biology Grade 9 - Unit 3: Human Anatomy & Tissues', 'duration': '58:20', 'id': 'VSc_v-SUp7c'},
+          ],
+        },
+        {
+          'subjectId': 'Biology',
+          'enTitle': 'Biology',
+          'amTitle': 'ስነ-ህይወት',
+          'title': 'Biology',
+          'icon': Icons.science_rounded,
+          'color': const Color(0xFF2E7D32),
+          'videosCount': '30+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '15\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1530026405186-ed1ea0ac7a63?w=80',
+          'playlist': [
+            {'title': 'Biology Grade 9 - Unit 4: Ecosystems & Biomes', 'duration': '48:30', 'id': 'coH023k00D8'},
+            {'title': 'Biology Grade 9 - Unit 5: Classification of Plants', 'duration': '1:02:15', 'id': '8IlzKkJbWRQ'},
+          ],
+        },
+        {
+          'subjectId': 'Physics',
+          'enTitle': 'Physics',
+          'amTitle': 'ፊዚክስ',
+          'title': 'Physics',
+          'icon': Icons.bolt_rounded,
+          'color': const Color(0xFFE53935),
+          'videosCount': '30+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '15\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=80',
+          'playlist': [
+            {'title': 'Physics Grade 9 - Unit 1: Vectors & Kinematics', 'duration': '52:10', 'id': 'n_58_qM4zR0'},
+            {'title': 'Physics Grade 9 - Unit 2: Two-Dimensional Dynamics', 'duration': '1:18:45', 'id': 'bB71nFpXGic'},
+          ],
+        },
+        {
+          'subjectId': 'Mathematics',
+          'enTitle': 'Mathematics',
+          'amTitle': 'ሂሳብ',
+          'title': 'Mathematics',
+          'icon': Icons.functions_rounded,
+          'color': const Color(0xFF0084FF),
+          'videosCount': '30+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '15\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=80',
+          'playlist': [
+            {'title': 'Math Grade 9 - Unit 1: Sequence & Series', 'duration': '1:05:30', 'id': '5s2Lcs0Bq78'},
+            {'title': 'Math Grade 9 - Unit 2: Quadratic Equations', 'duration': '1:24:12', 'id': 'ySXe7f6G4_g'},
+          ],
+        }
+      ];
+    } else if (grade == 10) {
+      return [
+        {
+          'subjectId': 'Biology',
+          'enTitle': 'Biology',
+          'amTitle': 'ስነ-ህይወት',
+          'title': 'Biology',
+          'icon': Icons.biotech_rounded,
+          'color': const Color(0xFF2E7D32),
+          'videosCount': '25+ Videos',
+          'notesText': 'Chapter 1-10\nNotes',
+          'quizzesCount': '10\nQuizzes',
+          'useThumbnail': false,
+          'thumbnailUrl': '',
+          'playlist': [
+            {'title': 'Biology Grade 10 - Unit 1: Genetics & DNA replication', 'duration': '58:15', 'id': 'coH023k00D8'},
+          ],
+        },
+        {
+          'subjectId': 'Physics',
+          'enTitle': 'Physics',
+          'amTitle': 'ፊዚክስ',
+          'title': 'Physics',
+          'icon': Icons.bolt_rounded,
+          'color': const Color(0xFFE53935),
+          'videosCount': '28+ Videos',
+          'notesText': 'Chapter 1-10\nNotes',
+          'quizzesCount': '12\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=80',
+          'playlist': [
+            {'title': 'Physics Grade 10 - Unit 1: Heat & Thermodynamics', 'duration': '48:30', 'id': 'n_58_qM4zR0'},
+          ],
+        },
+        {
+          'subjectId': 'Mathematics',
+          'enTitle': 'Mathematics',
+          'amTitle': 'ሂሳብ',
+          'title': 'Mathematics',
+          'icon': Icons.functions_rounded,
+          'color': const Color(0xFF0084FF),
+          'videosCount': '35+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '18\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=80',
+          'playlist': [
+            {'title': 'Math Grade 10 - Unit 1: Polynomial Functions', 'duration': '1:10:00', 'id': '5s2Lcs0Bq78'},
+          ],
+        },
+      ];
+    } else if (grade == 11) {
+      return [
+        {
+          'subjectId': 'Biology',
+          'enTitle': 'Biology',
+          'amTitle': 'ስነ-ህይወት',
+          'title': 'Biology',
+          'icon': Icons.biotech_rounded,
+          'color': const Color(0xFF2E7D32),
+          'videosCount': '35+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '18\nQuizzes',
+          'useThumbnail': false,
+          'thumbnailUrl': '',
+          'playlist': [
+            {'title': 'Biology Grade 11 - Unit 1: Chemistry of Life', 'duration': '1:15:00', 'id': 'coH023k00D8'},
+          ],
+        },
+        {
+          'subjectId': 'Physics',
+          'enTitle': 'Physics',
+          'amTitle': 'ፊዚክስ',
+          'title': 'Physics',
+          'icon': Icons.bolt_rounded,
+          'color': const Color(0xFFE53935),
+          'videosCount': '32+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '15\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=80',
+          'playlist': [
+            {'title': 'Physics Grade 11 - Unit 1: Vectors & Equilibrium', 'duration': '1:02:10', 'id': 'n_58_qM4zR0'},
+          ],
+        },
+        {
+          'subjectId': 'Mathematics',
+          'enTitle': 'Mathematics',
+          'amTitle': 'ሂሳብ',
+          'title': 'Mathematics',
+          'icon': Icons.functions_rounded,
+          'color': const Color(0xFF0084FF),
+          'videosCount': '40+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '20\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=80',
+          'playlist': [
+            {'title': 'Math Grade 11 - Unit 1: Relations & Functions', 'duration': '1:04:30', 'id': '5s2Lcs0Bq78'},
+          ],
+        },
+      ];
+    } else {
+      return [
+        {
+          'subjectId': 'Biology',
+          'enTitle': 'Biology',
+          'amTitle': 'ስነ-ህይወት',
+          'title': 'Biology',
+          'icon': Icons.biotech_rounded,
+          'color': const Color(0xFF2E7D32),
+          'videosCount': '48+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '20\nQuizzes',
+          'useThumbnail': false,
+          'thumbnailUrl': '',
+          'playlist': [
+            {'title': 'Biology Grade 12 - Unit 1: Microorganisms', 'duration': '1:10:45', 'id': 'coH023k00D8'},
+          ],
+        },
+        {
+          'subjectId': 'Physics',
+          'enTitle': 'Physics',
+          'amTitle': 'ፊዚክስ',
+          'title': 'Physics',
+          'icon': Icons.bolt_rounded,
+          'color': const Color(0xFFE53935),
+          'videosCount': '50+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '20\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=80',
+          'playlist': [
+            {'title': 'Physics Grade 12 - Unit 1: Electromagnetism', 'duration': '1:15:20', 'id': 'n_58_qM4zR0'},
+          ],
+        },
+        {
+          'subjectId': 'Mathematics',
+          'enTitle': 'Mathematics',
+          'amTitle': 'ሂሳብ',
+          'title': 'Mathematics',
+          'icon': Icons.functions_rounded,
+          'color': const Color(0xFF0084FF),
+          'videosCount': '55+ Videos',
+          'notesText': 'Chapter 1-12\nNotes',
+          'quizzesCount': '25\nQuizzes',
+          'useThumbnail': true,
+          'thumbnailUrl': 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=80',
+          'playlist': [
+            {'title': 'Math Grade 12 - Unit 1: Sequences & Series Matric Prep', 'duration': '1:15:30', 'id': 'K_js8HXa8VM'},
+          ],
+        },
+      ];
+    }
+  }
+
+  void _showVideoPlaylistModal(String courseTitle, List<dynamic> playlist, bool isLight) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$courseTitle Video Lessons',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: playlist.length,
+                  itemBuilder: (context, index) {
+                    final item = playlist[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0D2353),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 20),
+                        ),
+                        title: Text(
+                          item['title']!,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Text(
+                          item['duration']!,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            color: isLight ? Colors.black54 : Colors.white70,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => VideoPlayerScreen(
+                                videoId: item['id']!,
+                                title: item['title']!,
+                                duration: item['duration']!,
+                                isDarkMode: !isLight,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 20),
-          _buildPopularCourseItem("Mathematics Grade 12", "Calculus & Algebra", "4.8 ★ (120 reviews)", "48 Modules", const Color(0xFF9C27B0), isLight),
-          _buildPopularCourseItem("Physics Grade 11", "Mechanics & Relativity", "4.9 ★ (95 reviews)", "40 Modules", const Color(0xFFFFA726), isLight),
-          _buildPopularCourseItem("Biology Grade 10", "Ecosystems & Genetics", "4.7 ★ (80 reviews)", "30 Modules", const Color(0xFF4CAF50), isLight),
-        ],
+        );
+      },
+    );
+  }
+
+  void _navigateToCourseUnitNotes(Map<String, dynamic> course, bool isLight) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UnitSelectionScreen(
+          grade: _selectedGradeForCourses,
+          subjectId: course['subjectId'],
+          enTitle: course['enTitle'],
+          amTitle: course['amTitle'],
+          color: course['color'],
+          icon: Icon(course['icon'], size: 48, color: Colors.white),
+          isDarkMode: !isLight,
+          languageCode: widget.languageCode,
+          onToggleTheme: widget.onToggleTheme,
+          onToggleLanguage: widget.onToggleLanguage,
+        ),
       ),
     );
   }
 
-  Widget _buildPopularCourseItem(String title, String subtitle, String rating, String length, Color accent, bool isLight) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isLight ? Colors.white : const Color(0xFF1F2937),
-        borderRadius: BorderRadius.circular(16),
+  void _navigateToCourseQuiz(Map<String, dynamic> course) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(
+          grade: _selectedGradeForCourses,
+          subject: course['subjectId'].toString().toLowerCase(),
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            height: 48, width: 48,
-            decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-            child: Icon(Icons.menu_book, color: accent),
+    );
+  }
+
+  Widget _buildPlayButton() {
+    return Container(
+      width: 28,
+      height: 19,
+      margin: const EdgeInsets.only(right: 4.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D2353),
+        borderRadius: BorderRadius.circular(4.0),
+      ),
+      child: const Icon(
+        Icons.play_arrow_rounded,
+        color: Colors.white,
+        size: 13,
+      ),
+    );
+  }
+
+  Widget _buildThumbnailButton(String imageUrl) {
+    return Container(
+      width: 28,
+      height: 19,
+      margin: const EdgeInsets.only(right: 4.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D2353),
+        borderRadius: BorderRadius.circular(4.0),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4.0),
+        child: Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.play_arrow_rounded,
+              color: Colors.white,
+              size: 13,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCoursesScreen(bool isLight) {
+    final List<Map<String, dynamic>> courses = _getCoursesData(_selectedGradeForCourses);
+
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: isLight ? Colors.white : const Color(0xFF1D283C),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32.0),
+          topRight: Radius.circular(32.0),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 18,
+            offset: const Offset(0, -6),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: isLight ? const Color(0xFF0D2353) : Colors.white)),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(rating, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber)),
-                    const SizedBox(width: 12),
-                    Text(length, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                  ],
-                )
-              ],
-            ),
-          )
         ],
+        image: DecorationImage(
+          image: const AssetImage('assets/images/education_bg_pattern.png'),
+          repeat: ImageRepeat.repeat,
+          opacity: isLight ? 0.08 : 0.02,
+          colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32.0),
+          topRight: Radius.circular(32.0),
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.languageCode == 'en' ? 'Grade' : 'ክፍል',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [9, 10, 11, 12].map((int gradeNum) {
+                    final bool isSelected = _selectedGradeForCourses == gradeNum;
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedGradeForCourses = gradeNum;
+                        });
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF1E88E5))
+                              : (isLight ? Colors.white : const Color(0xFF1E293B)),
+                          borderRadius: BorderRadius.circular(12),
+                          border: isSelected
+                              ? null
+                              : Border.all(
+                                  color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                                  width: 1.2,
+                                ),
+                        ),
+                        child: Text(
+                          widget.languageCode == 'en' ? 'Grade $gradeNum' : 'ክፍል $gradeNum',
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : (isLight ? const Color(0xFF0F172A) : Colors.white),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14.5,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 24.0),
+              ...courses.map((course) {
+                final List<Widget> placeholders = [
+                  _buildPlayButton(),
+                  _buildPlayButton(),
+                  course['useThumbnail'] == true
+                      ? _buildThumbnailButton(course['thumbnailUrl'])
+                      : _buildPlayButton(),
+                ];
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(24.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF1E3A8A),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              course['icon'],
+                              color: isLight ? const Color(0xFF1E3A8A) : Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Text(
+                            course['title'],
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        child: Container(
+                          height: 0.8,
+                          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                        ),
+                      ),
+                      IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: InkWell(
+                                onTap: () => _showVideoPlaylistModal(course['title'], course['playlist'], isLight),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.languageCode == 'en' ? 'Video Lessons' : 'የቪዲዮ ትምህርት',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: placeholders,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      course['videosCount'],
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 0.8,
+                              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: InkWell(
+                                onTap: () => _navigateToCourseUnitNotes(course, isLight),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.languageCode == 'en' ? 'Short Notes' : 'አጫጭር ማስታወሻ',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.description_rounded,
+                                          color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            course['notesText'],
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w900,
+                                              color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                                              height: 1.15,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 0.8,
+                              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: InkWell(
+                                onTap: () => _navigateToCourseQuiz(course),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.languageCode == 'en' ? 'Quiz' : 'ፈተና',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.help_rounded,
+                                          color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Expanded(
+                                          child: Text(
+                                            course['quizzesCount'],
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w900,
+                                              color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                                              height: 1.15,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
+        ),
       ),
     );
   }
