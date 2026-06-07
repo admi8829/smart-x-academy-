@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/push_notification_service.dart';
 import 'home_screen.dart';
+import '../main.dart';
 
 enum LaunchStep {
   welcome,       // Step 1: Welcome & App Launch
@@ -37,7 +38,7 @@ class AppLaunchState extends ChangeNotifier {
     required VoidCallback onComplete,
   }) {
     _currentStep = LaunchStep.welcome;
-    _step1Progress = 0.0;
+    _step1Progress = 0.55; // Matches design mockup loading state start
     _step2Progress = 0.0;
     _step5Progress = 0.0;
     _authStatus = 'Checking account status...';
@@ -47,16 +48,17 @@ class AppLaunchState extends ChangeNotifier {
     // 1. WELCOME & APP LAUNCH
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) async {
       if (_currentStep == LaunchStep.welcome) {
-        _step1Progress += 0.02;
+        _step1Progress += 0.01;
         if (_step1Progress >= 1.0) {
           _step1Progress = 1.0;
           _currentStep = LaunchStep.syncing;
+          _step2Progress = 0.75; // Matches design mockup loading state for step 2
         }
         notifyListeners();
       } 
       // 2. DATA & CONTENT LOADING
       else if (_currentStep == LaunchStep.syncing) {
-        _step2Progress += 0.025;
+        _step2Progress += 0.01;
         if (_step2Progress >= 1.0) {
           _step2Progress = 1.0;
           _currentStep = LaunchStep.auth;
@@ -151,7 +153,42 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+class SplashScreenWrapper extends SplashScreen {
+  final SplashScreen actualWidget;
+  
+  @override
+  final bool isDarkMode;
+  @override
+  final String languageCode;
+
+  const SplashScreenWrapper({
+    required this.actualWidget,
+    required this.isDarkMode,
+    required this.languageCode,
+  }) : super(
+          isDarkMode: isDarkMode,
+          languageCode: languageCode,
+          onToggleTheme: actualWidget.onToggleTheme,
+          onToggleLanguage: actualWidget.onToggleLanguage,
+          key: actualWidget.key,
+        );
+}
+
 class _SplashScreenState extends State<SplashScreen> {
+  @override
+  SplashScreen get widget {
+    try {
+      final appState = AppStateProvider.of(context);
+      return SplashScreenWrapper(
+        actualWidget: super.widget,
+        isDarkMode: appState.isDarkMode,
+        languageCode: appState.languageCode,
+      );
+    } catch (_) {
+      return super.widget;
+    }
+  }
+
   late AppLaunchState _launchState;
 
   @override
@@ -223,41 +260,36 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 10),
+                const SizedBox(height: 24), // Breathing room above the logo to prevent touching status bar as in design rules
                 
-                // Centered dynamic branding Star Logo with student in center
-                CustomPaint(
-                  size: const Size(80, 80),
-                  painter: SmartXStarPainter(color: primaryColor),
-                ),
-                const SizedBox(height: 12),
-                
-                Text(
-                  "SMART X",
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2.0,
+                // Centered dynamic branding Star Logo with precise controlled dimensions
+                SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: CustomPaint(
+                    size: const Size(100, 100),
+                    painter: SmartXStarPainter(color: primaryColor),
                   ),
                 ),
+                const SizedBox(height: 24), // Perfect vertical spacing below logo
+                
                 Text(
-                  "ETHIOPIA",
+                  "SMART X ETHIOPIA",
                   style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 4.0,
+                    color: isDark ? const Color(0xFF64B5F6) : const Color(0xFF0D47A1), // Prominent, bold brand font
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8), // Vertical spacing between title and subtitle
                 
                 Text(
                   "APPLICATION PROCESS FLOW",
                   style: TextStyle(
-                    color: textColor.withOpacity(0.8),
+                    color: isDark ? Colors.white60 : Colors.black54,
                     fontSize: 13,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -336,21 +368,42 @@ class _SplashScreenState extends State<SplashScreen> {
                 // BOTTOM BADGE BAR
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // YouTube branding widget
+                    // YouTube branding widget styled with modern rounded curves
                     _buildYouTubeBadge(primaryColor, isDark),
                     
-                    // Gear customization icon
-                    IconButton(
-                      icon: Icon(
-                        Icons.settings_outlined,
-                        color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
-                        size: 24,
+                    // Gear customization icon centered and styled in matches rounded circular badge
+                    Container(
+                      height: 48,
+                      width: 48,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                          width: 1.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      onPressed: () {
-                        // Quick toggle modal or settings menu
-                        _showLocalSettingsModal(context, isDark);
-                      },
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: isDark ? Colors.grey[300] : const Color(0xFF0D47A1),
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          _showLocalSettingsModal(context, isDark);
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ),
                   ],
                 ),
@@ -373,183 +426,187 @@ class _SplashScreenState extends State<SplashScreen> {
     required Color primaryColor,
     required bool isDark,
   }) {
-    final Color borderColors = isCompleted 
-        ? primaryColor 
-        : (isActive ? primaryColor.withOpacity(0.8) : Colors.grey[300]!);
-    final Color iconColors = isCompleted || isActive ? primaryColor : Colors.grey[400]!;
+    final bool isLocked = !isActive && !isCompleted;
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Vertical timeline left path column
-          Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                      border: Border.all(
-                        color: borderColors,
-                        width: isCompleted || isActive ? 2.5 : 1.5,
-                      ),
-                      boxShadow: isActive
-                          ? [
-                              BoxShadow(
-                                color: primaryColor.withOpacity(0.15),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              )
-                            ]
-                          : null,
-                    ),
-                    child: Icon(
-                      icon,
-                      color: iconColors,
-                      size: 22,
-                    ),
-                  ),
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFF1E88E5),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        index.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (index < 5)
-                Expanded(
-                  child: Container(
-                    width: 2.5,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isCompleted ? primaryColor : Colors.grey[200]!,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 18),
-          
-          // Step metadata column
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    // Define color variables precisely based on active vs disabled states
+    final Color borderColors = isCompleted 
+        ? const Color(0xFF0D47A1) 
+        : (isActive ? const Color(0xFF0D47A1) : Colors.grey[300]!);
+    final Color iconColors = isCompleted || isActive ? const Color(0xFF0D47A1) : Colors.grey[400]!;
+
+    return Opacity(
+      opacity: isLocked ? 0.45 : 1.0, // Reduced opacity when locked/inactive to emphasize hierarchy
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Vertical timeline left path column with dotted chain design
+            Column(
               children: [
-                const SizedBox(height: 2),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                    color: isCompleted || isActive 
-                        ? (isDark ? Colors.white : const Color(0xFF122C4B)) 
-                        : Colors.grey[400]!,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                
-                // Custom horizontal loading progress bar as in reference mockup screenshot
-                if (isActive && progress >= 0.0 && progress <= 1.0 && (index == 1 || index == 2 || index == 5)) ...[
-                  Container(
-                    height: 8,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF334155) : Colors.grey[150] ?? const Color(0xFFEEF2F6),
-                      borderRadius: BorderRadius.circular(4),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        border: Border.all(
+                          color: borderColors,
+                          width: isCompleted || isActive ? 2.5 : 1.5,
+                        ),
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0D47A1).withOpacity(0.15),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: iconColors,
+                        size: 22,
+                      ),
                     ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: progress,
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
                       child: Container(
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF0F4C81), Color(0xFF1E88E5)],
+                          shape: BoxShape.circle,
+                          color: isLocked ? Colors.grey[350]! : const Color(0xFF1E88E5),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          index.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
                           ),
-                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (index < 5)
+                  Expanded(
+                    child: SizedBox(
+                      width: 4,
+                      child: CustomPaint(
+                        painter: DashedLinePainter(
+                          color: isCompleted ? const Color(0xFF0D47A1) : (isDark ? const Color(0xFF334155) : Colors.grey[300]!),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                ] else if (isCompleted && (index == 1 || index == 2 || index == 5)) ...[
-                  Container(
-                    height: 8,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                ],
-                
-                Text(
-                  desc,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.4,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                    color: isCompleted || isActive 
-                        ? (isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569)) 
-                        : Colors.grey[400]!,
-                  ),
-                ),
-                const SizedBox(height: 18),
               ],
             ),
-          ),
-        ],
+            const SizedBox(width: 18),
+            
+            // Step metadata column
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 2),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: isLocked 
+                          ? Colors.grey[500]! 
+                          : (isDark ? Colors.white : const Color(0xFF0D47A1)), // Prominent dark navy blue header as in spec
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  
+                  // Custom horizontal loading progress bar - rendered only for loading state steps 1 and 2
+                  if (index == 1 || index == 2) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: SizedBox(
+                        height: 8,
+                        width: double.infinity,
+                        child: LinearProgressIndicator(
+                          value: index == 1
+                              ? (isActive ? (progress > 0.0 ? progress : 0.55) : (isCompleted ? 1.0 : 0.55))
+                              : (isActive ? (progress > 0.0 ? progress : 0.75) : (isCompleted ? 1.0 : 0.75)),
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            isCompleted || isActive ? const Color(0xFF0D47A1) : Colors.grey[300]!,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                  
+                  Text(
+                    desc,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.4,
+                      fontWeight: FontWeight.normal,
+                      color: isDark ? Colors.grey[400] : Colors.black54, // Secondary muted grey description for hierarchy
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildYouTubeBadge(Color primaryColor, bool isDark) {
+    final Color borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final Color bgColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(24), // Clean rounded pill button as requested
         border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          color: borderColor,
+          width: 1.0, // Subtle thin border
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center, // Perfectly centered horizontally
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(4),
+              color: const Color(0xFFFF0000), // YouTube Red brand color
+              borderRadius: BorderRadius.circular(6),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.play_arrow, color: Colors.white, size: 12),
-                SizedBox(width: 1),
+                Icon(Icons.play_arrow_rounded, color: Colors.white, size: 14),
+                SizedBox(width: 2),
                 Text(
                   "You",
                   style: TextStyle(
@@ -570,28 +627,27 @@ class _SplashScreenState extends State<SplashScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(width: 10),
+          Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 "2.3K+",
                 style: TextStyle(
-                  color: primaryColor,
+                  color: isDark ? Colors.white : const Color(0xFF0D47A1),
                   fontWeight: FontWeight.w900,
                   fontSize: 13,
-                  height: 1.1,
                 ),
               ),
-              const Text(
+              const SizedBox(width: 4),
+              Text(
                 "SUBSCRIBERS",
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: isDark ? Colors.grey[400] : const Color(0xFF64748B),
                   fontWeight: FontWeight.bold,
-                  fontSize: 7.5,
+                  fontSize: 8,
                   letterSpacing: 0.5,
-                  height: 1.0,
                 ),
               ),
             ],
@@ -752,4 +808,53 @@ class SmartXStarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// A Custom Painter to render a gorgeous vertical dashed/dotted chain line.
+class DashedLinePainter extends CustomPainter {
+  final Color color;
+
+  DashedLinePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double cx = size.width / 2;
+    final double height = size.height;
+
+    // Draw chain-style: alternating longer dashes and tiny circular beads
+    final paintLine = Paint()
+      ..color = color
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final paintDot = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+
+    double y = 0.0;
+    const double dashLength = 6.0;
+    const double gap = 4.0;
+    const double dotRadius = 1.5;
+
+    int i = 0;
+    while (y < height) {
+      if (i % 2 == 0) {
+        // Draw line dash
+        final double nextY = min(y + dashLength, height);
+        canvas.drawLine(Offset(cx, y), Offset(cx, nextY), paintLine);
+        y = nextY + gap;
+      } else {
+        // Draw circular bead
+        if (y + dotRadius <= height) {
+          canvas.drawCircle(Offset(cx, y + dotRadius), dotRadius, paintDot);
+        }
+        y += (dotRadius * 2) + gap;
+      }
+      i++;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant DashedLinePainter oldDelegate) => oldDelegate.color != color;
 }

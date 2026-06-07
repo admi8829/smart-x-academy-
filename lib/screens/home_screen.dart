@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
+import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -26,7 +27,42 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+class HomeScreenWrapper extends HomeScreen {
+  final HomeScreen actualWidget;
+  
+  @override
+  final bool isDarkMode;
+  @override
+  final String languageCode;
+
+  const HomeScreenWrapper({
+    required this.actualWidget,
+    required this.isDarkMode,
+    required this.languageCode,
+  }) : super(
+          isDarkMode: isDarkMode,
+          languageCode: languageCode,
+          onToggleTheme: actualWidget.onToggleTheme,
+          onToggleLanguage: actualWidget.onToggleLanguage,
+          key: actualWidget.key,
+        );
+}
+
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  @override
+  HomeScreen get widget {
+    try {
+      final appState = AppStateProvider.of(context);
+      return HomeScreenWrapper(
+        actualWidget: super.widget,
+        isDarkMode: appState.isDarkMode,
+        languageCode: appState.languageCode,
+      );
+    } catch (_) {
+      return super.widget;
+    }
+  }
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
   late AnimationController _fadeController;
@@ -53,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _selectedGradeForCourses = 9;
   String _selectedCountryCode = '+251';
   bool _isProfileLoading = false;
-  bool _isLoginForm = false;
+  bool _isLoginForm = true;
   bool _obscurePassword = true;
   bool _isSettingsExpanded = false;
   bool _isAboutExpanded = false;
@@ -81,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'nav_courses': 'Courses',
       'nav_profile': 'Profile',
       'nav_settings': 'Settings',
+      'nav_new': 'New',
       'start_course_btn': 'Start Course',
       'featured_title': 'Today\'s Featured Lessons',
       'featured_sub': 'Select a lesson below to watch instantly in the player.',
@@ -108,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'nav_courses': 'ኮርሶች',
       'nav_profile': 'መገለጫ',
       'nav_settings': 'ማስተካከያዎች',
+      'nav_new': 'አዲስ',
       'start_course_btn': 'ኮርስ ጀምር',
       'featured_title': 'የዛሬው ልዩ ትምህርቶች',
       'featured_sub': 'በቀጥታ ለመመልከት ከታች ካሉት ቪዲዮዎች አንዱን ይምረጡ።',
@@ -298,7 +336,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           isCoursesActive
               ? (widget.languageCode == 'en' ? 'Browse Courses' : 'ኮርሶችን ያስሱ')
               : (isMoreActive
-                  ? (widget.languageCode == 'en' ? 'More Options' : 'ተጨማሪ አማራጮች')
+                  ? (widget.languageCode == 'en' ? 'What\'s New' : 'አዳዲስ ነገሮች')
                   : (isProfileActive 
                       ? (_isLoginForm
                           ? (widget.languageCode == 'en' ? 'Log In' : 'ይግቡ')
@@ -425,57 +463,104 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ),
             ),
-            _buildDrawerTile(
-              icon: Icons.info_outline_rounded,
-              title: widget.languageCode == 'en' ? 'About Smart X App' : 'ስለ ስማርት ኤክስ',
-              isSelected: false,
-              isLight: isLight,
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutAppModal(isLight);
-              },
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  _buildDrawerTile(
+                    icon: Icons.bookmark_outline_rounded,
+                    title: widget.languageCode == 'en' ? 'Saved Lessons' : 'የተቀመጡ ትምህርቶች',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonDialog();
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.trending_up_rounded,
+                    title: widget.languageCode == 'en' ? 'Study Progress' : 'የጥናት ሂደት',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonDialog();
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.credit_card_rounded,
+                    title: widget.languageCode == 'en' ? 'Subscription & Billing' : 'ምዝገባ እና ክፍያ',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showSubscriptionModal(isLight);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.notifications_none_rounded,
+                    title: widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showComingSoonDialog();
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.help_outline_rounded,
+                    title: widget.languageCode == 'en' ? 'Help & Support' : 'እርዳታ እና ድጋፍ',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showHelpSupportModal(isLight);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.info_outline_rounded,
+                    title: widget.languageCode == 'en' ? 'About App' : 'ስለ መተግበሪያው',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutAppModal(isLight);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.shield_outlined,
+                    title: widget.languageCode == 'en' ? 'Privacy Policy' : 'የግል መመሪያ',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showPrivacyPolicyModal(isLight);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.assignment_turned_in_outlined,
+                    title: widget.languageCode == 'en' ? 'Terms of Service' : 'የአገልግሎት ውሎች',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showTermsOfServiceModal(isLight);
+                    },
+                  ),
+                  _buildDrawerTile(
+                    icon: Icons.g_translate_rounded,
+                    title: widget.languageCode == 'en' ? 'አማርኛ (Amharic)' : 'English (en)',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onToggleLanguage();
+                    },
+                  ),
+                ],
+              ),
             ),
-            _buildDrawerTile(
-              icon: Icons.assignment_turned_in_outlined,
-              title: widget.languageCode == 'en' ? 'Terms of Service' : 'የአገልግሎት ውሎች',
-              isSelected: false,
-              isLight: isLight,
-              onTap: () {
-                Navigator.pop(context);
-                _showTermsOfServiceModal(isLight);
-              },
-            ),
-            _buildDrawerTile(
-              icon: Icons.shield_outlined,
-              title: widget.languageCode == 'en' ? 'Privacy Policy' : 'የግል መመሪያ',
-              isSelected: false,
-              isLight: isLight,
-              onTap: () {
-                Navigator.pop(context);
-                _showPrivacyPolicyModal(isLight);
-              },
-            ),
-            _buildDrawerTile(
-              icon: Icons.g_translate_rounded,
-              title: widget.languageCode == 'en' ? 'አማርኛ (Amharic)' : 'English (en)',
-              isSelected: false,
-              isLight: isLight,
-              onTap: () {
-                Navigator.pop(context);
-                widget.onToggleLanguage();
-              },
-            ),
-            _buildDrawerTile(
-              icon: Icons.logout_rounded,
-              title: widget.languageCode == 'en' ? 'Log Out' : 'ውጣ',
-              isSelected: false,
-              isLight: isLight,
-              onTap: () {
-                Navigator.pop(context);
-                _showLogOutConfirmationDialog();
-              },
-            ),
-            const Spacer(),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Divider(
@@ -506,6 +591,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              child: _buildDrawerTile(
+                icon: Icons.logout_rounded,
+                title: widget.languageCode == 'en' ? 'Log Out' : 'ውጣ',
+                isSelected: false,
+                isLight: isLight,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showLogOutConfirmationDialog();
+                },
+              ),
+            ),
             const SizedBox(height: 12),
           ],
         ),
@@ -528,56 +626,58 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
         child: _buildCurrentTab(isLight),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(18.0, 0.0, 18.0, 24.0),
-        child: Container(
-          height: 64.0,
-          decoration: BoxDecoration(
-            color: isLight ? Colors.white : const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(38.0),
-            border: Border.all(
-              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-              width: 1.5,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+          child: Container(
+            height: 70.0,
+            decoration: BoxDecoration(
+              color: isLight ? Colors.white : const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(35.0),
+              border: Border.all(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                width: 1.0,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isLight 
+                      ? const Color(0xFF0F1B2B).withValues(alpha: 0.1) 
+                      : Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 30.0,
+                  offset: const Offset(0, 8),
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: isLight 
-                    ? const Color(0xFF0F1B2B).withValues(alpha: 0.08) 
-                    : Colors.black.withValues(alpha: 0.45),
-                blurRadius: 28.0,
-                offset: const Offset(0, 10),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildBottomNavItem(
-                index: 0,
-                icon: Icons.home_rounded,
-                label: _local('nav_home'),
-                isLight: isLight,
-              ),
-              _buildBottomNavItem(
-                index: 1,
-                icon: Icons.book_rounded,
-                label: _local('nav_courses'),
-                isLight: isLight,
-              ),
-              _buildBottomNavItem(
-                index: 2,
-                icon: Icons.person_rounded,
-                label: _local('nav_profile'),
-                isLight: isLight,
-              ),
-              _buildBottomNavItem(
-                index: 3,
-                icon: Icons.settings_rounded,
-                label: _local('nav_settings'),
-                isLight: isLight,
-              ),
-            ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildBottomNavItem(
+                  index: 0,
+                  icon: Icons.home_rounded,
+                  label: _local('nav_home'),
+                  isLight: isLight,
+                ),
+                _buildBottomNavItem(
+                  index: 1,
+                  icon: Icons.menu_book_rounded,
+                  label: _local('nav_courses'),
+                  isLight: isLight,
+                ),
+                _buildBottomNavItem(
+                  index: 2,
+                  icon: Icons.person_rounded,
+                  label: _local('nav_profile'),
+                  isLight: isLight,
+                ),
+                _buildBottomNavItem(
+                  index: 3,
+                  icon: Icons.fiber_new_rounded,
+                  label: _local('nav_new'),
+                  isLight: isLight,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -2004,7 +2104,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildLabel(String text, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(left: 2.0, bottom: 8.0, top: 12.0),
+      padding: const EdgeInsets.only(left: 2.0, bottom: 4.0, top: 4.0),
       child: Text(
         text,
         style: TextStyle(
@@ -2244,41 +2344,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF1E293B),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.lock_person_rounded,
-                  size: 42,
+                  size: 36,
                   color: Color(0xFF1E88E5),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               Text(
                 widget.languageCode == 'en' ? 'Welcome Back!' : 'እንኳን በደህና መጡ!',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w900,
                   color: isLight ? const Color(0xFF0F172A) : Colors.white,
                   letterSpacing: -0.4,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 widget.languageCode == 'en'
                     ? 'Log in to continue your learning journey'
                     : 'ለመቀጠል እባክዎን መለያዎን ያስገቡ',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: isLight ? const Color(0xFF64748B) : Colors.white70,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 14),
 
         // Email or Phone input
         _buildLabel(widget.languageCode == 'en' ? 'Email Address or Phone Number' : 'የኢሜል አድራሻ ወይም ስልክ ቁጥር', isDark),
@@ -2287,6 +2387,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2305,10 +2408,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
+              suffixIcon: _emailController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _emailController.clear();
+                        });
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 6),
 
         // Password input row with Forgot Password Link
         Row(
@@ -2318,7 +2431,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             GestureDetector(
               onTap: () => _showForgotPasswordDialog(isLight),
               child: Padding(
-                padding: const EdgeInsets.only(top: 12.0, right: 2.0),
+                padding: const EdgeInsets.only(top: 4.0, right: 2.0),
                 child: Text(
                   widget.languageCode == 'en' ? 'Forgot Password?' : 'የይለፍ ቃል ጠፋብዎት?',
                   style: const TextStyle(
@@ -2336,6 +2449,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2354,22 +2470,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey,
-                  size: 18,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_passwordController.text.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _passwordController.clear();
+                        });
+                      },
+                    ),
+                  IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 16),
 
         // Log In submit Button
         _isProfileLoading
@@ -2414,7 +2544,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
 
         // Sign Up Switcher Footer
         Center(
@@ -2462,41 +2592,41 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF1E293B),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.person_add_alt_1_rounded,
-                  size: 42,
+                  size: 36,
                   color: Color(0xFF1E88E5),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 8),
               Text(
                 widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ',
                 style: TextStyle(
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: FontWeight.w900,
                   color: isLight ? const Color(0xFF0F172A) : Colors.white,
                   letterSpacing: -0.4,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
               Text(
                 widget.languageCode == 'en'
                     ? 'Join Smart X Academy and boost your grades'
                     : 'ስማርት ኤክስ አካዳሚ በመቀላቀል ውጤትዎን ያሻሽሉ',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   color: isLight ? const Color(0xFF64748B) : Colors.white70,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
 
         // 1. Full Name
         _buildLabel(widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም', isDark),
@@ -2504,6 +2634,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           isDark: isDark,
           child: TextFormField(
             controller: _fullNameController,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2522,10 +2655,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
+              suffixIcon: _fullNameController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _fullNameController.clear();
+                        });
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
 
         // 2. Email Address
         _buildLabel(widget.languageCode == 'en' ? 'Email Address' : 'የኢሜል አድራሻ', isDark),
@@ -2534,6 +2677,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2552,10 +2698,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
+              suffixIcon: _emailController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _emailController.clear();
+                        });
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
 
         // 3. Grade Level dropdown selector
         _buildLabel(widget.languageCode == 'en' ? 'Grade Level' : 'የክፍል ደረጃ', isDark),
@@ -2592,7 +2748,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
 
         // 4. School Name
         _buildLabel(widget.languageCode == 'en' ? 'School Name' : 'የትምህርት ቤት ስም', isDark),
@@ -2600,6 +2756,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           isDark: isDark,
           child: TextFormField(
             controller: _schoolNameController,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2618,10 +2777,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
+              suffixIcon: _schoolNameController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _schoolNameController.clear();
+                        });
+                      },
+                    )
+                  : null,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
 
         // 5. Age input with icons on both sides
         _buildLabel(widget.languageCode == 'en' ? 'Age' : 'እድሜ', isDark),
@@ -2635,6 +2804,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: TextFormField(
                   controller: _ageController,
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    setState(() {});
+                  },
                   style: TextStyle(
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 14.5,
@@ -2651,11 +2823,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ),
+              if (_ageController.text.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                  onPressed: () {
+                    setState(() {
+                      _ageController.clear();
+                    });
+                  },
+                ),
               Icon(Icons.calendar_month, color: isDark ? Colors.white70 : navyColor, size: 20),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
 
         // 6. Sex (Gender) selector row
         Row(
@@ -2772,7 +2953,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 6),
 
         // 7. Phone Number Input with Ethiopian Country Selector representation
         _buildLabel(widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር', isDark),
@@ -2808,6 +2989,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 child: TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
+                  onChanged: (value) {
+                    setState(() {});
+                  },
                   style: TextStyle(
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 14.5,
@@ -2824,10 +3008,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ),
+              if (_phoneController.text.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                  onPressed: () {
+                    setState(() {
+                      _phoneController.clear();
+                    });
+                  },
+                ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
 
         // 8. Password Input
         _buildLabel(widget.languageCode == 'en' ? 'Password' : 'የይለፍ ቃል', isDark),
@@ -2836,6 +3029,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: TextFormField(
             controller: _passwordController,
             obscureText: _obscurePassword,
+            onChanged: (value) {
+              setState(() {});
+            },
             style: TextStyle(
               color: isDark ? Colors.white : const Color(0xFF0F172A),
               fontSize: 14.5,
@@ -2854,22 +3050,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white70 : navyColor,
                 size: 20,
               ),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey,
-                  size: 18,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_passwordController.text.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _passwordController.clear();
+                        });
+                      },
+                    ),
+                  IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                      size: 18,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
         // 9. Register submit Button
         _isProfileLoading
@@ -3066,303 +3276,75 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildSettingsScreen(bool isLight) {
     bool isDark = !isLight;
-    
-    final String labelSavedLessons = widget.languageCode == 'en' ? 'Saved Lessons' : 'የተቀመጡ ትምህርቶች';
-    final String labelStudyProgress = widget.languageCode == 'en' ? 'Study Progress' : 'የጥናት ሂደት';
-    final String labelSubscription = widget.languageCode == 'en' ? 'Subscription & Billing' : 'ምዝገባ እና ክፍያ';
-    final String labelNotifications = widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች';
-    final String labelHelpSupport = widget.languageCode == 'en' ? 'Help & Support' : 'እርዳታ እና ድጋፍ';
-    final String labelSettings = widget.languageCode == 'en' ? 'Settings' : 'ማስተካከያዎች';
-    final String labelAbout = widget.languageCode == 'en' ? 'About App' : 'ስለ መተግበሪያው';
-    final String labelPrivacy = widget.languageCode == 'en' ? 'Privacy Policy' : 'የግል መመሪያ';
-    final String labelLogOut = widget.languageCode == 'en' ? 'Log Out' : 'ውጣ';
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-              // Avatar section
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isLight ? const Color(0xFF0D2353).withOpacity(0.15) : const Color(0xFF475569),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: CircleAvatar(
-                      radius: 36,
-                      backgroundColor: const Color(0xFFC5D3E8),
-                      backgroundImage: _profileImageRemoved 
-                          ? null 
-                          : const NetworkImage('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150'), // Elegant cartoonish avatar representation
-                      child: _profileImageRemoved
-                          ? Text(
-                              _userName.isEmpty ? "U" : _userName.substring(0, 1).toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _userName,
-                          style: TextStyle(
-                            fontSize: 19.5,
-                            fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _userGradeStr,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isLight ? const Color(0xFFE0F2FE) : const Color(0xFF0F172A),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: 16),
-              Divider(
-                height: 1,
-                thickness: 1,
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+              child: Icon(
+                Icons.celebration_rounded,
+                size: 72,
+                color: isLight ? const Color(0xFF0284C7) : const Color(0xFF38BDF8),
               ),
-
-              // Saved Lessons
-              _buildMoreItem(
-                leadingIcon: Icons.bookmark_border_rounded,
-                title: labelSavedLessons,
-                isLight: isLight,
-                onTap: () {
-                  _showSavedLessonsModal(isLight);
-                },
+            ),
+            const SizedBox(height: 32),
+            Text(
+              widget.languageCode == 'en' ? 'What\'s New' : 'አዳዲስ ነገሮች',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                letterSpacing: -0.5,
               ),
-
-              // Study Progress
-              _buildMoreItem(
-                leadingIcon: Icons.trending_up_rounded,
-                title: labelStudyProgress,
-                isLight: isLight,
-                onTap: () {
-                  _showStudyProgressModal(isLight);
-                },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.languageCode == 'en' 
+                  ? 'Check back soon for new features, upcoming lessons, and exciting announcements!'
+                  : 'ለአዳዲስ አገልግሎቶች፣ ለሚቀጥሉት ትምህርቶች እና ለሚያስደስቱ ማስታወቂያዎች በቅርቡ ተመልሰው ይምጡ!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: isLight ? const Color(0xFF475569) : Colors.white70,
+                height: 1.5,
               ),
-
-              // Subscription & Billing
-              _buildMoreItem(
-                leadingIcon: Icons.credit_card_outlined,
-                title: labelSubscription,
-                isLight: isLight,
-                onTap: () {
-                  _showSubscriptionModal(isLight);
-                },
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _currentIndex = 0; // Go to home
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E88E5),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                elevation: 0,
               ),
-
-              // Notifications
-              _buildMoreItem(
-                leadingIcon: Icons.notifications_none_rounded,
-                title: labelNotifications,
-                isLight: isLight,
-                onTap: () {
-                  _showNotificationsModal(isLight);
-                },
+              child: Text(
+                widget.languageCode == 'en' ? 'Go to Home' : 'ወደ መነሻ ተመለስ',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-
-              // Help & Support
-              _buildMoreItem(
-                leadingIcon: Icons.help_outline_rounded,
-                title: labelHelpSupport,
-                isLight: isLight,
-                onTap: () {
-                  _showHelpSupportModal(isLight);
-                },
-              ),
-
-              // Settings expandable panel
-              _buildMoreItem(
-                leadingIcon: Icons.settings_outlined,
-                title: labelSettings,
-                isLight: isLight,
-                showChevron: false,
-                expandedContent: _isSettingsExpanded
-                    ? Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            // Language switcher row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.translate, size: 20, color: isLight ? const Color(0xFF0D2353) : Colors.white70),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      widget.languageCode == 'en' ? 'App Language' : 'የመተግበሪያ ቋንቋ',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: isLight ? const Color(0xFF334155) : Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Switch(
-                                  value: widget.languageCode == 'am',
-                                  activeColor: const Color(0xFF1E88E5),
-                                  onChanged: (val) => widget.onToggleLanguage(),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 16),
-                            // Dark Mode switcher row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(Icons.dark_mode_outlined, size: 20, color: isLight ? const Color(0xFF0D2353) : Colors.white70),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      widget.languageCode == 'en' ? 'Dark Mode' : 'ጨለማ ገጽታ',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: isLight ? const Color(0xFF334155) : Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Switch(
-                                  value: widget.isDarkMode,
-                                  activeColor: const Color(0xFF1E88E5),
-                                  onChanged: (val) => widget.onToggleTheme(),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      )
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _isSettingsExpanded = !_isSettingsExpanded;
-                  });
-                },
-              ),
-
-              // About App expandable panel
-              _buildMoreItem(
-                leadingIcon: Icons.info_outline_rounded,
-                title: labelAbout,
-                isLight: isLight,
-                showChevron: false,
-                expandedContent: _isAboutExpanded
-                    ? Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.all(14),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Smart X Academy',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                                color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              widget.languageCode == 'en'
-                                  ? 'Version: 1.0.0+1 (Stable Build)\n\nAn advanced e-learning platform specifically crafted for Grade 9 to 12 Ethiopian high school students to access summaries, matric practice exams, interactive digital cheat-cards, and video walkthrough lessons.'
-                                  : 'ስሪት: 1.0.0+1 (የተረጋጋ)\n\nለ9-12ኛ ክፍል ኢትዮጵያዊያን ተማሪዎች የተዘጋጀ የቪዲዮ ትምህርቶች፣ ማጠቃለያዎች፣ የአጭር ጊዜ የጥናት መረጃዎች ሙሉ በሙሉ ተከፍተዋል።',
-                              style: TextStyle(
-                                fontSize: 13,
-                                height: 1.4,
-                                color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _isAboutExpanded = !_isAboutExpanded;
-                  });
-                },
-              ),
-
-              // Privacy Policy
-              _buildMoreItem(
-                leadingIcon: Icons.shield_outlined,
-                title: labelPrivacy,
-                isLight: isLight,
-                onTap: () {
-                  _showPrivacyPolicyModal(isLight);
-                },
-              ),
-
-              // Log Out
-              _buildMoreItem(
-                leadingIcon: Icons.logout_rounded,
-                title: labelLogOut,
-                isLight: isLight,
-                isDestructive: true,
-                showChevron: false,
-                onTap: () {
-                  _showLogOutConfirmationDialog();
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildMoreItem({
@@ -3665,37 +3647,80 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             _currentIndex = index;
           });
         },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? activeColor.withOpacity(0.12)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+        child: Container(
+          color: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? activeColor.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected ? activeColor : inactiveColor,
+                  size: 26,
+                ),
               ),
-              child: Icon(
-                icon,
-                color: isSelected ? activeColor : inactiveColor,
-                size: 24,
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                  color: isSelected ? activeColor : inactiveColor,
+                ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showComingSoonDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        bool isLight = !widget.isDarkMode;
+        return AlertDialog(
+          backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            widget.languageCode == 'en' ? 'Coming Soon' : 'በቅርቡ የሚመጣ',
+            style: TextStyle(
+              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                color: isSelected ? activeColor : inactiveColor,
+          ),
+          content: Text(
+            widget.languageCode == 'en'
+                ? 'This feature is currently under development.'
+                : 'ይህ አገልግሎት በአሁኑ ጊዜ በልማት ላይ ነው።',
+            style: TextStyle(
+              color: isLight ? const Color(0xFF475569) : Colors.white70,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                widget.languageCode == 'en' ? 'Close' : 'ዝጋ',
+                style: const TextStyle(
+                  color: Color(0xFF1E88E5),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
