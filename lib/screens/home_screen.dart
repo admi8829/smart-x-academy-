@@ -759,7 +759,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               color: isSelected
                   ? const Color(0xFF1E88E5)
                   : (isLight ? const Color(0xFF0F172A) : Colors.white),
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w750,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
               fontSize: 13.0,
             ),
           ),
@@ -1855,7 +1855,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         widget.languageCode == 'en' ? 'No downloads yet' : 'እስካሁን የወረደ ፋይል የለም',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w950,
+                          fontWeight: FontWeight.w900,
                           color: isLight ? const Color(0xFF0F172A) : Colors.white,
                         ),
                       ),
@@ -2592,7 +2592,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 widget.languageCode == 'en'
                     ? 'Start Grade $_selectedGradeForQuizTab Practice Exam'
                     : 'የክፍል $_selectedGradeForQuizTab የልምምድ ፈተና ጀምር',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w955),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
               ),
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
@@ -2656,7 +2656,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   title,
                   style: TextStyle(
                     fontSize: 14.5,
-                    fontWeight: FontWeight.w950,
+                    fontWeight: FontWeight.w900,
                     color: isSelected ? Colors.white : (isLight ? const Color(0xFF0F172A) : Colors.white),
                   ),
                 ),

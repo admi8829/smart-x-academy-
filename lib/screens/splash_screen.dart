@@ -99,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
 
     _pulseScale = Tween<double>(begin: 0.8, end: 2.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.outBack)
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOutBack)
     );
 
     _pulseOpacity = Tween<double>(begin: 0.6, end: 0.0).animate(
@@ -333,7 +333,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     titleText,
                     style: TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.w950,
+                      fontWeight: FontWeight.w900,
                       color: titleColor,
                       letterSpacing: -0.5,
                     ),
@@ -390,7 +390,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                               term['index'],
                               style: TextStyle(
                                 fontSize: 13.5,
-                                fontWeight: FontWeight.w950,
+                                fontWeight: FontWeight.w900,
                                 color: iconCol,
                               ),
                             ),
@@ -516,7 +516,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           widget.languageCode == 'en' ? "Accept & Continue" : "ተስማምቻለሁ፤ ቀጥል",
                           style: const TextStyle(
                             fontSize: 15,
-                            fontWeight: FontWeight.w955,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -626,7 +626,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w950,
+                  fontWeight: FontWeight.w900,
                   height: 1.25,
                   color: titleColor,
                   letterSpacing: -0.4,
@@ -662,7 +662,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         : "ማሳወቂያዎችን ፍቀድ",
                     style: const TextStyle(
                       fontSize: 15,
-                      fontWeight: FontWeight.w955,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
