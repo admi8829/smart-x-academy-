@@ -426,51 +426,53 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
             _buildDrawerTile(
-              icon: Icons.home_rounded,
-              title: _local('nav_home'),
-              isSelected: _currentIndex == 0,
+              icon: Icons.info_outline_rounded,
+              title: widget.languageCode == 'en' ? 'About Smart X App' : 'ስለ ስማርት ኤክስ',
+              isSelected: false,
               isLight: isLight,
               onTap: () {
-                setState(() {
-                  _currentIndex = 0;
-                });
                 Navigator.pop(context);
+                _showAboutAppModal(isLight);
               },
             ),
             _buildDrawerTile(
-              icon: Icons.book_outlined,
-              title: _local('nav_courses'),
-              isSelected: _currentIndex == 1,
+              icon: Icons.assignment_turned_in_outlined,
+              title: widget.languageCode == 'en' ? 'Terms of Service' : 'የአገልግሎት ውሎች',
+              isSelected: false,
               isLight: isLight,
               onTap: () {
-                setState(() {
-                  _currentIndex = 1;
-                });
                 Navigator.pop(context);
+                _showTermsOfServiceModal(isLight);
               },
             ),
             _buildDrawerTile(
-              icon: Icons.person_outline_rounded,
-              title: _local('nav_profile'),
-              isSelected: _currentIndex == 2,
+              icon: Icons.shield_outlined,
+              title: widget.languageCode == 'en' ? 'Privacy Policy' : 'የግል መመሪያ',
+              isSelected: false,
               isLight: isLight,
               onTap: () {
-                setState(() {
-                  _currentIndex = 2;
-                });
                 Navigator.pop(context);
+                _showPrivacyPolicyModal(isLight);
               },
             ),
             _buildDrawerTile(
-              icon: Icons.settings_rounded,
-              title: _local('nav_settings'),
-              isSelected: _currentIndex == 3,
+              icon: Icons.g_translate_rounded,
+              title: widget.languageCode == 'en' ? 'አማርኛ (Amharic)' : 'English (en)',
+              isSelected: false,
               isLight: isLight,
               onTap: () {
-                setState(() {
-                  _currentIndex = 3;
-                });
                 Navigator.pop(context);
+                widget.onToggleLanguage();
+              },
+            ),
+            _buildDrawerTile(
+              icon: Icons.logout_rounded,
+              title: widget.languageCode == 'en' ? 'Log Out' : 'ውጣ',
+              isSelected: false,
+              isLight: isLight,
+              onTap: () {
+                Navigator.pop(context);
+                _showLogOutConfirmationDialog();
               },
             ),
             const Spacer(),
@@ -548,30 +550,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ],
           ),
-          child: Center(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _currentIndex = 3;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(10.0),
-                decoration: BoxDecoration(
-                  color: _currentIndex == 3
-                      ? (isLight ? const Color(0xFFDBEAFE) : const Color(0xFF1E293B))
-                      : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.settings_rounded,
-                  color: _currentIndex == 3
-                      ? const Color(0xFF1E88E5)
-                      : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-                  size: 28,
-                ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildBottomNavItem(
+                index: 0,
+                icon: Icons.home_rounded,
+                label: _local('nav_home'),
+                isLight: isLight,
               ),
-            ),
+              _buildBottomNavItem(
+                index: 1,
+                icon: Icons.book_rounded,
+                label: _local('nav_courses'),
+                isLight: isLight,
+              ),
+              _buildBottomNavItem(
+                index: 2,
+                icon: Icons.person_rounded,
+                label: _local('nav_profile'),
+                isLight: isLight,
+              ),
+              _buildBottomNavItem(
+                index: 3,
+                icon: Icons.settings_rounded,
+                label: _local('nav_settings'),
+                isLight: isLight,
+              ),
+            ],
           ),
         ),
       ),
@@ -3634,6 +3640,137 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 onTap: () {},
               ),
               const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+    required bool isLight,
+  }) {
+    final bool isSelected = _currentIndex == index;
+    final Color activeColor = const Color(0xFF1E88E5);
+    final Color inactiveColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+    
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? activeColor.withOpacity(0.12)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? activeColor : inactiveColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                color: isSelected ? activeColor : inactiveColor,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAboutAppModal(bool isLight) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline_rounded, size: 48, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+              const SizedBox(height: 12),
+              Text(
+                'Smart X Academy',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.languageCode == 'en'
+                    ? 'Version: 1.0.0+1 (Stable Build)\n\nAn advanced e-learning platform specifically crafted for Grade 9 to 12 Ethiopian high school students to access summaries, matric practice exams, interactive digital cheat-cards, and video walkthrough lessons.'
+                    : 'ስሪት: 1.0.0+1 (የተረጋጋ)\n\nለ9-12ኛ ክፍል ኢትዮጵያዊያን ተማሪዎች የተዘጋጀ የቪዲዮ ትምህርቶች፣ ማጠቃለያዎች፣ የአጭር ጊዜ የጥናት መረጃዎች ሙሉ በሙሉ ተከፍተዋል።',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  height: 1.4,
+                  color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTermsOfServiceModal(bool isLight) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.assignment_turned_in_outlined, size: 48, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+              const SizedBox(height: 12),
+              Text(
+                widget.languageCode == 'en' ? 'Terms of Service' : 'የአገልግሎት ውሎች',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: isLight ? const Color(0xFF0D2353) : Colors.white),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.languageCode == 'en'
+                    ? 'By using the Smart X Academy app, you agree to access our educational content for personal learning purposes only. Content cloning, commercial redistribution, or reproduction of summaries, matric cheat cards, and video content is strictly prohibited.'
+                    : 'ስማርት ኤክስ አካዳሚ መተግበሪያን ሲጠቀሙ፤ የተዘጋጁ የትምህርት ማጠቃለያዎችን፣ የፈተና ጥያቄዎችን እና የቪዲዮ ማስረዳቶችን ለግል ዕውቀትዎ ብቻ ለመጠቀም ይስማማሉ። ይዘቶችን ማባዛት ወይም ለሌላ ማስተላለፍ በጥብቅ የተከለከለ ነው።',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, height: 1.4, color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+              ),
+              const SizedBox(height: 24),
             ],
           ),
         );
