@@ -7,6 +7,7 @@ import 'register_screen.dart';
 import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
+import '../services/offline_manager.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -94,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isSettingsExpanded = false;
   bool _isAboutExpanded = false;
 
+  int _selectedGradeForQuizTab = 9;
+  int _carouselIndex = 0;
+
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
@@ -114,8 +118,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'g12_title': 'Grade 12',
       'g12_sub': 'Achieve your\ngoals!',
       'nav_home': 'Home',
-      'nav_courses': 'Courses',
-      'nav_quiz': 'Quiz',
+      'nav_courses': 'Offline',
+      'nav_quiz': 'Quizzes',
       'nav_notes': 'Notes',
       'nav_account': 'Account',
       'nav_profile': 'Profile',
@@ -145,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'g12_title': 'ክፍል 12',
       'g12_sub': 'ግብዎን ያሳኩ!',
       'nav_home': 'መነሻ',
-      'nav_courses': 'ኮርሶች',
+      'nav_courses': 'ከመስመር ውጭ',
       'nav_quiz': 'ጥያቄዎች',
       'nav_notes': 'ማስታወሻዎች',
       'nav_account': 'መለያ',
@@ -208,13 +212,20 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     _loadProfileData();
     _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
+        vsync: this,
+        duration: const Duration(milliseconds: 1200),
     );
-    
+
     // Replicating tutorial video with standard Youtube embedded controller
     _loadBannerAd();
     _fadeController.forward();
+    OfflineManager.addListener(_onOfflineDownloadsChanged);
+  }
+
+  void _onOfflineDownloadsChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadProfileData() async {
@@ -262,6 +273,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    OfflineManager.removeListener(_onOfflineDownloadsChanged);
     _fullNameController.dispose();
     _emailController.dispose();
     _schoolNameController.dispose();
@@ -436,9 +448,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       drawer: Drawer(
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+        width: 250, // Decreased width for a very beautiful, compact design
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
+            // Custom premium, highly compact header with decreased space/gap
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 40, bottom: 16, left: 16, right: 16),
               decoration: BoxDecoration(
                 color: isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A),
                 image: const DecorationImage(
@@ -447,66 +463,57 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   opacity: 0.1,
                 ),
               ),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: isLight ? Colors.white : const Color(0xFF0D2353),
-                child: Icon(
-                  Icons.school_rounded,
-                  size: 36,
-                  color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                ),
-              ),
-              accountName: Text(
-                _userName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.5,
-                  color: Colors.white,
-                ),
-              ),
-              accountEmail: Text(
-                _userEmail,
-                style: const TextStyle(
-                  fontWeight: FontWeight.normal,
-                  fontSize: 12.5,
-                  color: Colors.white70,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isLight ? Colors.white : const Color(0xFF1E293B),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.school_rounded,
+                        size: 26,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _userName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    _userEmail,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.zero,
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  _buildDrawerTile(
-                    icon: Icons.bookmark_outline_rounded,
-                    title: widget.languageCode == 'en' ? 'Saved Lessons' : 'የተቀመጡ ትምህርቶች',
-                    isSelected: false,
-                    isLight: isLight,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showComingSoonDialog();
-                    },
-                  ),
-                  _buildDrawerTile(
-                    icon: Icons.trending_up_rounded,
-                    title: widget.languageCode == 'en' ? 'Study Progress' : 'የጥናት ሂደት',
-                    isSelected: false,
-                    isLight: isLight,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showComingSoonDialog();
-                    },
-                  ),
-                  _buildDrawerTile(
-                    icon: Icons.credit_card_rounded,
-                    title: widget.languageCode == 'en' ? 'Subscription & Billing' : 'ምዝገባ እና ክፍያ',
-                    isSelected: false,
-                    isLight: isLight,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showSubscriptionModal(isLight);
-                    },
-                  ),
                   _buildDrawerTile(
                     icon: Icons.notifications_none_rounded,
                     title: widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች',
@@ -557,16 +564,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       _showTermsOfServiceModal(isLight);
                     },
                   ),
-                  _buildDrawerTile(
-                    icon: Icons.g_translate_rounded,
-                    title: widget.languageCode == 'en' ? 'አማርኛ (Amharic)' : 'English (en)',
-                    isSelected: false,
-                    isLight: isLight,
-                    onTap: () {
-                      Navigator.pop(context);
-                      widget.onToggleLanguage();
-                    },
-                  ),
                 ],
               ),
             ),
@@ -575,29 +572,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               child: Divider(
                 color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                 height: 1.0,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.languageCode == 'en' ? 'Dark Mode' : 'የጨለማ ገጽታ',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: isLight ? const Color(0xFF334155) : Colors.white70,
-                    ),
-                  ),
-                  Switch(
-                    value: widget.isDarkMode,
-                    onChanged: (val) {
-                      widget.onToggleTheme();
-                    },
-                    activeColor: const Color(0xFF1E88E5),
-                  ),
-                ],
               ),
             ),
             Padding(
@@ -613,7 +587,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -669,8 +643,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 _buildBottomNavItem(
                   index: 1,
-                  iconActive: Icons.menu_book,
-                  iconInactive: Icons.menu_book_outlined,
+                  iconActive: Icons.offline_pin,
+                  iconInactive: Icons.offline_pin_outlined,
                   label: _local('nav_courses'),
                   isLight: isLight,
                 ),
@@ -708,9 +682,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       case 0:
         return _buildHomeScreenContent(isLight);
       case 1:
-        return _buildCoursesScreen(isLight);
+        return _buildOfflineScreen(isLight);
       case 2:
-        return _buildQuizScreenPlaceholder(isLight); // Quiz
+        return _buildQuizScreenTab(isLight); // Quiz
       case 3:
         return _buildNotesScreenPlaceholder(isLight); // Notes
       case 4:
@@ -760,21 +734,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required VoidCallback onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
       child: Container(
         decoration: BoxDecoration(
           color: isSelected
               ? (isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155))
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(12.0),
+          borderRadius: BorderRadius.circular(10.0),
         ),
         child: ListTile(
+          dense: true,
+          visualDensity: const VisualDensity(horizontal: -4, vertical: -3),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
           leading: Icon(
             icon,
             color: isSelected
                 ? const Color(0xFF1E88E5)
                 : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-            size: 24,
+            size: 20,
           ),
           title: Text(
             title,
@@ -782,13 +759,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               color: isSelected
                   ? const Color(0xFF1E88E5)
                   : (isLight ? const Color(0xFF0F172A) : Colors.white),
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-              fontSize: 14.5,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w750,
+              fontSize: 13.0,
             ),
           ),
           onTap: onTap,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(10.0),
           ),
         ),
       ),
@@ -1808,6 +1785,959 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
       ),
     );
+  }
+
+  Widget _buildOfflineScreen(bool isLight) {
+    return FutureBuilder<Set<String>>(
+      future: OfflineManager.getDownloadedUnitIds(),
+      builder: (context, snapshot) {
+        final downloadedIds = snapshot.data ?? {};
+        
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Title
+              Text(
+                widget.languageCode == 'en' ? 'Offline Study Hub' : 'ከመስመር ውጭ የጥናት ማህደር',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                widget.languageCode == 'en'
+                    ? 'Your downloaded lessons, short notes, and practice quizzes are available 100% offline.'
+                    : 'ያወረዷቸው አጫጭር ማስታወሻዎች እና ፈተናዎች ያለ በይነመረብ (Offline) እዚህ ይሰራሉ።',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                  color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              if (downloadedIds.isEmpty) ...[
+                // Beautiful guide card on how to download if empty
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(24.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E88E5).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.cloud_download_outlined,
+                          size: 32,
+                          color: Color(0xFF1E88E5),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        widget.languageCode == 'en' ? 'No downloads yet' : 'እስካሁን የወረደ ፋይል የለም',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w950,
+                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.languageCode == 'en'
+                            ? 'To access lessons offline, select any Grade on the Home Screen, browse your courses/subjects, open any Unit Explorer, and tap the "Download" button to save files instantly.'
+                            : 'የትምህርት ክፍሎችን ያለ በይነመረብ ለማግኘት መነሻ ገጽ ላይ ክፍልዎን ይምረጡ፣ የሚፈልጉትን ትምህርት ከገቡ በኋላ "ያውርዱ" የሚለውን ቁልፍ ይጫኑ።',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.5,
+                          fontWeight: FontWeight.w600,
+                          color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                // List of downloaded units
+                ...downloadedIds.map((id) {
+                  final unitInfo = _lookupUnitInfo(id);
+                  final String title = widget.languageCode == 'en' ? unitInfo['enUnit'] : unitInfo['amUnit'];
+                  final String subject = unitInfo['subject'];
+                  final IconData icon = unitInfo['icon'];
+                  final Color color = unitInfo['color'];
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: isLight ? Colors.white : const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                        width: 1.1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                icon,
+                                color: color,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        subject,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w900,
+                                          color: color,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF10B981).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.check_circle_rounded, size: 10, color: Color(0xFF10B981)),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              widget.languageCode == 'en' ? 'Offline' : 'ከመስመር ውጭ',
+                                              style: const TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w900,
+                                                color: Color(0xFF10B981),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    title,
+                                    style: TextStyle(
+                                      fontSize: 15.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton.icon(
+                                onPressed: () => _showOfflineShortNotesSheet(title, subject, id, isLight),
+                                icon: const Icon(Icons.description_rounded, size: 14),
+                                label: Text(
+                                  widget.languageCode == 'en' ? 'Short Note' : 'ማስታወሻ',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: color,
+                                  backgroundColor: color.withOpacity(0.08),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => QuizScreen(grade: 9, subject: subject),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.help_rounded, size: 14),
+                                label: Text(
+                                  widget.languageCode == 'en' ? 'Take Quiz' : 'ፈተና',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: color,
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () => _confirmDeleteDownload(id, title),
+                              icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFFEF4444)),
+                              style: IconButton.styleFrom(
+                                backgroundColor: const Color(0xFFEF4444).withOpacity(0.08),
+                                padding: const EdgeInsets.all(10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showOfflineShortNotesSheet(String unitTitle, String subject, String id, bool isLight) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 16),
+                    width: 42,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          widget.languageCode == 'en' ? 'SMART SHORT NOTE' : 'አጭር የጥናት ማስታወሻ',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  child: Text(
+                    unitTitle,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    subject,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E88E5),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  child: Container(
+                    height: 1,
+                    color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    children: [
+                      Text(
+                        _getShortNotesForUnit(id, subject),
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          height: 1.6,
+                          fontWeight: FontWeight.w600,
+                          color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                    ],
+                  ),
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteDownload(String id, String unitTitle) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isLight = !widget.isDarkMode;
+        return AlertDialog(
+          backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+          title: Text(
+            widget.languageCode == 'en' ? 'Delete offline package?' : 'ፓኬጁን ያጥፉ?',
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+          ),
+          content: Text(
+            widget.languageCode == 'en'
+                ? 'Are you sure you want to remove "$unitTitle" from your offline study packages?'
+                : '"$unitTitle" የሚለውን አጭር ማስታወሻ እና ፈተና ማጥፋት ይፈልጋሉ?',
+            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                widget.languageCode == 'en' ? 'Cancel' : 'አይ',
+                style: TextStyle(color: isLight ? const Color(0xFF475569) : Colors.white60, fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                OfflineManager.removeDownload(id);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      widget.languageCode == 'en'
+                          ? 'Offline package removed'
+                          : 'ከመስመር ውጭ የነበረው ማህደር ተሰርዟል',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    backgroundColor: const Color(0xFFEF4444),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              child: Text(
+                widget.languageCode == 'en' ? 'Delete' : 'አጥፋ',
+                style: const TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.w900),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Map<String, dynamic> _lookupUnitInfo(String id) {
+    final Map<String, Map<String, dynamic>> unitsDb = {
+      'math_u1': {
+        'enUnit': 'Unit 1: The Number System',
+        'amUnit': 'ክፍል 1: የቁጥር ስርዓት',
+        'subject': 'Mathematics',
+        'icon': Icons.functions_rounded,
+        'color': const Color(0xFF0084FF),
+      },
+      'bio_u1': {
+        'enUnit': 'Unit 1: Introduction to Biology',
+        'amUnit': 'ክፍል 1: ስለ ስነ-ህይወት መግቢያ',
+        'subject': 'Biology',
+        'icon': Icons.biotech_rounded,
+        'color': const Color(0xFF2E7D32),
+      },
+    };
+
+    if (unitsDb.containsKey(id)) {
+      return unitsDb[id]!;
+    }
+
+    String subject = "General";
+    IconData icon = Icons.offline_pin_rounded;
+    Color color = const Color(0xFF8B5CF6);
+
+    if (id.startsWith('math')) {
+      subject = "Mathematics";
+      icon = Icons.functions_rounded;
+      color = const Color(0xFF0084FF);
+    } else if (id.startsWith('bio')) {
+      subject = "Biology";
+      icon = Icons.biotech_rounded;
+      color = const Color(0xFF2E7D32);
+    } else if (id.startsWith('phys')) {
+      subject = "Physics";
+      icon = Icons.bolt_rounded;
+      color = const Color(0xFFE53935);
+    } else if (id.startsWith('chem')) {
+      subject = "Chemistry";
+      icon = Icons.science_rounded;
+      color = const Color(0xFFD81B60);
+    } else if (id.startsWith('geo')) {
+      subject = "Geography";
+      icon = Icons.public_rounded;
+      color = const Color(0xFF0F766E);
+    } else if (id.startsWith('hist')) {
+      subject = "History";
+      icon = Icons.account_balance_rounded;
+      color = const Color(0xFFCA8A04);
+    } else if (id.startsWith('civ')) {
+      subject = "Civics";
+      icon = Icons.gavel_rounded;
+      color = const Color(0xFF475569);
+    } else if (id.startsWith('agri')) {
+      subject = "Agriculture";
+      icon = Icons.agriculture_rounded;
+      color = const Color(0xFF15803D);
+    }
+
+    String unitNum = "1";
+    final match = RegExp(r'u(\d+)').firstMatch(id);
+    if (match != null) {
+      unitNum = match.group(1) ?? "1";
+    }
+
+    return {
+      'enUnit': 'Unit $unitNum: Complete Package',
+      'amUnit': 'ክፍል $unitNum: አጠቃላይ ፓኬጅ',
+      'subject': subject,
+      'icon': icon,
+      'color': color,
+    };
+  }
+
+  String _getShortNotesForUnit(String id, String subject) {
+    if (id.startsWith('math')) {
+      return "• Rational Numbers: Any number that can be expressed as the quotient or fraction p/q of two integers, a numerator p and a non-zero denominator q.\n\n"
+          "• Irrational Numbers: Real numbers that cannot be written as simple fractions. E.g., √2, π (pi), and e. They have non-terminating, non-periodic decimal expansions.\n\n"
+          "• Arithmetic Progression (AP): A sequence of numbers such that the difference of any two successive members is a constant d. Formula: a_n = a_1 + (n-1)d.\n\n"
+          "• Geometric Progression (GP): A sequence where each term after the first is found by multiplying the previous term by a non-zero number called the common ratio r. Formula: a_n = a_1 * r^(n-1).\n\n"
+          "• High-Yield Exam Tip: Arithmetic Mean AM = (a+b)/2, Geometric Mean GM = √(ab). AM is always greater than or equal to GM.";
+    } else if (id.startsWith('bio')) {
+      return "• Biology is the scientific study of life. It covers molecular structures, microscopic cell biology, genetics, anatomy, and global environmental ecology.\n\n"
+          "• Microscope Technology: Cellular biology began after Robert Hooke described plant cork cells in 1665 using an early compound microscope.\n\n"
+          "• Cell Theory Principles:\n"
+          "  1. All living organisms are composed of one or more cells.\n"
+          "  2. The cell is the basic structural and functional unit of life.\n"
+          "  3. All cells arise from pre-existing cells.\n\n"
+          "• Organelles Key Functions:\n"
+          "  - Mitochondria: Powerhouse of the cell, generates ATP via cellular respiration.\n"
+          "  - Nucleus: Site of genetic information storage (DNA).\n"
+          "  - Chloroplasts: Solar panels of plant cells, coordinates photosynthesis processes.\n\n"
+          "• Scientific Inquiry: Formulate Hypothesis -> Operational Experiment -> Empirical Data Collection -> Peer-Reviewed Conclusion.";
+    } else if (id.startsWith('chem')) {
+      return "• Atomic Structure & Quantum Theory: Atoms consist of a heavy, positively charged nucleus surrounded by tiny, negatively charged electrons.\n\n"
+          "• Quantum Numbers:\n"
+          "  1. Principle (n): Specifies the shell energy level.\n"
+          "  2. Angular (l): Codes subshell shape (s, p, d, f).\n"
+          "  3. Magnetic (m): Identifies orbital spatial alignment.\n"
+          "  4. Spin (s): Defines electron self-rotation (+1/2 or -1/2).\n\n"
+          "• Key Atomic Building Rules:\n"
+          "  - Aufbau Principle: Orbitals must be filled in order of ascending energy.\n"
+          "  - Pauli Exclusion: Two electrons cannot share identical quantum indices.\n"
+          "  - Hund's Rule: Orbitals are singly filled before doubling up to minimize Coulombic repulsion.";
+    } else if (id.startsWith('phys')) {
+      return "• Physical Quantities & Vectors:\n"
+          "  - Scalar: Quantity with magnitude only (e.g., speed, mass, energy).\n"
+          "  - Vector: Quantity with both magnitude and direction (e.g., velocity, acceleration, force).\n\n"
+          "• Vector Addition Methods:\n"
+          "  1. Graphical: Head-to-Tail alignment.\n"
+          "  2. Analytical Components: Projecting onto Cartesian coordinates (A_x = A*cos(θ), A_y = A*sin(θ)). Sum components to find resultant magnitude R = √(R_x² + R_y²).\n\n"
+          "• Units System (SI): 7 base units form the blueprint of all derived physical measurements on Earth.";
+    } else {
+      return "• General Summary Notes:\n\n"
+          "This offline module has been successfully compiled and fully saved directly to your local partition. It contains cheat cards, diagrams index, matric-aligned questions, and high-yield notes.\n\n"
+          "• Study Tips:\n"
+          "  - Review this page regularly before trying the offline quiz\n"
+          "  - Tap 'Quiz' on your offline dashboard to test your knowledge retention\n"
+          "  - Active recall and spaced repetition are highly effective for national exams prep.";
+    }
+  }
+
+  Widget _buildQuizScreenTab(bool isLight) {
+    final quizSlides = _getQuizSlidesForGrade(_selectedGradeForQuizTab);
+    final currentSlide = quizSlides[_carouselIndex % quizSlides.length];
+    final String questionText = currentSlide['question'];
+    final List<String> options = currentSlide['options'];
+    final int correctIndex = currentSlide['correctIndex'];
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.languageCode == 'en' ? 'National Exam Quizzes' : 'ብሄራዊ የፈተና ጥያቄዎች',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w900,
+              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            widget.languageCode == 'en'
+                ? 'Select a high school grade below to start official matric-level mock exams.'
+                : 'ብሄራዊ የልምምድ ፈተና መፈተን ለመጀመር ከታች የአንዱን ክፍል ካርድ ይጫኑ።',
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+              color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Beautiful grade grid cards matching home page design conceptually
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12.0,
+            mainAxisSpacing: 12.0,
+            childAspectRatio: 1.55,
+            children: [
+              _buildGradeQuizSelectorCard(9, widget.languageCode == 'en' ? 'Grade 9' : 'ክፍል 9', widget.languageCode == 'en' ? 'Start Journey!' : 'ጉዞዎን ይጀምሩ!', const Color(0xFF0084FF), isLight),
+              _buildGradeQuizSelectorCard(10, widget.languageCode == 'en' ? 'Grade 10' : 'ክፍል 10', widget.languageCode == 'en' ? 'Expand knowledge!' : 'እውቀትዎን ያሳድጉ!', const Color(0xFF10B981), isLight),
+              _buildGradeQuizSelectorCard(11, widget.languageCode == 'en' ? 'Grade 11' : 'ክፍል 11', widget.languageCode == 'en' ? 'Prepare for excellence!' : 'ለላቀ ውጤት ይዘጋጁ!', const Color(0xFFF59E0B), isLight),
+              _buildGradeQuizSelectorCard(12, widget.languageCode == 'en' ? 'Grade 12' : 'ክፍል 12', widget.languageCode == 'en' ? 'Achieve goals!' : 'ግብዎን ያሳኩ!', const Color(0xFF8B5CF6), isLight),
+            ],
+          ),
+
+          const SizedBox(height: 32),
+
+          // PREVIEW MODE section styled exactly like reference image
+          Row(
+            children: [
+              Icon(Icons.style_rounded, size: 18, color: isLight ? const Color(0xFF0F172A) : Colors.white),
+              const SizedBox(width: 8),
+              Text(
+                widget.languageCode == 'en' ? 'Interactive Preview' : 'በይነተገናኝ ማሳያ',
+                style: TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              children: [
+                // Inner Card mimicking exactly the user's reference image
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header PREVIEW MODE + Glowing Green Dot
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'PREVIEW MODE',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF94A3B8),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      // Question text
+                      Text(
+                        questionText,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          height: 1.3,
+                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Options list with Addis Ababa / correct green check highlight
+                      ...List.generate(options.length, (idx) {
+                        final bool isCorrectHighlight = idx == correctIndex;
+                        final String optionValue = options[idx];
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: isCorrectHighlight
+                                ? (isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E3A8A).withOpacity(0.3))
+                                : (isLight ? Colors.white : const Color(0xFF1E293B)),
+                            border: Border.all(
+                              color: isCorrectHighlight
+                                  ? const Color(0xFF1E88E5)
+                                  : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+                              width: isCorrectHighlight ? 1.5 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                optionValue,
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: isCorrectHighlight
+                                      ? const Color(0xFF1E88E5)
+                                      : (isLight ? const Color(0xFF475569) : Colors.white70),
+                                ),
+                              ),
+                              if (isCorrectHighlight)
+                                Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF10B981),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 11,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Slideshow Carousel controls (Next, Prev)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _carouselIndex = (_carouselIndex - 1 + quizSlides.length) % quizSlides.length;
+                        });
+                      },
+                      icon: Icon(Icons.arrow_back_rounded, color: isLight ? const Color(0xFF475569) : Colors.white70),
+                      style: IconButton.styleFrom(
+                        backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+                        padding: const EdgeInsets.all(10),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Row(
+                      children: List.generate(quizSlides.length, (dotIdx) {
+                        final bool isCurrent = dotIdx == (_carouselIndex % quizSlides.length);
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: isCurrent ? 20 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: isCurrent ? const Color(0xFF1E88E5) : const Color(0xFF94A3B8).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(width: 14),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _carouselIndex = (_carouselIndex + 1) % quizSlides.length;
+                        });
+                      },
+                      icon: Icon(Icons.arrow_forward_rounded, color: isLight ? const Color(0xFF475569) : Colors.white70),
+                      style: IconButton.styleFrom(
+                        backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+                        padding: const EdgeInsets.all(10),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          // Giant action button to trigger comprehensive exam screen
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QuizScreen(
+                      grade: _selectedGradeForQuizTab,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.play_circle_filled_rounded, size: 18),
+              label: Text(
+                widget.languageCode == 'en'
+                    ? 'Start Grade $_selectedGradeForQuizTab Practice Exam'
+                    : 'የክፍል $_selectedGradeForQuizTab የልምምድ ፈተና ጀምር',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w955),
+              ),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: _selectedGradeForQuizTab == 9
+                    ? const Color(0xFF0084FF)
+                    : (_selectedGradeForQuizTab == 10
+                        ? const Color(0xFF10B981)
+                        : (_selectedGradeForQuizTab == 11
+                            ? const Color(0xFFF59E0B)
+                            : const Color(0xFF8B5CF6))),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeQuizSelectorCard(int gradeNum, String title, String subtitle, Color btnColor, bool isLight) {
+    bool isSelected = _selectedGradeForQuizTab == gradeNum;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedGradeForQuizTab = gradeNum;
+          _carouselIndex = 0;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        decoration: BoxDecoration(
+          color: isSelected ? btnColor : (isLight ? Colors.white : const Color(0xFF1E293B)),
+          borderRadius: BorderRadius.circular(18.0),
+          border: Border.all(
+            color: isSelected ? btnColor : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected ? btnColor.withOpacity(0.2) : Colors.black.withOpacity(0.01),
+              blurRadius: 8.0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.school,
+                  size: 16,
+                  color: isSelected ? Colors.white : btnColor,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w950,
+                    color: isSelected ? Colors.white : (isLight ? const Color(0xFF0F172A) : Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white.withOpacity(0.8) : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _getQuizSlidesForGrade(int grade) {
+    if (grade == 9) {
+      return [
+        {
+          'question': 'What is the capital city of Ethiopia?',
+          'options': ['A) Nairobi', 'B) Addis Ababa', 'C) Asmara'],
+          'correctIndex': 1,
+        },
+        {
+          'question': 'Which branch of Biology studies the feedback cycles of organisms and biosphere?',
+          'options': ['A) Genetics', 'B) Zoology', 'C) Ecology'],
+          'correctIndex': 2,
+        },
+        {
+          'question': 'Calculate the slope value of y = 3x + 12.',
+          'options': ['A) m = 1', 'B) m = 3', 'C) m = 12'],
+          'correctIndex': 1,
+        },
+      ];
+    } else if (grade == 10) {
+      return [
+        {
+          'question': 'Which biological macromolecule builds plant cell walls?',
+          'options': ['A) Cellulose', 'B) Glycogen', 'C) Peptide-glycans'],
+          'correctIndex': 0,
+        },
+        {
+          'question': 'Find the root solution set of x² - 16 = 0.',
+          'options': ['A) {4}', 'B) {-4, 4}', 'C) {16}'],
+          'correctIndex': 1,
+        },
+      ];
+    } else if (grade == 11) {
+      return [
+        {
+          'question': 'What is the magnitude of a vector with components (6, 8)?',
+          'options': ['A) 10 units', 'B) 14 units', 'C) 100 units'],
+          'correctIndex': 0,
+        },
+        {
+          'question': 'Which model proposed electrons travel in stationary quantic orbits?',
+          'options': ['A) Bohr Model', 'B) Dalton Model', 'C) Rutherford Model'],
+          'correctIndex': 0,
+        },
+      ];
+    } else {
+      return [
+        {
+          'question': 'What is the limit of (3x² - 2x) / x as x approaches 0?',
+          'options': ['A) 0', 'B) -2', 'C) ∞'],
+          'correctIndex': 1,
+        },
+        {
+          'question': 'In which historic year did the victory of Battle of Adwa transpire?',
+          'options': ['A) 1889', 'B) 1896', 'C) 1935'],
+          'correctIndex': 1,
+        },
+      ];
+    }
   }
 
   Widget _buildCoursesScreen(bool isLight) {

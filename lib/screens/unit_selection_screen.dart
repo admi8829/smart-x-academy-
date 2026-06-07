@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_helper.dart';
+import '../services/offline_manager.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
 
@@ -46,6 +47,16 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   void initState() {
     super.initState();
     _loadBannerAd();
+    _loadOfflineDownloads();
+  }
+
+  void _loadOfflineDownloads() async {
+    final downloaded = await OfflineManager.getDownloadedUnitIds();
+    if (mounted) {
+      setState(() {
+        _downloadedUnits.addAll(downloaded);
+      });
+    }
   }
 
   @override
@@ -499,6 +510,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     });
 
     final String languageCode = AppStateProvider.of(context).languageCode;
+    final allUnits = _getUnits();
+    final unitMap = allUnits.firstWhere((u) => u['id'] == unitId, orElse: () => <String, dynamic>{});
+    final String unitTitle = languageCode == 'en' 
+        ? (unitMap['enUnit'] ?? 'Unit Complete Package') 
+        : (unitMap['amUnit'] ?? 'ክፍል አጠቃላይ ፓኬጅ');
 
     // Animate custom downloading to feel incredible and completely responsive
     double current = 0.0;
@@ -506,6 +522,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
       if (!mounted) return;
       current += 0.2;
       if (current >= 1.0) {
+        OfflineManager.addDownload(unitId);
         setState(() {
           _downloadProgress.remove(unitId);
           _downloadedUnits.add(unitId);
@@ -519,17 +536,24 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 Expanded(
                   child: Text(
                     languageCode == 'en'
-                        ? 'Unit has been successfully saved for offline use!'
-                        : 'የትምህርት ክፍሉ ከመስመር ውጭ እንዲሰራ ተደርጓል!',
+                        ? 'Saved! Short note and quiz are available offline.'
+                        : 'ተቀምጧል! አጭር ማስታወሻ እና ፈተናዎች ከመስመር ውጭ ዝግጁ ናቸው።',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),
               ],
             ),
+            action: SnackBarAction(
+              label: languageCode == 'en' ? 'READ NOTE' : 'ማስታወሻ አንብብ',
+              textColor: Colors.white,
+              onPressed: () {
+                _showAfterDownloadShortNotesSheet(unitId, unitTitle);
+              },
+            ),
             backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 4),
           ),
         );
       } else {
@@ -541,6 +565,158 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
 
     Future.delayed(const Duration(milliseconds: 200), tick);
+  }
+
+  String _getShortNotesForUnit(String unitId) {
+    if (unitId.startsWith('math')) {
+      return "• Rational Numbers: Any number that can be expressed as the quotient or fraction p/q of two integers, a numerator p and a non-zero denominator q.\n\n"
+          "• Irrational Numbers: Real numbers that cannot be written as simple fractions. E.g., √2, π (pi), and e. They have non-terminating, non-periodic decimal expansions.\n\n"
+          "• Arithmetic Progression (AP): A sequence of numbers such that the difference of any two successive members is a constant d. Formula: a_n = a_1 + (n-1)d.\n\n"
+          "• Geometric Progression (GP): A sequence where each term after the first is found by multiplying the previous term by a non-zero number called the common ratio r. Formula: a_n = a_1 * r^(n-1).\n\n"
+          "• High-Yield Exam Tip: Arithmetic Mean AM = (a+b)/2, Geometric Mean GM = √(ab). AM is always greater than or equal to GM.";
+    } else if (unitId.startsWith('bio')) {
+      return "• Biology is the scientific study of life. It covers molecular structures, microscopic cell biology, genetics, anatomy, and global environmental ecology.\n\n"
+          "• Microscope Technology: Cellular biology began after Robert Hooke described plant cork cells in 1665 using an early compound microscope.\n\n"
+          "• Cell Theory Principles:\n"
+          "  1. All living organisms are composed of one or more cells.\n"
+          "  2. The cell is the basic structural and functional unit of life.\n"
+          "  3. All cells arise from pre-existing cells.\n\n"
+          "• Organelles Key Functions:\n"
+          "  - Mitochondria: Powerhouse of the cell, generates ATP via cellular respiration.\n"
+          "  - Nucleus: Site of genetic information storage (DNA).\n"
+          "  - Chloroplasts: Solar panels of plant cells, coordinates photosynthesis processes.\n\n"
+          "• Scientific Inquiry: Formulate Hypothesis -> Operational Experiment -> Empirical Data Collection -> Peer-Reviewed Conclusion.";
+    } else if (unitId.startsWith('chem')) {
+      return "• Atomic Structure & Quantum Theory: Atoms consist of a heavy, positively charged nucleus surrounded by tiny, negatively charged electrons.\n\n"
+          "• Quantum Numbers:\n"
+          "  1. Principle (n): Specifies the shell energy level.\n"
+          "  2. Angular (l): Codes subshell shape (s, p, d, f).\n"
+          "  3. Magnetic (m): Identifies orbital spatial alignment.\n"
+          "  4. Spin (s): Defines electron self-rotation (+1/2 or -1/2).\n\n"
+          "• Key Atomic Building Rules:\n"
+          "  - Aufbau Principle: Orbitals must be filled in order of ascending energy.\n"
+          "  - Pauli Exclusion: Two electrons cannot share identical quantum indices.\n"
+          "  - Hund's Rule: Orbitals are singly filled before doubling up to minimize Coulombic repulsion.";
+    } else if (unitId.startsWith('phys')) {
+      return "• Physical Quantities & Vectors:\n"
+          "  - Scalar: Quantity with magnitude only (e.g., speed, mass, energy).\n"
+          "  - Pointing Vectors: Quantity with both magnitude and direction (e.g., velocity, acceleration, force).\n\n"
+          "• Vector Addition Methods:\n"
+          "  1. Graphical: Head-to-Tail alignment.\n"
+          "  2. Analytical Components: Projecting onto Cartesian coordinates (A_x = A*cos(θ), A_y = A*sin(θ)). Sum components to find resultant magnitude R = √(R_x² + R_y²).\n\n"
+          "• Units System (SI): 7 base units form the blueprint of all derived physical measurements on Earth.";
+    } else {
+      return "• General Summary Notes:\n\n"
+          "This offline module has been successfully compiled and fully saved directly to your local partition. It contains cheat cards, diagrams index, matric-aligned questions, and high-yield notes.\n\n"
+          "• Study Tips:\n"
+          "  - Review this page regularly before trying the offline quiz\n"
+          "  - Tap 'Quiz' on your offline dashboard to test your knowledge retention\n"
+          "  - Active recall and spaced repetition are highly effective for national exams prep.";
+    }
+  }
+
+  void _showAfterDownloadShortNotesSheet(String unitId, String unitTitle) {
+    final isLight = !AppStateProvider.of(context).isDarkMode;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 16),
+                    width: 42,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'DOWNLOAD COMPLETE: SHORT NOTE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF10B981),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  child: Text(
+                    unitTitle,
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  child: Container(
+                    height: 1,
+                    color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    children: [
+                      Text(
+                        _getShortNotesForUnit(unitId),
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.6,
+                          fontWeight: FontWeight.w600,
+                          color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+                    ],
+                  ),
+                )
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showInfoSheet() {
