@@ -115,6 +115,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'g12_sub': 'Achieve your\ngoals!',
       'nav_home': 'Home',
       'nav_courses': 'Courses',
+      'nav_quiz': 'Quiz',
+      'nav_notes': 'Notes',
+      'nav_account': 'Account',
       'nav_profile': 'Profile',
       'nav_settings': 'Settings',
       'nav_new': 'New',
@@ -143,6 +146,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'g12_sub': 'ግብዎን ያሳኩ!',
       'nav_home': 'መነሻ',
       'nav_courses': 'ኮርሶች',
+      'nav_quiz': 'ጥያቄዎች',
+      'nav_notes': 'ማስታወሻዎች',
+      'nav_account': 'መለያ',
       'nav_profile': 'መገለጫ',
       'nav_settings': 'ማስተካከያዎች',
       'nav_new': 'አዲስ',
@@ -305,9 +311,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     bool isLight = !widget.isDarkMode;
-    final bool isProfileActive = _currentIndex == 2;
-    final bool isMoreActive = _currentIndex == 3;
     final bool isCoursesActive = _currentIndex == 1;
+    final bool isQuizActive = _currentIndex == 2;
+    final bool isNotesActive = _currentIndex == 3;
+    final bool isProfileActive = _currentIndex == 4;
     final bool isCustomDarkHeader = false;
 
     return Scaffold(
@@ -335,13 +342,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         title: Text(
           isCoursesActive
               ? (widget.languageCode == 'en' ? 'Browse Courses' : 'ኮርሶችን ያስሱ')
-              : (isMoreActive
-                  ? (widget.languageCode == 'en' ? 'What\'s New' : 'አዳዲስ ነገሮች')
-                  : (isProfileActive 
-                      ? (_isLoginForm
-                          ? (widget.languageCode == 'en' ? 'Log In' : 'ይግቡ')
-                          : (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ'))
-                      : _local('title'))),
+              : (isQuizActive
+                  ? (widget.languageCode == 'en' ? 'Quizzes' : 'ጥያቄዎች')
+                  : (isNotesActive
+                      ? (widget.languageCode == 'en' ? 'My Notes' : 'የእኔ ማስታወሻዎች')
+                      : (isProfileActive 
+                          ? (_isLoginForm
+                              ? (widget.languageCode == 'en' ? 'Log In' : 'ይግቡ')
+                              : (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ'))
+                          : _local('title')))),
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w900,
@@ -626,54 +635,64 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
         child: _buildCurrentTab(isLight),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-          child: Container(
-            height: 70.0,
-            decoration: BoxDecoration(
-              color: isLight ? Colors.white : const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(35.0),
-              border: Border.all(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                width: 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isLight 
-                      ? const Color(0xFF0F1B2B).withValues(alpha: 0.1) 
-                      : Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 30.0,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 2,
-                ),
-              ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isLight ? Colors.white : const Color(0xFF1E293B),
+          border: Border(
+            top: BorderSide(
+              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+              width: 1.0,
             ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isLight 
+                  ? const Color(0xFF0F1B2B).withValues(alpha: 0.05) 
+                  : Colors.black.withValues(alpha: 0.3),
+              blurRadius: 10.0,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            height: 64.0,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildBottomNavItem(
                   index: 0,
-                  icon: Icons.home_rounded,
+                  iconActive: Icons.home,
+                  iconInactive: Icons.home_outlined,
                   label: _local('nav_home'),
                   isLight: isLight,
                 ),
                 _buildBottomNavItem(
                   index: 1,
-                  icon: Icons.menu_book_rounded,
+                  iconActive: Icons.menu_book,
+                  iconInactive: Icons.menu_book_outlined,
                   label: _local('nav_courses'),
                   isLight: isLight,
                 ),
                 _buildBottomNavItem(
                   index: 2,
-                  icon: Icons.person_rounded,
-                  label: _local('nav_profile'),
+                  iconActive: Icons.fact_check,
+                  iconInactive: Icons.fact_check_outlined,
+                  label: _local('nav_quiz'),
                   isLight: isLight,
                 ),
                 _buildBottomNavItem(
                   index: 3,
-                  icon: Icons.fiber_new_rounded,
-                  label: _local('nav_new'),
+                  iconActive: Icons.article,
+                  iconInactive: Icons.article_outlined,
+                  label: _local('nav_notes'),
+                  isLight: isLight,
+                ),
+                _buildBottomNavItem(
+                  index: 4,
+                  iconActive: Icons.person,
+                  iconInactive: Icons.person_outline,
+                  label: _local('nav_account'),
                   isLight: isLight,
                 ),
               ],
@@ -691,12 +710,46 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       case 1:
         return _buildCoursesScreen(isLight);
       case 2:
-        return _buildProfileScreen(isLight);
+        return _buildQuizScreenPlaceholder(isLight); // Quiz
       case 3:
-        return _buildSettingsScreen(isLight);
+        return _buildNotesScreenPlaceholder(isLight); // Notes
+      case 4:
+        return _buildProfileScreen(isLight); // Account
       default:
         return _buildHomeScreenContent(isLight);
     }
+  }
+
+  Widget _buildQuizScreenPlaceholder(bool isLight) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check_box_outlined, size: 80, color: isLight ? const Color(0xFF0F4C81).withValues(alpha: 0.3) : Colors.white30),
+          const SizedBox(height: 16),
+          Text(
+            widget.languageCode == 'en' ? 'Quiz feature coming soon!' : 'የጥያቄዎች አገልግሎት በቅርቡ ይመጣል!',
+            style: TextStyle(fontSize: 16, color: isLight ? const Color(0xFF475569) : Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotesScreenPlaceholder(bool isLight) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.article_outlined, size: 80, color: isLight ? const Color(0xFF0F4C81).withValues(alpha: 0.3) : Colors.white30),
+          const SizedBox(height: 16),
+          Text(
+            widget.languageCode == 'en' ? 'Notes feature coming soon!' : 'የማስታወሻ አገልግሎት በቅርቡ ይመጣል!',
+            style: TextStyle(fontSize: 16, color: isLight ? const Color(0xFF475569) : Colors.white70),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildDrawerTile({
@@ -3631,13 +3684,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildBottomNavItem({
     required int index,
-    required IconData icon,
+    required IconData iconActive,
+    required IconData iconInactive,
     required String label,
     required bool isLight,
   }) {
     final bool isSelected = _currentIndex == index;
-    final Color activeColor = const Color(0xFF1E88E5);
-    final Color inactiveColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+    final Color activeColor = const Color(0xFF0C4673); // Dark navy blue as in reference
+    final Color inactiveColor = isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF); // Gray color
     
     return Expanded(
       child: GestureDetector(
@@ -3649,34 +3703,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         },
         child: Container(
           color: Colors.transparent,
+          height: 64.0,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                height: 3.0,
+                width: 44.0,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? activeColor.withValues(alpha: 0.12)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Icon(
-                  icon,
-                  color: isSelected ? activeColor : inactiveColor,
-                  size: 26,
+                  color: isSelected ? activeColor : Colors.transparent,
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(3),
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                  color: isSelected ? activeColor : inactiveColor,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isSelected ? iconActive : iconInactive,
+                      color: isSelected ? activeColor : inactiveColor,
+                      size: 26,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? activeColor : inactiveColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(height: 4), // small bottom padding
             ],
           ),
         ),
