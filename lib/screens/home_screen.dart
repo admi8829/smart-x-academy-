@@ -269,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final bool isProfileActive = _currentIndex == 2;
     final bool isMoreActive = _currentIndex == 3;
     final bool isCoursesActive = _currentIndex == 1;
-    final bool isCustomDarkHeader = isMoreActive || isCoursesActive;
+    final bool isCustomDarkHeader = false;
 
     return Scaffold(
       key: _scaffoldKey,
@@ -1652,77 +1652,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildCoursesScreen(bool isLight) {
     final List<Map<String, dynamic>> courses = _getCoursesData(_selectedGradeForCourses);
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: isLight ? Colors.white : const Color(0xFF1D283C),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32.0),
-          topRight: Radius.circular(32.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -6),
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.languageCode == 'en' ? 'Grade' : 'ክፍል',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+              letterSpacing: -0.4,
+            ),
           ),
-        ],
-        image: DecorationImage(
-          image: const AssetImage('assets/images/education_bg_pattern.png'),
-          repeat: ImageRepeat.repeat,
-          opacity: isLight ? 0.08 : 0.02,
-          colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32.0),
-          topRight: Radius.circular(32.0),
-        ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.languageCode == 'en' ? 'Grade' : 'ክፍል',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                  letterSpacing: -0.4,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [9, 10, 11, 12].map((int gradeNum) {
-                    final bool isSelected = _selectedGradeForCourses == gradeNum;
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedGradeForCourses = gradeNum;
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF1E88E5))
-                              : (isLight ? Colors.white : const Color(0xFF1E293B)),
-                          borderRadius: BorderRadius.circular(12),
-                          border: isSelected
-                              ? null
-                              : Border.all(
-                                  color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                                  width: 1.2,
-                                ),
-                        ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [9, 10, 11, 12].map((int gradeNum) {
+                final bool isSelected = _selectedGradeForCourses == gradeNum;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedGradeForCourses = gradeNum;
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF1E88E5)
+                          : (isLight ? Colors.white : const Color(0xFF1E293B)),
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? null
+                          : Border.all(
+                              color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                              width: 1.2,
+                            ),
+                    ),
                         child: Text(
                           widget.languageCode == 'en' ? 'Grade $gradeNum' : 'ክፍል $gradeNum',
                           style: TextStyle(
@@ -1942,9 +1914,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               }).toList(),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Future<void> _handleProfileFormSave() async {
@@ -2600,40 +2570,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final String labelPrivacy = widget.languageCode == 'en' ? 'Privacy Policy' : 'የግል መመሪያ';
     final String labelLogOut = widget.languageCode == 'en' ? 'Log Out' : 'ውጣ';
 
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        color: isLight ? Colors.white : const Color(0xFF1D283C),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32.0),
-          topRight: Radius.circular(32.0),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 18,
-            offset: const Offset(0, -6),
-          ),
-        ],
-        image: DecorationImage(
-          image: const AssetImage('assets/images/education_bg_pattern.png'),
-          repeat: ImageRepeat.repeat,
-          opacity: isLight ? 0.08 : 0.02,
-          colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32.0),
-          topRight: Radius.circular(32.0),
-        ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
               // Avatar section
               Row(
                 children: [
@@ -2913,9 +2855,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               const SizedBox(height: 12),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildMoreItem({
