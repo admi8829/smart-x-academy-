@@ -491,7 +491,7 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 20.0,
-                                  fontWeight: FontWeight.w900, // Bold subject text in hold!
+                                  fontWeight: FontWeight.w950, // Bold subject text in hold!
                                   color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
                                   height: 1.15,
                                   letterSpacing: -0.5,
