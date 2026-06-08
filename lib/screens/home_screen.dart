@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
+import '../services/auth_service.dart';
 import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
@@ -76,6 +77,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   String _userEmail = "abebe@smartx.com";
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
+  bool _isLoggedIn = false;
+
+  // Contributor Portal Input Fields
+  final GlobalKey<FormState> _addQuestionFormKey = GlobalKey<FormState>();
+  final TextEditingController _addQuestionTextCtrl = TextEditingController();
+  final TextEditingController _addOptionACtrl = TextEditingController();
+  final TextEditingController _addOptionBCtrl = TextEditingController();
+  final TextEditingController _addOptionCCtrl = TextEditingController();
+  final TextEditingController _addOptionDCtrl = TextEditingController();
+  final TextEditingController _addExplanationCtrl = TextEditingController();
+  String _addSelectedSubject = 'Biology';
+  int _addSelectedGrade = 9;
+  int _addSelectedUnit = 1;
+  String _addCorrectAnswer = 'A';
+  bool _isSavingQuestion = false;
 
   // Profile Form Controllers matching screenshot fields
   late TextEditingController _fullNameController;
@@ -231,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
+      _isLoggedIn = prefs.getBool('is_authenticated') ?? false;
       _userName = prefs.getString('user_fullName') ?? "Abebe Bekele";
       final gradeVal = prefs.getString('user_grade') ?? "Grade 12";
       _userGradeStr = gradeVal.endsWith("Student") ? gradeVal : "$gradeVal Student";
@@ -280,6 +297,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _phoneController.dispose();
     _passwordController.dispose();
     _ageController.dispose();
+    _addQuestionTextCtrl.dispose();
+    _addOptionACtrl.dispose();
+    _addOptionBCtrl.dispose();
+    _addOptionCCtrl.dispose();
+    _addOptionDCtrl.dispose();
+    _addExplanationCtrl.dispose();
     _fadeController.dispose();
     _bannerAd?.dispose();
     super.dispose();
@@ -591,23 +614,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ],
         ),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          color: isCustomDarkHeader
-              ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
-              : (isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827)),
-          image: isCustomDarkHeader
-              ? null
-              : DecorationImage(
-                  image: const AssetImage('assets/images/education_bg_pattern.png'),
-                  repeat: ImageRepeat.repeat,
-                  opacity: isLight ? 0.09 : 0.03,
-                  colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: BoxDecoration(
+                color: isCustomDarkHeader
+                    ? (isLight ? const Color(0xFF0D2353) : const Color(0xFF0F172A))
+                    : (isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827)),
+                image: isCustomDarkHeader
+                    ? null
+                    : DecorationImage(
+                        image: const AssetImage('assets/images/education_bg_pattern.png'),
+                        repeat: ImageRepeat.repeat,
+                        opacity: isLight ? 0.09 : 0.03,
+                        colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
+                      ),
+              ),
+              child: _buildCurrentTab(isLight),
+            ),
+          ),
+          if (_isBannerAdLoaded && _bannerAd != null)
+            Container(
+              color: isLight ? Colors.white : const Color(0xFF1E293B),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                    width: 0.8,
+                  ),
                 ),
-        ),
-        child: _buildCurrentTab(isLight),
+              ),
+              child: SizedBox(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -1114,18 +1163,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
           
           const SizedBox(height: 32.0),
-
-          // --- Custom AdMob Banner Ad Area located visually at the very bottom end of home content ---
-          if (_isBannerAdLoaded && _bannerAd != null) ...[
-            Center(
-              child: Container(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                margin: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -4176,13 +4213,711 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildProfileScreen(bool isLight) {
-    return RegisterScreen(
-      isDarkMode: !isLight,
-      languageCode: widget.languageCode,
-      onToggleTheme: widget.onToggleTheme,
-      onToggleLanguage: widget.onToggleLanguage,
-      embedInTab: true,
+    if (_isLoggedIn) {
+      return _buildProfileDashboard(isLight);
+    } else {
+      return RegisterScreen(
+        isDarkMode: !isLight,
+        languageCode: widget.languageCode,
+        onToggleTheme: widget.onToggleTheme,
+        onToggleLanguage: widget.onToggleLanguage,
+        embedInTab: true,
+      );
+    }
+  }
+
+  Widget _buildProfileDashboard(bool isLight) {
+    final bool isDark = !isLight;
+    final Color navyColor = const Color(0xFF0D2353);
+    final Color cardBg = isLight ? Colors.white : const Color(0xFF1E293B);
+    final Color textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final Color accentColor = isLight ? const Color(0xFF1E88E5) : const Color(0xFF38BDF8);
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Sleek Gradient Profile Header Card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLight
+                    ? [const Color(0xFF0D2353), const Color(0xFF1E40AF)]
+                    : [const Color(0xFF0F172A), const Color(0xFF1E293B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Avatar layout
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2.5),
+                        color: isLight ? Colors.blue.shade100 : Colors.teal.shade800,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _userName.length > 2 ? _userName.substring(0, 2).toUpperCase() : _userName.toUpperCase(),
+                        style: TextStyle(
+                          color: isLight ? navyColor : Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _userGradeStr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(color: Colors.white24, height: 1),
+                const SizedBox(height: 16),
+                
+                // Details Grid (Phone & Email)
+                Row(
+                  children: [
+                    const Icon(Icons.alternate_email_rounded, color: Colors.white70, size: 16),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _userEmail,
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.phone_rounded, color: Colors.white70, size: 16),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _userPhoneNumber.isNotEmpty ? _userPhoneNumber : "No Phone Added",
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 14),
+
+          // 2. High-Polished Study Stats Row
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded, color: accentColor, size: 28),
+                      const SizedBox(height: 6),
+                      const Text("154 Solved", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      const SizedBox(height: 1),
+                      Text(widget.languageCode == 'en' ? "Practice" : "ልምምድ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.menu_book_rounded, color: Colors.orange, size: 28),
+                      const SizedBox(height: 6),
+                      const Text("28 Read", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      const SizedBox(height: 1),
+                      Text(widget.languageCode == 'en' ? "Short Notes" : "አጫጭር ማስታወሻ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.timer_outlined, color: Colors.green, size: 28),
+                      const SizedBox(height: 6),
+                      const Text("14.5 Hrs", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      const SizedBox(height: 1),
+                      Text(widget.languageCode == 'en' ? "Study Time" : "የማጠናያ ጊዜ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // 3. Performance Analysis Chart Widget
+          _buildPerformanceChart(isLight),
+
+          const SizedBox(height: 6),
+
+          // 4. Contributor Portal Form Card: Add question to Supabase
+          Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Form(
+              key: _addQuestionFormKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.cloud_upload_outlined, color: accentColor, size: 24),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          widget.languageCode == 'en' ? "Contributor Portal" : "ዳታ መቆጣጠሪያ",
+                          style: TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    widget.languageCode == 'en' 
+                        ? "Register & post new exam questions to the Supabase server database instantly!"
+                        : "አዳዲስ የፈተና ጥያቄዎችን ፣ ምርጫዎችን እና ማብራሪያዎችን በቀጥታ ሱፓቤስ ሰርቨር ላይ ይውሰዱ!",
+                    style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 18),
+                  
+                  // Grade level selector dropdown
+                  DropdownButtonFormField<int>(
+                    value: _addSelectedGrade,
+                    dropdownColor: cardBg,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Target Grade Level"),
+                    items: [9, 10, 11, 12].map((grade) {
+                      return DropdownMenuItem<int>(
+                        value: grade,
+                        child: Text('Grade $grade'),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _addSelectedGrade = val);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Subject selection dropdown
+                  DropdownButtonFormField<String>(
+                    value: _addSelectedSubject,
+                    dropdownColor: cardBg,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Subject Category"),
+                    items: ['Biology', 'Physics', 'Chemistry', 'Mathematics', 'Civics', 'English', 'Geography', 'History'].map((sub) {
+                      return DropdownMenuItem<String>(
+                        value: sub,
+                        child: Text(sub),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _addSelectedSubject = val);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Unit text input
+                  TextFormField(
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Unit / Chapter", hintText: "1"),
+                    initialValue: _addSelectedUnit.toString(),
+                    onChanged: (val) {
+                      final parsed = int.tryParse(val);
+                      if (parsed != null) {
+                        _addSelectedUnit = parsed;
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Question Input
+                  TextFormField(
+                    controller: _addQuestionTextCtrl,
+                    maxLines: 3,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Question text", hintText: "Enter question query..."),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return "Question text is required";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Option A
+                  TextFormField(
+                    controller: _addOptionACtrl,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Option A", hintText: "Enter option A text"),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return "Option A is required";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Option B
+                  TextFormField(
+                    controller: _addOptionBCtrl,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Option B", hintText: "Enter option B text"),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return "Option B is required";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Option C
+                  TextFormField(
+                    controller: _addOptionCCtrl,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Option C", hintText: "Enter option C text"),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return "Option C is required";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Option D
+                  TextFormField(
+                    controller: _addOptionDCtrl,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Option D", hintText: "Enter option D text"),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return "Option D is required";
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Correct Option selection
+                  DropdownButtonFormField<String>(
+                    value: _addCorrectAnswer,
+                    dropdownColor: cardBg,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Correct Answer Option"),
+                    items: ['A', 'B', 'C', 'D'].map((opt) {
+                      return DropdownMenuItem<String>(
+                        value: opt,
+                        child: Text("Option $opt"),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _addCorrectAnswer = val);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Explanation Input
+                  TextFormField(
+                    controller: _addExplanationCtrl,
+                    maxLines: 2,
+                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
+                    decoration: _getInputDecoration(isLight, labelText: "Add Explanation (Optional)", hintText: "This is correct because..."),
+                  ),
+                  const SizedBox(height: 18),
+
+                  _isSavingQuestion
+                      ? const Center(child: CircularProgressIndicator())
+                      : Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isLight
+                                  ? [const Color(0xFF0D2353), const Color(0xFF1E40AF)]
+                                  : [const Color(0xFF0F172A), const Color(0xFF1E293B)],
+                            ),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: TextButton(
+                            onPressed: _submitQuestionToSupabase,
+                            child: const Text(
+                              "Upload To Supabase DB 🚀",
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // 5. Logout Button
+          Container(
+            height: 52,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red.shade400, width: 1.5),
+              borderRadius: BorderRadius.circular(26),
+            ),
+            child: TextButton.icon(
+              onPressed: () async {
+                final authService = AuthService();
+                await authService.signOut();
+                setState(() {
+                  _isLoggedIn = false;
+                });
+                await _loadProfileData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Logged out successfully"),
+                    backgroundColor: Colors.blue,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              icon: Icon(Icons.logout_rounded, color: Colors.red[400], size: 20),
+              label: Text(
+                widget.languageCode == 'en' ? "Log Out Session" : "መለያ ውጣ",
+                style: TextStyle(
+                  color: Colors.red[400],
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14.5,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
     );
+  }
+
+  Widget _buildPerformanceChart(bool isLight) {
+    final barColor = isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8);
+    final shadowColor = isLight ? Colors.black.withOpacity(0.05) : Colors.black.withOpacity(0.2);
+    final bgBarColor = isLight ? Colors.grey.shade100 : const Color(0xFF1E293B);
+
+    final List<Map<String, dynamic>> chartData = [
+      {'subject': 'Biology', 'score': 84, 'icon': Icons.biotech},
+      {'subject': 'Physics', 'score': 68, 'icon': Icons.bolt},
+      {'subject': 'Chemistry', 'score': 74, 'icon': Icons.science_outlined},
+      {'subject': 'Mathematics', 'score': 90, 'icon': Icons.calculate_outlined},
+      {'subject': 'Civics', 'score': 80, 'icon': Icons.gavel_rounded},
+      {'subject': 'English', 'score': 88, 'icon': Icons.translate_rounded},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: isLight ? Colors.white : const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.languageCode == 'en' ? "Performance Analytics 📉" : "የውጤት ትንተና 📉",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.languageCode == 'en' ? "Based on recent practice achievements" : "ባለፉት ጥያቄዎች ውጤት መሰረት",
+                    style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  widget.languageCode == 'en' ? "Global Rank #128" : "የደረጃ ቁጥር #128",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
+                  ),
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Vertical Columns Chart Grid
+          SizedBox(
+            height: 180,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: chartData.map((data) {
+                final int score = data['score'];
+                final String subject = data['subject'];
+                final IconData icon = data['icon'];
+                
+                return Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Percentage Text
+                      Text(
+                        "$score%",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // Bar Column container
+                      Expanded(
+                        child: Container(
+                          width: 14,
+                          decoration: BoxDecoration(
+                            color: bgBarColor,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          alignment: Alignment.bottomCenter,
+                          child: AnimatedContainer(
+                            duration: const Duration(seconds: 1),
+                            height: (score / 100) * 120,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: isLight 
+                                  ? [const Color(0xFF1E40AF), const Color(0xFF3B82F6)]
+                                  : [const Color(0xFF0ea5e9), const Color(0xFF38bdf8)],
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Icon & Short Tag
+                      Icon(icon, size: 16, color: Colors.grey[400]),
+                      const SizedBox(height: 4),
+                      Text(
+                        subject.length > 3 ? subject.substring(0, 3).toUpperCase() : subject.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _getInputDecoration(bool isLight, {required String labelText, String? hintText}) {
+    final Color borderCol = isLight ? const Color(0xFFD2D6DC) : const Color(0xFF334155);
+    final Color focusCol = isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8);
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderCol, width: 1.2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderCol, width: 1.2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: focusCol, width: 1.5),
+      ),
+    );
+  }
+
+  Future<void> _submitQuestionToSupabase() async {
+    if (!_addQuestionFormKey.currentState!.validate()) return;
+    
+    setState(() {
+      _isSavingQuestion = true;
+    });
+    
+    try {
+      final text = _addQuestionTextCtrl.text.trim();
+      final explanation = _addExplanationCtrl.text.trim();
+      final options = [
+        _addOptionACtrl.text.trim(),
+        _addOptionBCtrl.text.trim(),
+        _addOptionCCtrl.text.trim(),
+        _addOptionDCtrl.text.trim(),
+      ];
+      
+      final correctChoiceLetter = _addCorrectAnswer.toUpperCase();
+
+      await Supabase.instance.client.from('questions').insert({
+        'grade': _addSelectedGrade,
+        'subject': _addSelectedSubject,
+        'unit': _addSelectedUnit,
+        'question_text': text,
+        'options': options,
+        'correct_answer': correctChoiceLetter,
+        'explanation': explanation.isEmpty ? null : explanation,
+      });
+      
+      // Reset form
+      _addQuestionTextCtrl.clear();
+      _addOptionACtrl.clear();
+      _addOptionBCtrl.clear();
+      _addOptionCCtrl.clear();
+      _addOptionDCtrl.clear();
+      _addExplanationCtrl.clear();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text("Exam Question successfully added to Supabase!")),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      debugPrint("Failed to insert question: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text("Failed to insert question: $e")),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSavingQuestion = false;
+      });
+    }
   }
 
   Widget _buildProfileDetailRow({

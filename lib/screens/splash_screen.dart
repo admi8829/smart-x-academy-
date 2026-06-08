@@ -63,6 +63,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   // --- Onboarding & Interactive Progress Flow ---
   int _currentStep = 0; // 0 = Terms & Conditions, 1 = Push Notifications Permission
   bool _agreeToTerms = false;
+  bool _isLoadingState = true;
   
   // Custom Swing and Pulse Animations
   late AnimationController _bellSwingController;
@@ -74,6 +75,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
+    _checkTermsAccepted();
 
     // 1. Swing animation for notification bell
     _bellSwingController = AnimationController(
@@ -111,6 +113,25 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _pulseController.repeat();
   }
 
+  Future<void> _checkTermsAccepted() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final accepted = prefs.getBool('terms_accepted') ?? false;
+      if (accepted) {
+        _navigateToDashboard();
+      } else {
+        setState(() {
+          _isLoadingState = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error reading onboarding prefs: $e");
+      setState(() {
+        _isLoadingState = false;
+      });
+    }
+  }
+
   @override
   void dispose() {
     _bellSwingController.dispose();
@@ -121,10 +142,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   Future<void> _handleAcceptTerms() async {
     if (!_agreeToTerms) return;
     
-    // Smooth transition from Terms Step (0) to Notification Step (1)
-    setState(() {
-      _currentStep = 1;
-    });
+    // 1. Directly request notification permission programmatically upon accepting terms, bypassing Step 1 completely!
+    try {
+      await PushNotificationService.requestNotificationPermission();
+    } catch (e) {
+      debugPrint("Error requesting notification permission directly: $e");
+    }
+
+    // 2. Save terms acceptance state in SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('terms_accepted', true);
+    } catch (e) {
+      debugPrint("Error saving terms state: $e");
+    }
+    
+    // 3. Go straight to HomeScreen Dashboard
+    _navigateToDashboard();
   }
 
   Future<void> _handleNotificationPermission(bool authorized) async {
@@ -165,6 +199,38 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingState) {
+      final bool isDark = widget.isDarkMode;
+      final Color backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF5F7FA);
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: CustomPaint(
+                  size: const Size(72, 72),
+                  painter: SmartXStarPainter(color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0D2353)),
+                ),
+              ),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(isDark ? const Color(0xFF38BDF8) : const Color(0xFF0D2353)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final bool isDark = widget.isDarkMode;
     final Color backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     
@@ -222,7 +288,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       {
         'index': '2',
         'icon': Icons.menu_book_outlined,
-        'color': primaryColor,
+        'color': const Color(0xFF1D4ED8),
         'titleEn': 'Educational Materials Licensing',
         'titleAm': 'የይዘቶች የግል አጠቃቀም ፈቃድ',
         'descEn': 'The provided revision cheatsheets, lesson syllabus indices, and matric revision guides are licensed exclusively for individual offline student study.',
@@ -259,276 +325,386 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
     return KeyedSubtree(
       key: const ValueKey('terms_view'),
-      child: Column(
-        children: [
-          // Elegant Header Actions (Theme, Language togglers and Star Emblem)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CustomPaint(
-                        size: const Size(28, 28),
-                        painter: SmartXStarPainter(color: primaryColor),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      "SMART X ETHIOPIA",
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.8,
-                        color: Color(0xFF0D47A1),
-                      ),
-                    ),
-                  ],
-                ),
-                // Custom quick setting controls
-                Row(
-                  children: [
-                    // Language Switcher
-                    IconButton(
-                      icon: const Icon(Icons.g_translate_rounded, size: 20),
-                      onPressed: widget.onToggleLanguage,
-                      style: IconButton.styleFrom(
-                        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        foregroundColor: isDark ? Colors.white : const Color(0xFF0D47A1),
-                        side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.all(8),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Theme Switcher
-                    IconButton(
-                      icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, size: 20),
-                      onPressed: widget.onToggleTheme,
-                      style: IconButton.styleFrom(
-                        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-                        foregroundColor: isDark ? Colors.white : const Color(0xFF0D47A1),
-                        side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.all(8),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [const Color(0xFF0F172A), const Color(0xFF020617)]
+                : [const Color(0xFFF8FAFC), const Color(0xFFEFF6FF)],
           ),
-
-          // Scrollable list of Terms
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        child: Column(
+          children: [
+            // Elegant Header Actions (Theme, Language togglers and Star Emblem)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    titleText,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: titleColor,
-                      letterSpacing: -0.5,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CustomPaint(
+                            size: const Size(24, 24),
+                            painter: SmartXStarPainter(color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF1D4ED8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "SMART X ETHIOPIA",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF0F4C81),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitleText,
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
-                      fontWeight: FontWeight.w600,
-                      color: subtitleColor,
-                    ),
+                  // Custom quick setting controls
+                  Row(
+                    children: [
+                      // Language Switcher
+                      IconButton(
+                        icon: const Icon(Icons.g_translate_rounded, size: 18),
+                        onPressed: widget.onToggleLanguage,
+                        style: IconButton.styleFrom(
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          foregroundColor: isDark ? Colors.white : const Color(0xFF0D47A1),
+                          side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          padding: const EdgeInsets.all(10),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Theme Switcher
+                      IconButton(
+                        icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded, size: 18),
+                        onPressed: widget.onToggleTheme,
+                        style: IconButton.styleFrom(
+                          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                          foregroundColor: isDark ? Colors.white : const Color(0xFF0D47A1),
+                          side: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          padding: const EdgeInsets.all(10),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
 
-                  // Building 5 distinct terms cards
-                  ...termsList.map((term) {
-                    final String termTitle = widget.languageCode == 'en' ? term['titleEn'] : term['titleAm'];
-                    final String termDesc = widget.languageCode == 'en' ? term['descEn'] : term['descAm'];
-                    final Color iconCol = term['color'];
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(16),
+            // Scrollable list of Terms
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      titleText,
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w950,
+                        color: titleColor,
+                        letterSpacing: -0.6,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: cardBackground,
+                        color: isDark ? const Color(0xFF1E293B).withOpacity(0.5) : const Color(0xFFF1F5F9).withOpacity(0.8),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                          width: 1.1,
+                          width: 1.0,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.015),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Number Indicator in Colored Circle Side-Badge
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: iconCol.withOpacity(0.12),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
+                          Icon(
+                            Icons.info_outline_rounded,
+                            color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF1E88E5),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: Text(
-                              term['index'],
+                              subtitleText,
                               style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w900,
-                                color: iconCol,
+                                fontSize: 13,
+                                height: 1.45,
+                                fontWeight: FontWeight.bold,
+                                color: subtitleColor,
                               ),
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+
+                    // Building 5 distinct terms cards
+                    ...termsList.map((term) {
+                      final String termTitle = widget.languageCode == 'en' ? term['titleEn'] : term['titleAm'];
+                      final String termDesc = widget.languageCode == 'en' ? term['descEn'] : term['descAm'];
+                      final Color iconCol = term['color'];
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: cardBackground,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border(
+                            left: BorderSide(color: iconCol, width: 5.0),
+                            top: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                            right: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                            bottom: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark 
+                                  ? Colors.black.withOpacity(0.12)
+                                  : Colors.blueGrey.withOpacity(0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Number Indicator inside dynamic circle
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: iconCol.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                term['index'],
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w950,
+                                  color: iconCol,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    termTitle,
+                                    style: TextStyle(
+                                      fontSize: 14.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: titleColor,
+                                      letterSpacing: -0.1,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    termDesc,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      height: 1.45,
+                                      fontWeight: FontWeight.w600,
+                                      color: subtitleColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
+
+            // Accept agreement section at the footer (glassmorphism look)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              decoration: BoxDecoration(
+                color: cardBackground,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border(
+                  top: BorderSide(
+                    color: isDark ? const Color(0xFF2E3B4E) : const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, -6),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Tactile Agreement Checkbox Card
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _agreeToTerms = !_agreeToTerms;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _agreeToTerms
+                            ? (isDark ? const Color(0xFF0F4C81).withOpacity(0.15) : const Color(0xFFEFF6FF))
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _agreeToTerms
+                              ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF3B82F6))
+                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: _agreeToTerms
+                                  ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF1D4ED8))
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _agreeToTerms
+                                    ? (isDark ? const Color(0xFF38BDF8) : const Color(0xFF1D4ED8))
+                                    : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                                width: 2.0,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: _agreeToTerms 
+                                ? const Icon(Icons.check, size: 16, color: Colors.white) 
+                                : null,
+                          ),
                           const SizedBox(width: 14),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Text(
+                              widget.languageCode == 'en'
+                                  ? "I read and accept all 5 educational terms & policies."
+                                  : "ሁሉንም የትምህርት አጠቃቀም ደንቦችን እና ፖሊሲዎችን ተስማምቻለሁ።",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: titleColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Proceed Gradient Action Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: _agreeToTerms
+                            ? const LinearGradient(
+                                colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              )
+                            : null,
+                        color: !_agreeToTerms
+                            ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0))
+                            : null,
+                        boxShadow: _agreeToTerms
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF1D4ED8).withOpacity(0.35),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _agreeToTerms ? _handleAcceptTerms : null,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  termTitle,
+                                  widget.languageCode == 'en' ? "Accept & Continue" : "ተስማምቻለሁ፤ ቀጥል",
                                   style: TextStyle(
-                                    fontSize: 14.5,
+                                    fontSize: 15.5,
                                     fontWeight: FontWeight.w900,
-                                    color: titleColor,
+                                    color: _agreeToTerms
+                                        ? Colors.white
+                                        : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
                                   ),
                                 ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  termDesc,
-                                  style: TextStyle(
-                                    fontSize: 12.5,
-                                    height: 1.45,
-                                    fontWeight: FontWeight.w500,
-                                    color: subtitleColor,
-                                  ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 18,
+                                  color: _agreeToTerms
+                                      ? Colors.white
+                                      : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    );
-                  }),
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-
-          // Accept agreement section at the foot
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: cardBackground,
-              border: Border(
-                top: BorderSide(
-                  color: isDark ? const Color(0xFF2E3B4E) : const Color(0xFFE2E8F0),
-                  width: 1.2,
-                ),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Custom Tactile Agreement Checkbox Card
-                InkWell(
-                  onTap: () {
-                    setState(() {
-                      _agreeToTerms = !_agreeToTerms;
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                    child: Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: _agreeToTerms ? primaryColor : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: _agreeToTerms ? primaryColor : (isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-                              width: 1.8,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: _agreeToTerms 
-                              ? const Icon(Icons.check, size: 14, color: Colors.white) 
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            widget.languageCode == 'en'
-                                ? "I read and accept all 5 educational terms & policies."
-                                : "ሁሉንም የትምህርት አጠቃቀም ደንቦችን እና ፖሊሲዎችን ተስማምቻለሁ።",
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w900,
-                              color: titleColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                // Proceed Action Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _agreeToTerms ? _handleAcceptTerms : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      disabledBackgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
-                      disabledForegroundColor: isDark ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                      elevation: _agreeToTerms ? 4 : 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.languageCode == 'en' ? "Accept & Continue" : "ተስማምቻለሁ፤ ቀጥል",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward_rounded, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
