@@ -121,6 +121,61 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     );
   }
 
+  Color _getGradeColor() {
+    switch (widget.grade) {
+      case 9:
+        return const Color(0xFF0084FF); // Blue
+      case 10:
+        return const Color(0xFF10B981); // Emerald Green
+      case 11:
+        return const Color(0xFFF59E0B); // Amber
+      case 12:
+        return const Color(0xFF8B5CF6); // Purple
+      default:
+        return const Color(0xFF0084FF);
+    }
+  }
+
+  Widget _buildLanguageSegment({
+    required String langCode,
+    required String label,
+    required bool isSelected,
+    required bool isLight,
+    required Color activeColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        decoration: BoxDecoration(
+          color: isSelected ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(50.0),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withOpacity(0.35),
+                    blurRadius: 8.0,
+                    offset: const Offset(0, 3),
+                  )
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.0,
+            fontWeight: FontWeight.w900,
+            color: isSelected
+                ? Colors.white
+                : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Dynamically retrieve the latest real-time application values to bypass stale attributes
@@ -129,6 +184,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     final bool isLight = !isDark;
     final String currentLang = appState.languageCode;
     final subjects = _getSubjects();
+    final Color gradeColor = _getGradeColor();
 
     // Matching responsive top UI alignment and clean off-white platform canvas background
     final Color bgColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
@@ -153,27 +209,6 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           ),
         ),
         actions: [
-          // Elegant language option toggle matching parent structure
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.g_translate_rounded, size: 14, color: headerTextColor),
-                  const SizedBox(width: 4),
-                  Text(
-                    currentLang.toUpperCase(),
-                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold, color: headerTextColor),
-                  ),
-                ],
-              ),
-            ),
-            onPressed: appState.onToggleLanguage,
-          ),
           // Elegant theme mode toggles
           IconButton(
             icon: Icon(
@@ -183,7 +218,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
             ),
             onPressed: appState.onToggleTheme,
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 12),
         ],
       ),
       body: Container(
@@ -206,17 +241,74 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Beautiful descriptive subtitle
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 22.0),
-                  child: Text(
-                    _local('subtitle', currentLang),
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w600,
-                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                    ),
+                Text(
+                  _local('subtitle', currentLang),
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w600,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                   ),
                 ),
+                
+                const SizedBox(height: 18.0),
+
+                // Prominent Dual Segmented Language Toggle Switch Bar
+                Row(
+                  children: [
+                    Text(
+                      currentLang == 'en' ? "Language:" : "ቋንቋ: ",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF334155) : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.all(4.0),
+                      decoration: BoxDecoration(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                        borderRadius: BorderRadius.circular(50.0),
+                        border: Border.all(
+                          color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildLanguageSegment(
+                            langCode: 'en',
+                            label: 'English 🇺🇸',
+                            isSelected: currentLang == 'en',
+                            isLight: isLight,
+                            activeColor: gradeColor,
+                            onTap: () {
+                              if (currentLang != 'en') {
+                                appState.onToggleLanguage();
+                              }
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          _buildLanguageSegment(
+                            langCode: 'am',
+                            label: 'አማርኛ 🇪🇹',
+                            isSelected: currentLang == 'am',
+                            isLight: isLight,
+                            activeColor: gradeColor,
+                            onTap: () {
+                              if (currentLang != 'am') {
+                                appState.onToggleLanguage();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24.0),
 
                 // 2-Column Responsive Bento Grid matching requested design aspect perfectly
                 GridView.builder(
@@ -226,7 +318,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 18.0,
-                    childAspectRatio: 0.94, // Refined aspect ratio so we fit start button and titles beautifully
+                    childAspectRatio: 0.88, // Slightly taller aspect ratio for the redesigned rich cards
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (context, index) {
@@ -237,6 +329,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                       color: subject['color'],
                       illustration: subject['illustration'],
                       isLight: isLight,
+                      gradeColor: gradeColor,
                       btnStartText: _local('btn_start', currentLang),
                       onTap: () => _navigateToUnitSelectionScreen(subject, appState),
                     );
@@ -251,13 +344,14 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
   }
 }
 
-// 3D Tilt Card Widget for premium physics transitions
+// Redesigned 3D Physics & Floating Perspective Card
 class _InteractiveSubjectCard extends StatefulWidget {
   final String amTitle;
   final String enTitle;
   final Color color;
   final Widget illustration;
   final bool isLight;
+  final Color gradeColor;
   final String btnStartText;
   final VoidCallback onTap;
 
@@ -267,6 +361,7 @@ class _InteractiveSubjectCard extends StatefulWidget {
     required this.color,
     required this.illustration,
     required this.isLight,
+    required this.gradeColor,
     required this.btnStartText,
     required this.onTap,
   });
@@ -275,157 +370,224 @@ class _InteractiveSubjectCard extends StatefulWidget {
   State<_InteractiveSubjectCard> createState() => _InteractiveSubjectCardState();
 }
 
-class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> {
+class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with SingleTickerProviderStateMixin {
   double _tiltX = 0.0;
   double _tiltY = 0.0;
   double _scale = 1.0;
+  late AnimationController _levitateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _levitateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _levitateController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _scale = 0.95;
-          _tiltX = -0.04;
-          _tiltY = 0.04;
-        });
-      },
-      onTapUp: (_) {
-        setState(() {
-          _scale = 1.0;
-          _tiltX = 0.0;
-          _tiltY = 0.0;
-        });
-        widget.onTap();
-      },
-      onTapCancel: () {
-        setState(() {
-          _scale = 1.0;
-          _tiltX = 0.0;
-          _tiltY = 0.0;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.001) // perspective
-          ..scale(_scale)
-          ..rotateX(_tiltX)
-          ..rotateY(_tiltY),
-        transformAlignment: Alignment.center,
-        decoration: BoxDecoration(
-          // Soft warm cream beige color or elegant dark slate
-          color: widget.isLight ? const Color(0xFFFAF6F0) : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(26.0),
-          boxShadow: [
-            BoxShadow(
-              color: widget.isLight 
-                  ? const Color(0xFF0F1B2B).withOpacity(0.04) 
-                  : Colors.black.withOpacity(0.35),
-              blurRadius: 20.0,
-              offset: const Offset(0, 8),
-              spreadRadius: 0,
-            )
-          ],
-        ),
-        padding: const EdgeInsets.all(15.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Upper Content: Titles and Custom illustrations
-            Expanded(
-              child: Row(
+    return AnimatedBuilder(
+      animation: _levitateController,
+      builder: (context, child) {
+        final double pulse = _levitateController.value;
+        final double floatOffsetY = (pulse - 0.5) * 5.0; // 5px float height
+        final double autoTilt = (pulse - 0.5) * 0.015;
+
+        return Listener(
+          onPointerDown: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _scale = 0.94;
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerMove: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerUp: (event) {
+            setState(() {
+              _scale = 1.0;
+              _tiltX = 0.0;
+              _tiltY = 0.0;
+            });
+          },
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0012) // 3D Perspective Depth
+                ..translate(0.0, floatOffsetY) // Levitation float offset
+                ..scale(_scale)
+                ..rotateX(_tiltX)
+                ..rotateY(_tiltY + autoTilt),
+              transformAlignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: widget.isLight
+                      ? [
+                          Colors.white,
+                          Color.alphaBlend(widget.gradeColor.withOpacity(0.06), Colors.white),
+                        ]
+                      : [
+                          const Color(0xFF1E293B),
+                          Color.alphaBlend(widget.gradeColor.withOpacity(0.09), const Color(0xFF0F172A)),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: widget.gradeColor.withOpacity(widget.isLight ? 0.35 : 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.gradeColor.withOpacity(widget.isLight ? 0.12 : 0.28),
+                    blurRadius: 20.0,
+                    offset: const Offset(0, 8),
+                    spreadRadius: -2,
+                  )
+                ],
+              ),
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Upper Content: Titles and custom icon decoration
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          widget.amTitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 17.5,
-                            fontWeight: FontWeight.bold,
-                            color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                            height: 1.15,
-                            letterSpacing: -0.3,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                widget.amTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.w950, // Bold subject text in hold!
+                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  height: 1.15,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 5.0),
+                              Text(
+                                widget.enTitle.toUpperCase(), // Bold English uppercase description style
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w900, // English title in hold!
+                                  color: widget.gradeColor, // Highlights the chosen grade color
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 3.0),
-                        Text(
-                          widget.enTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12.0,
-                            fontWeight: FontWeight.w800,
-                            color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        const SizedBox(width: 8),
+                        // Rich vector icon wrapper inside circular shaded backdrop
+                        Container(
+                          height: 50,
+                          width: 50,
+                          padding: const EdgeInsets.all(6.0),
+                          decoration: BoxDecoration(
+                            color: widget.color.withOpacity(widget.isLight ? 0.08 : 0.16),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: widget.color.withOpacity(0.3),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: widget.illustration,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  SizedBox(
-                    height: 48,
-                    width: 48,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: widget.illustration,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12.0),
+                  
+                  const SizedBox(height: 12.0),
 
-            // Premium rectangular START button styled WHITE as requested, accented by its primary color
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white, // Sleek premium white format!
-                borderRadius: BorderRadius.circular(16), // Rounded rectangle style
-                border: Border.all(
-                  color: widget.isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.color.withOpacity(0.12),
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 0,
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.play_circle_fill_rounded, // play circle icon
-                    color: widget.color, // Accented color
-                    size: 16,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    widget.btnStartText,
-                    style: TextStyle(
-                      color: widget.color, // Color matched cleanly
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold, // bold weigh font!
-                      letterSpacing: 0.5,
+                  // Pill-shaped high-fidelity START button colored copy to chosen grade
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.gradeColor,
+                          widget.gradeColor.withBlue((widget.gradeColor.blue + 20).clamp(0, 255)),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.gradeColor.withOpacity(0.3),
+                          blurRadius: 10.0,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 16.0,
+                        ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          widget.btnStartText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

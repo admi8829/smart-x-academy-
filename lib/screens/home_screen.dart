@@ -998,7 +998,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       height: 1.25,
                                       shadows: [
                                         Shadow(
-                                          color: Colors.black80,
+                                          color: Colors.black87,
                                           offset: Offset(0, 1),
                                           blurRadius: 4,
                                         ),
@@ -1061,45 +1061,192 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 0.98, // Adjusted height to make start buttons float beautifully below
+              childAspectRatio: 0.84, // Slightly taller aspect ratio for modern tall widgets support
               children: [
                 // Grade 9
-                _buildGradeCard(
+                _InteractiveGradeCard(
                   title: _local('g9_title'),
                   subtitle: _local('g9_sub'),
                   illustration: _buildScrollIllustration(),
                   btnColor: const Color(0xFF0084FF),
                   isLight: isLight,
+                  statusText: widget.languageCode == 'en' ? "GRADE 9" : "ክፍል 9",
                   onTap: () => _navigateToGradeScreen(9),
                 ),
                 // Grade 10
-                _buildGradeCard(
+                _InteractiveGradeCard(
                   title: _local('g10_title'),
                   subtitle: _local('g10_sub'),
                   illustration: _buildShieldIllustration(),
                   btnColor: const Color(0xFF10B981),
                   isLight: isLight,
+                  statusText: widget.languageCode == 'en' ? "GRADE 10" : "ክፍል 10",
                   onTap: () => _navigateToGradeScreen(10),
                 ),
                 // Grade 11
-                _buildGradeCard(
+                _InteractiveGradeCard(
                   title: _local('g11_title'),
                   subtitle: _local('g11_sub'),
                   illustration: _buildOrbitIllustration(),
                   btnColor: const Color(0xFFF59E0B),
                   isLight: isLight,
+                  statusText: widget.languageCode == 'en' ? "GRADE 11" : "ክፍል 11",
                   onTap: () => _navigateToGradeScreen(11),
                 ),
                 // Grade 12
-                _buildGradeCard(
+                _InteractiveGradeCard(
                   title: _local('g12_title'),
                   subtitle: _local('g12_sub'),
                   illustration: _buildGraduateIllustration(),
                   btnColor: const Color(0xFF8B5CF6),
                   isLight: isLight,
+                  statusText: widget.languageCode == 'en' ? "GRADE 12" : "ክፍል 12",
                   onTap: () => _navigateToGradeScreen(12),
                 ),
               ],
+            ),
+          ),
+          
+          const SizedBox(height: 24.0),
+
+          // Custom Quick-Access Syllabus Unit Portal: "Syllabus Highlights / Dynamic Units Hub" in "ONE PLACE"
+          _animateItem(
+            index: 3,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20.0),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isLight 
+                      ? [const Color(0xFFF1F5F9), const Color(0xFFF8FAFC)] 
+                      : [const Color(0xFF1E293B), const Color(0xFF0F172A)],
+                ),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.auto_awesome_rounded, color: Color(0xFF8B5CF6), size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.languageCode == 'en' ? "Syllabus Unit Hub" : "የክፍል አጠቃላይ ማዕከል",
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.w950,
+                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF8B5CF6).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          widget.languageCode == 'en' ? "ONE PLACE" : "በአንድ ቦታ",
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8B5CF6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6.0),
+                  Text(
+                    widget.languageCode == 'en' 
+                        ? "Access key high-yield curriculum chapters instantly in one place."
+                        : "ሁሉንም ታዋቂ የትምህርት ክፍሎች በአንድ ቦታ በቀላሉ ያግኙ።",
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.w600,
+                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(height: 14.0),
+                  
+                  // Continuous list of high yield units in one place
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _getHubUnits().length,
+                    itemBuilder: (context, idx) {
+                      final u = _getHubUnits()[idx];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10.0),
+                        decoration: BoxDecoration(
+                          color: isLight ? Colors.white : const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                            width: 1.0,
+                          ),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
+                          leading: Container(
+                            height: 38,
+                            width: 38,
+                            decoration: BoxDecoration(
+                              color: u['color'].withOpacity(0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(u['icon'], color: u['color'], size: 16),
+                          ),
+                          title: Text(
+                            widget.languageCode == 'en' ? u['enTitle'] : u['amTitle'],
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w900,
+                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Grade ${u['grade']} • ${u['subject']}',
+                            style: TextStyle(
+                              fontSize: 11.0,
+                              fontWeight: FontWeight.w600,
+                              color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios_rounded, color: u['color'], size: 12),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (ctx) => UnitSelectionScreen(
+                                  grade: u['grade'],
+                                  subjectId: u['subject'],
+                                  enTitle: u['subject'],
+                                  amTitle: u['subject'],
+                                  color: u['color'],
+                                  icon: Icon(u['icon'], color: Colors.white, size: 24),
+                                  isDarkMode: widget.isDarkMode,
+                                  languageCode: widget.languageCode,
+                                  onToggleTheme: widget.onToggleTheme,
+                                  onToggleLanguage: widget.onToggleLanguage,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
           
@@ -1109,122 +1256,285 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildGradeCard({
-    required String title,
-    required String subtitle,
-    required Widget illustration,
-    required Color btnColor,
-    required bool isLight,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          // Pure Colors.white background for light mode
-          color: isLight ? Colors.white : const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(
-            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 20.0,
-              offset: const Offset(0, 10),
-              spreadRadius: 1.0,
-            )
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(16.0, 18.0, 16.0, 14.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Section containing header and illustration directly on the cream canvas
-            Expanded(
-              child: Row(
+  List<Map<String, dynamic>> _getHubUnits() {
+    return [
+      {
+        'grade': 12,
+        'subject': 'Mathematics',
+        'enTitle': 'Unit 1: Sequences and Series',
+        'amTitle': 'ክፍል 1: ስለ ቅደም ተከተሎች እና ተከታታዮች',
+        'color': const Color(0xFF0084FF),
+        'icon': Icons.calculate_rounded,
+      },
+      {
+        'grade': 11,
+        'subject': 'Biology',
+        'enTitle': 'Unit 2: Cellular Macromolecules',
+        'amTitle': 'ክፍል 2: ሴሉላር ማክሮሞለኪውሎች',
+        'color': const Color(0xFF10B981),
+        'icon': Icons.biotech_rounded,
+      },
+      {
+        'grade': 12,
+        'subject': 'Physics',
+        'enTitle': 'Unit 3: Electromagnetism',
+        'amTitle': 'ክፍል 3: ኤሌክትሮማግኔቲዝም',
+        'color': const Color(0xFFF59E0B),
+        'icon': Icons.bolt_rounded,
+      },
+    ];
+  }
+}
+
+class _InteractiveGradeCard extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final Widget illustration;
+  final Color btnColor;
+  final bool isLight;
+  final VoidCallback onTap;
+  final String statusText;
+
+  const _InteractiveGradeCard({
+    required this.title,
+    required this.subtitle,
+    required this.illustration,
+    required this.btnColor,
+    required this.isLight,
+    required this.onTap,
+    required this.statusText,
+  });
+
+  @override
+  State<_InteractiveGradeCard> createState() => _InteractiveGradeCardState();
+}
+
+class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with SingleTickerProviderStateMixin {
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+  double _scale = 1.0;
+  late AnimationController _levitateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _levitateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _levitateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _levitateController,
+      builder: (context, child) {
+        final double pulse = _levitateController.value;
+        final double floatOffsetY = (pulse - 0.5) * 4.0;
+        final double autoTilt = (pulse - 0.5) * 0.012;
+
+        return Listener(
+          onPointerDown: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _scale = 0.94;
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerMove: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerUp: (event) {
+            setState(() {
+              _scale = 1.0;
+              _tiltX = 0.0;
+              _tiltY = 0.0;
+            });
+          },
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0012)
+                ..translate(0.0, floatOffsetY)
+                ..scale(_scale)
+                ..rotateX(_tiltX)
+                ..rotateY(_tiltY + autoTilt),
+              transformAlignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: widget.isLight
+                      ? [
+                          Colors.white,
+                          Color.alphaBlend(widget.btnColor.withOpacity(0.05), Colors.white),
+                        ]
+                      : [
+                          const Color(0xFF1E293B),
+                          Color.alphaBlend(widget.btnColor.withOpacity(0.08), const Color(0xFF0F172A)),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: widget.btnColor.withOpacity(widget.isLight ? 0.35 : 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.btnColor.withOpacity(widget.isLight ? 0.12 : 0.28),
+                    blurRadius: 20.0,
+                    offset: const Offset(0, 8),
+                    spreadRadius: -2,
+                  )
+                ],
+              ),
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 19.5,
-                            fontWeight: FontWeight.w900,
-                            color: isLight ? const Color(0xFF0F2537) : Colors.white,
-                            letterSpacing: -0.4,
+                  // Upper Content: Title, metrics badge and custom vector graphic
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: widget.btnColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: widget.btnColor.withOpacity(0.25),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        child: Text(
+                          widget.statusText,
                           style: TextStyle(
-                            fontSize: 12.0,
-                            height: 1.2,
-                            fontWeight: FontWeight.w600,
-                            color: isLight ? const Color(0xFF718096) : const Color(0xFFA0AEC0),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: widget.btnColor,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      // The cute vector illustration floating on the right
+                      SizedBox(
+                        height: 38,
+                        width: 38,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: widget.illustration,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12.0),
+
+                  // Core grade text in bold (in hold!)
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 21.0,
+                      fontWeight: FontWeight.w950, // Bold grade text in hold!
+                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4.0),
+
+                  // Elegant descriptive subtitle
+                  Expanded(
+                    child: Text(
+                      widget.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12.0),
+
+                  // High-fidelity active Start button matching grade colour
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.btnColor,
+                          widget.btnColor.withBlue((widget.btnColor.blue + 25).clamp(0, 255)),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.btnColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.insights_rounded,
+                          color: Colors.white,
+                          size: 14.0,
+                        ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          "EXPLORE PORTAL",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  SizedBox(
-                    height: 44,
-                    width: 44,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: illustration,
-                    ),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 10.0),
-            // Premium Start Course floating button matching design and screenshot perfectly!
-            Container(
-              width: double.infinity,
-              height: 44,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF2D3748),
-                borderRadius: BorderRadius.circular(20.0), // Rounded rectangular format matching screen with radius 20!
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF4A5568),
-                  width: 1.2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: Text(
-                _local('start_course_btn'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isLight ? const Color(0xFF4C6B94) : Colors.white,
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
+}
 
   // --- Beautiful Custom stacked vector illustrations matching image ---
   Widget _buildScrollIllustration() {
