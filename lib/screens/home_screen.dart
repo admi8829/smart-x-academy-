@@ -9,6 +9,7 @@ import '../services/auth_service.dart';
 import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
+import 'dynamic_quiz_screen.dart';
 import '../services/offline_manager.dart';
 import '../main.dart';
 
@@ -538,6 +539,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 physics: const BouncingScrollPhysics(),
                 children: [
+                  _buildDrawerTile(
+                    icon: Icons.cloud_download_rounded,
+                    title: widget.languageCode == 'en' ? 'Supabase Quiz Simulator' : 'ሱፓቤስ ፈተና መለማመጃ',
+                    isSelected: false,
+                    isLight: isLight,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (ctx) => DynamicQuizScreen(
+                            isDarkMode: widget.isDarkMode,
+                            languageCode: widget.languageCode,
+                            onToggleTheme: widget.onToggleTheme,
+                            onToggleLanguage: widget.onToggleLanguage,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   _buildDrawerTile(
                     icon: Icons.notifications_none_rounded,
                     title: widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች',
