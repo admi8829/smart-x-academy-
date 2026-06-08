@@ -1141,7 +1141,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             widget.languageCode == 'en' ? "Syllabus Unit Hub" : "የክፍል አጠቃላይ ማዕከል",
                             style: TextStyle(
                               fontSize: 16.0,
-                              fontWeight: FontWeight.w950,
+                              fontWeight: FontWeight.w900,
                               color: isLight ? const Color(0xFF0F172A) : Colors.white,
                               letterSpacing: -0.3,
                             ),
@@ -1284,257 +1284,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     ];
   }
-}
-
-class _InteractiveGradeCard extends StatefulWidget {
-  final String title;
-  final String subtitle;
-  final Widget illustration;
-  final Color btnColor;
-  final bool isLight;
-  final VoidCallback onTap;
-  final String statusText;
-
-  const _InteractiveGradeCard({
-    required this.title,
-    required this.subtitle,
-    required this.illustration,
-    required this.btnColor,
-    required this.isLight,
-    required this.onTap,
-    required this.statusText,
-  });
-
-  @override
-  State<_InteractiveGradeCard> createState() => _InteractiveGradeCardState();
-}
-
-class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with SingleTickerProviderStateMixin {
-  double _tiltX = 0.0;
-  double _tiltY = 0.0;
-  double _scale = 1.0;
-  late AnimationController _levitateController;
-
-  @override
-  void initState() {
-    super.initState();
-    _levitateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _levitateController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _levitateController,
-      builder: (context, child) {
-        final double pulse = _levitateController.value;
-        final double floatOffsetY = (pulse - 0.5) * 4.0;
-        final double autoTilt = (pulse - 0.5) * 0.012;
-
-        return Listener(
-          onPointerDown: (event) {
-            final RenderBox? box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final Offset localPos = box.globalToLocal(event.position);
-            final double midX = box.size.width / 2;
-            final double midY = box.size.height / 2;
-            setState(() {
-              _scale = 0.94;
-              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
-              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
-            });
-          },
-          onPointerMove: (event) {
-            final RenderBox? box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final Offset localPos = box.globalToLocal(event.position);
-            final double midX = box.size.width / 2;
-            final double midY = box.size.height / 2;
-            setState(() {
-              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
-              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
-            });
-          },
-          onPointerUp: (event) {
-            setState(() {
-              _scale = 1.0;
-              _tiltX = 0.0;
-              _tiltY = 0.0;
-            });
-          },
-          child: GestureDetector(
-            onTap: widget.onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0012)
-                ..translate(0.0, floatOffsetY)
-                ..scale(_scale)
-                ..rotateX(_tiltX)
-                ..rotateY(_tiltY + autoTilt),
-              transformAlignment: Alignment.center,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: widget.isLight
-                      ? [
-                          Colors.white,
-                          Color.alphaBlend(widget.btnColor.withOpacity(0.05), Colors.white),
-                        ]
-                      : [
-                          const Color(0xFF1E293B),
-                          Color.alphaBlend(widget.btnColor.withOpacity(0.08), const Color(0xFF0F172A)),
-                        ],
-                ),
-                borderRadius: BorderRadius.circular(24.0),
-                border: Border.all(
-                  color: widget.btnColor.withOpacity(widget.isLight ? 0.35 : 0.5),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.btnColor.withOpacity(widget.isLight ? 0.12 : 0.28),
-                    blurRadius: 20.0,
-                    offset: const Offset(0, 8),
-                    spreadRadius: -2,
-                  )
-                ],
-              ),
-              padding: const EdgeInsets.all(14.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Upper Content: Title, metrics badge and custom vector graphic
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: widget.btnColor.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: widget.btnColor.withOpacity(0.25),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          widget.statusText,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            color: widget.btnColor,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                      // The cute vector illustration floating on the right
-                      SizedBox(
-                        height: 38,
-                        width: 38,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: widget.illustration,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 12.0),
-
-                  // Core grade text in bold (in hold!)
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 21.0,
-                      fontWeight: FontWeight.w950, // Bold grade text in hold!
-                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4.0),
-
-                  // Elegant descriptive subtitle
-                  Expanded(
-                    child: Text(
-                      widget.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                        height: 1.25,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12.0),
-
-                  // High-fidelity active Start button matching grade colour
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.btnColor,
-                          widget.btnColor.withBlue((widget.btnColor.blue + 25).clamp(0, 255)),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.btnColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.insights_rounded,
-                          color: Colors.white,
-                          size: 14.0,
-                        ),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          "EXPLORE PORTAL",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
 
   // --- Beautiful Custom stacked vector illustrations matching image ---
   Widget _buildScrollIllustration() {
@@ -5936,6 +5685,258 @@ class GradeCoursesPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+
+class _InteractiveGradeCard extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final Widget illustration;
+  final Color btnColor;
+  final bool isLight;
+  final VoidCallback onTap;
+  final String statusText;
+
+  const _InteractiveGradeCard({
+    required this.title,
+    required this.subtitle,
+    required this.illustration,
+    required this.btnColor,
+    required this.isLight,
+    required this.onTap,
+    required this.statusText,
+  });
+
+  @override
+  State<_InteractiveGradeCard> createState() => _InteractiveGradeCardState();
+}
+
+class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with SingleTickerProviderStateMixin {
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+  double _scale = 1.0;
+  late AnimationController _levitateController;
+
+  @override
+  void initState() {
+    super.initState();
+    _levitateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _levitateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _levitateController,
+      builder: (context, child) {
+        final double pulse = _levitateController.value;
+        final double floatOffsetY = (pulse - 0.5) * 4.0;
+        final double autoTilt = (pulse - 0.5) * 0.012;
+
+        return Listener(
+          onPointerDown: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _scale = 0.94;
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerMove: (event) {
+            final RenderBox? box = context.findRenderObject() as RenderBox?;
+            if (box == null) return;
+            final Offset localPos = box.globalToLocal(event.position);
+            final double midX = box.size.width / 2;
+            final double midY = box.size.height / 2;
+            setState(() {
+              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
+              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
+            });
+          },
+          onPointerUp: (event) {
+            setState(() {
+              _scale = 1.0;
+              _tiltX = 0.0;
+              _tiltY = 0.0;
+            });
+          },
+          child: GestureDetector(
+            onTap: widget.onTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0012)
+                ..translate(0.0, floatOffsetY)
+                ..scale(_scale)
+                ..rotateX(_tiltX)
+                ..rotateY(_tiltY + autoTilt),
+              transformAlignment: Alignment.center,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: widget.isLight
+                      ? [
+                          Colors.white,
+                          Color.alphaBlend(widget.btnColor.withOpacity(0.05), Colors.white),
+                        ]
+                      : [
+                          const Color(0xFF1E293B),
+                          Color.alphaBlend(widget.btnColor.withOpacity(0.08), const Color(0xFF0F172A)),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(24.0),
+                border: Border.all(
+                  color: widget.btnColor.withOpacity(widget.isLight ? 0.35 : 0.5),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.btnColor.withOpacity(widget.isLight ? 0.12 : 0.28),
+                    blurRadius: 20.0,
+                    offset: const Offset(0, 8),
+                    spreadRadius: -2,
+                  )
+                ],
+              ),
+              padding: const EdgeInsets.all(14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Upper Content: Title, metrics badge and custom vector graphic
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: widget.btnColor.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: widget.btnColor.withOpacity(0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          widget.statusText,
+                          style: TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                            color: widget.btnColor,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      // The cute vector illustration floating on the right
+                      SizedBox(
+                        height: 38,
+                        width: 38,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: widget.illustration,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12.0),
+
+                  // Core grade text in bold (in hold!)
+                  Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 21.0,
+                      fontWeight: FontWeight.w900, // Bold grade text in hold!
+                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4.0),
+
+                  // Elegant descriptive subtitle
+                  Expanded(
+                    child: Text(
+                      widget.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12.0),
+
+                  // High-fidelity active Start button matching grade colour
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          widget.btnColor,
+                          widget.btnColor.withBlue((widget.btnColor.blue + 25).clamp(0, 255)),
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.btnColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        )
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.insights_rounded,
+                          color: Colors.white,
+                          size: 14.0,
+                        ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          "EXPLORE PORTAL",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
