@@ -728,7 +728,7 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
                               ),
                             ),
                           ),
-                        ];
+                        );
                       }),
                     ],
                   ),
