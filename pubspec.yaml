@@ -15,11 +15,12 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.0
 
-  # Video playback placeholder
+  # Videos and local storage
   youtube_player_flutter: ^9.0.1
-
-  # Local persistence for settings (Theme, Language, Grade)
   shared_preferences: ^2.2.3
+
+  # Supabase Integration
+  supabase_flutter: ^2.6.0
 
   # Monitization and google ads
   google_mobile_ads: ^7.0.0

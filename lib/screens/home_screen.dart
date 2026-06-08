@@ -4176,36 +4176,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildProfileScreen(bool isLight) {
-    final bool isDark = !isLight;
-    final Color navyColor = const Color(0xFF0D2353);
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      child: Form(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
-          margin: const EdgeInsets.only(bottom: 24),
-          decoration: BoxDecoration(
-            color: isLight ? Colors.white.withOpacity(0.92) : const Color(0xFF1E293B).withOpacity(0.95),
-            borderRadius: BorderRadius.circular(32),
-            border: Border.all(
-              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: _isLoginForm
-              ? _buildLoginForm(isLight, isDark, navyColor)
-              : _buildRegisterForm(isLight, isDark, navyColor),
-        ),
-      ),
+    return RegisterScreen(
+      isDarkMode: !isLight,
+      languageCode: widget.languageCode,
+      onToggleTheme: widget.onToggleTheme,
+      onToggleLanguage: widget.onToggleLanguage,
+      embedInTab: true,
     );
   }
 

@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash_screen.dart';
 import 'services/push_notification_service.dart';
 
 void main() async {
   // Ensure widget bindings are safely initialized before calling native platforms/plugins
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Supabase
+  try {
+    await Supabase.initialize(
+      url: 'https://rdaaqdezaeoyfmuresfa.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkYWFxZGV6YWVveWZtdXJlc2ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NjY4NzUsImV4cCI6MjA5NjQ0Mjg3NX0.5XjuJCWrax50wKPGYeCEUTDCq0nF9-QiZ4eIN_BD-pk',
+    );
+  } catch (e) {
+    debugPrint("Failed to initialize Supabase: $e");
+  }
   
   // Initialize Push Notifications via Firebase
   await PushNotificationService.initialize();
