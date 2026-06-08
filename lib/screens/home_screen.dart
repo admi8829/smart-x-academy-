@@ -1141,7 +1141,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             widget.languageCode == 'en' ? "Syllabus Unit Hub" : "የክፍል አጠቃላይ ማዕከል",
                             style: TextStyle(
                               fontSize: 16.0,
-                              fontWeight: FontWeight.w950,
+                              fontWeight: FontWeight.w900,
                               color: isLight ? const Color(0xFF0F172A) : Colors.white,
                               letterSpacing: -0.3,
                             ),
@@ -1458,7 +1458,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                     widget.title,
                     style: TextStyle(
                       fontSize: 21.0,
-                      fontWeight: FontWeight.w950, // Bold grade text in hold!
+                      fontWeight: FontWeight.w900, // Bold grade text in hold!
                       color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
                       letterSpacing: -0.5,
                     ),
