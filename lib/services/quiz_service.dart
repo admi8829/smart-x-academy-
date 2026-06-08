@@ -15,23 +15,20 @@ class QuizService {
     int? unit,
   }) async {
     try {
-      var query = _supabase.from('questions').select();
-
-      // Filter by grade
-      query = query.eq('grade', grade);
-
-      // Filter by subject if specified (using ilike for case-insensitive matches)
-      if (subject != null && subject.trim().isNotEmpty) {
-        query = query.ilike('subject', subject.trim());
+      // Build dynamic section_id: "grade_${grade}_${subject.toLowerCase().substring(0, 4)}_${unit}"
+      String subPrefix = (subject ?? "physics").toLowerCase().trim();
+      if (subPrefix.length > 4) {
+        subPrefix = subPrefix.substring(0, 4);
       }
+      final String sectionId = "grade_${grade}_${subPrefix}_${unit ?? 1}";
 
-      // Filter by unit if specified
-      if (unit != null) {
-        query = query.eq('unit', unit);
-      }
+      debugPrint("QuizService: Fetching questions with section_id = $sectionId");
 
-      // Order by ID or random
-      final response = await query.order('id', ascending: true);
+      final response = await _supabase
+          .from('questions')
+          .select()
+          .eq('section_id', sectionId)
+          .order('id', ascending: true);
       
       final List<dynamic> data = response as List<dynamic>;
       return data.map((json) => QuestionModel.fromJson(json)).toList();
