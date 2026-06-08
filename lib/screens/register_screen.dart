@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -26,34 +26,31 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
 
-  // Text Controllers matching Supabase Passwordless specs
+  // Text Editing Controllers for Email & Password Sign-Up / Log-In
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _schoolNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  // OTP Verification view state
-  final _otpController = TextEditingController();
-  final _otpFocusNode = FocusNode();
-
-  // State flags for transitions & loading
-  bool _isLoginForm = false; // default to Create Account screen
-  bool _isOtpSent = false;   // true transitions to OTP visual boxes view
-  int _selectedGrade = 12;   // default chosen grade
+  // Authentication & toggle states
+  bool _isLoginForm = false; // defaults to Create Account screen
+  int _selectedGrade = 12;   // default chosen grade level
   bool _isLoading = false;   // loading states during async calls
   String? _errorMessage;     // dynamic inline error validation tracker
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
-    _schoolNameController.dispose();
-    _otpController.dispose();
-    _otpFocusNode.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  // Multi-language localizations matching original specs & theme mood
+  // Multi-language localizations matching original design language & themes
   String _local(String key) {
     final translations = {
       'en': {
@@ -63,11 +60,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'subtitle_login': 'Log in to continue your learning journey',
         'field_fullname': 'Full Name',
         'field_email': 'Email Address',
+        'field_phone': 'Phone Number',
+        'field_password': 'Password',
         'field_grade': 'Grade Level',
-        'field_school': 'School Name',
-        'btn_register': 'Register & Send Code',
-        'btn_login': 'Send Verification Code',
-        'success_otp_sent': 'Verification code sent successfully!',
+        'btn_register': 'Create Account',
+        'btn_login': 'Log In',
         'already_have_account': 'Already have an account? ',
         'dont_have_account': "Don't have an account? ",
         'terms_text': 'By registering, you agree to our ',
@@ -79,11 +76,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'subtitle_login': 'የትምህርት ጉዞዎን ለመቀጠል ይግቡ',
         'field_fullname': 'ሙሉ ስም',
         'field_email': 'የኢሜል አድራሻ',
+        'field_phone': 'ስልክ ቁጥር',
+        'field_password': 'የይለፍ ቃል',
         'field_grade': 'የክፍል ደረጃ',
-        'field_school': 'የተማሪ ቤት ስም',
-        'btn_register': 'ተመዝገብ እና ኮድ ላክ',
-        'btn_login': 'የማረጋገጫ ኮድ ላክ',
-        'success_otp_sent': 'የማረጋገጫ ኮድ በተሳካ ሁኔታ ተልኳል!',
+        'btn_register': 'መለያ ፍጠር',
+        'btn_login': 'ይግቡ',
         'already_have_account': 'ቀድሞ መለያ አለዎት? ',
         'dont_have_account': "መለያ የለዎትም? ",
         'terms_text': 'በመመዝገብዎ፣ በሚከተሉት ደንቦች ይስማማሉ ',
@@ -93,15 +90,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return translations[widget.languageCode]?[key] ?? translations['en']![key]!;
   }
 
-  // Clear focus, errors, and OTP inputs
+  // Clear inputs & errors on mode flip
   void _resetInputStates() {
     setState(() {
-      _otpController.clear();
       _errorMessage = null;
+      _passwordController.clear();
     });
   }
 
-  // Custom Floating SnackBar for user notification & debugging feedback
+  // Floating customizable SnackBar helper
   void _showFloatingSnackBar(String text, {bool isError = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -132,231 +129,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Saves credentials to SharedPreferences to synchronize with legacy screens
-  Future<void> _saveLocalSession({
-    required String fullName,
-    required String email,
-    required String phone,
-    required String schoolName,
-    required String grade,
-    required String sex,
-    required int age,
-    required bool isPremium,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_fullName', fullName);
-    await prefs.setString('user_email', email);
-    await prefs.setString('user_phoneNumber', phone);
-    await prefs.setString('user_schoolName', schoolName);
-    await prefs.setString('user_grade', grade);
-    await prefs.setString('user_sex', sex);
-    await prefs.setInt('user_age', age);
-    await prefs.setBool('user_isPremium', isPremium);
-    await prefs.setBool('is_authenticated', true);
-  }
-
-  // Handles sending OTP code (via Supabase Passwordless signInWithOtp)
-  Future<void> _handleSendOtpCode() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  // Execute Supabase Registration with direct verification free flow
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-
-    final email = _emailController.text.trim();
-    final fullName = _fullNameController.text.trim();
-    final schoolName = _schoolNameController.text.trim();
 
     try {
-      // Trigger Supabase Passwordless Authentication
-      await Supabase.instance.client.auth.signInWithOtp(
-        email: email,
-        shouldCreateUser: !_isLoginForm,
-        data: _isLoginForm ? null : {
-          'full_name': fullName,
-          'grade_level': 'Grade $_selectedGrade',
-          'school_name': schoolName,
-        },
-      );
+      final String fullName = _fullNameController.text.trim();
+      final String email = _emailController.text.trim();
+      final String phone = _phoneController.text.trim();
+      final String password = _passwordController.text;
 
-      setState(() {
-        _isOtpSent = true;
-        _isLoading = false;
-      });
-
-      _showFloatingSnackBar(_local('success_otp_sent'), isError: false);
-      
-      // Auto-focus OTP visual field overlay
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _otpFocusNode.requestFocus();
-      });
-
-    } catch (e) {
-      debugPrint("Supabase OTP send exception: $e");
-      
-      String displayError = "An error occurred. Check your email or connection and try again.";
-      if (e.toString().contains("network") || e.toString().contains("SocketException")) {
-        displayError = "Connection problem. Please connect to the internet and try again.";
-      } else if (e.toString().contains("Database") || e.toString().contains("anon")) {
-        displayError = "Supabase credential configuration or database offline fallback.";
-      } else {
-        displayError = e.toString().replaceAll("AuthException: ", "");
-      }
-
-      setState(() {
-        _isLoading = false;
-        _errorMessage = displayError;
-      });
-
-      // Show floating snackbar as requested
-      _showFloatingSnackBar(displayError, isError: true);
-
-      // Offer fallback experience in sandbox previewer so they can test verification boxes offline!
-      _showSandboxFallbackDialog();
-    }
-  }
-
-  // Visual helper dialogue to let developers or users test the visual OTP boxes in offline/sandbox mode
-  void _showSandboxFallbackDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
-              Icon(Icons.terminal_rounded, color: Color(0xFF1E88E5)),
-              SizedBox(width: 8),
-              Text("Sandbox Mock Bypass", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ],
-          ),
-          content: const Text(
-            "Supabase database might be offline or requiring live internet configuration. "
-            "Would you like to simulate OTP transition to test the beautiful 6-digit layout and animations?",
-            style: TextStyle(fontSize: 13.5, height: 1.5),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  _isOtpSent = true;
-                  _isLoading = false;
-                  _errorMessage = "Sandbox mock activated. Enter code '123456' or '999999' to instantly login.";
-                });
-                Future.delayed(const Duration(milliseconds: 300), () {
-                  _otpFocusNode.requestFocus();
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0D2353),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text("Test Visual Boxes", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Verification process (verifyOTP or local mockup code for instant rating/clicks)
-  Future<void> _handleVerifyOtp() async {
-    final otpCode = _otpController.text.trim();
-    if (otpCode.length < 6) {
-      setState(() {
-        _errorMessage = "Please enter the full 6-digit verification code.";
-      });
-      _showFloatingSnackBar("Please enter the full 6-digit verification code.", isError: true);
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final email = _emailController.text.trim();
-    final fullName = _fullNameController.text.isEmpty ? "Abebe Bekele" : _fullNameController.text.trim();
-    final schoolName = _schoolNameController.text.isEmpty ? "Yeka Secondary School" : _schoolNameController.text.trim();
-
-    // 1. Check for quick sandbox simulator code (e.g. 123456 or 999999) to make demo flows reliable
-    if (otpCode == "123456" || otpCode == "999999" || email.contains("@test.com") || email.contains("@example.com")) {
-      await Future.delayed(const Duration(milliseconds: 1000));
-      await _saveLocalSession(
+      // Register with Supabase and write profile data
+      await _authService.signUpStudent(
         fullName: fullName,
-        email: email.isEmpty ? "student@smartx.com" : email,
-        phone: "+251 911 234 567",
-        schoolName: schoolName,
-        grade: 'Grade $_selectedGrade',
-        sex: "Male",
-        age: 17,
-        isPremium: true,
+        email: email,
+        phoneNumber: phone,
+        grade: _selectedGrade,
+        password: password,
       );
 
       setState(() {
         _isLoading = false;
       });
 
-      _showFloatingSnackBar("Demo Session Verified! Welcome back, $fullName!", isError: false);
-      _navigateToHome();
-      return;
-    }
-
-    // 2. Real Supabase execution with secure verification try-catch
-    try {
-      final response = await Supabase.instance.client.auth.verifyOTP(
-        type: OtpType.email,
-        token: otpCode,
-        email: email,
-      );
-
-      final user = response.user;
-      final resolvedFullName = user?.userMetadata?['full_name'] ?? fullName;
-      final resolvedSchool = user?.userMetadata?['school_name'] ?? schoolName;
-      final resolvedGrade = user?.userMetadata?['grade_level'] ?? 'Grade $_selectedGrade';
-
-      await _saveLocalSession(
-        fullName: resolvedFullName,
-        email: email,
-        phone: "+251 911 234 567",
-        schoolName: resolvedSchool,
-        grade: resolvedGrade,
-        sex: "Male",
-        age: 17,
-        isPremium: true,
-      );
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      _showFloatingSnackBar("Successfully authenticated! Welcome to Smart X!", isError: false);
+      _showFloatingSnackBar("Account created successfully! Welcome to Smart X!", isError: false);
       _navigateToHome();
 
     } catch (e) {
-      debugPrint("Supabase OTP VerifyException: $e");
-      String displayError = "Invalid verification code. Please request a new one or verify the inputs.";
-      if (e.toString().contains("network") || e.toString().contains("SocketException")) {
-        displayError = "Connection problem. Please connect to the internet and try again.";
+      debugPrint("Registration error: $e");
+      String errMsg = "An error occurred during registration. Please try again.";
+      if (e.toString().contains("already registered") || e.toString().contains("User already exists")) {
+        errMsg = "This email is already registered. Please login instead.";
+      } else if (e.toString().contains("network") || e.toString().contains("SocketException")) {
+        errMsg = "Connection issue. Please check your internet connection.";
       } else {
-        displayError = e.toString().replaceAll("AuthException: ", "");
+        errMsg = e.toString().replaceAll("Exception: ", "").replaceAll("AuthException: ", "");
       }
 
       setState(() {
         _isLoading = false;
-        _errorMessage = displayError;
+        _errorMessage = errMsg;
+      });
+      _showFloatingSnackBar(errMsg, isError: true);
+    }
+  }
+
+  // Execute Supabase Password Log In
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final String email = _emailController.text.trim();
+      final String password = _passwordController.text;
+
+      // Authenticate with Supabase Auth
+      await _authService.loginStudent(
+        email: email,
+        password: password,
+      );
+
+      setState(() {
+        _isLoading = false;
       });
 
-      _showFloatingSnackBar(displayError, isError: true);
+      _showFloatingSnackBar("Logged in successfully! Welcome back!", isError: false);
+      _navigateToHome();
+
+    } catch (e) {
+      debugPrint("Login error: $e");
+      String errMsg = "Invalid email or password. Please try again.";
+      if (e.toString().contains("Invalid login credentials")) {
+        errMsg = "Invalid email or password. Please check your credentials.";
+      } else if (e.toString().contains("network") || e.toString().contains("SocketException")) {
+        errMsg = "Network error. Please connect to the internet.";
+      } else {
+        errMsg = e.toString().replaceAll("Exception: ", "").replaceAll("AuthException: ", "");
+      }
+
+      setState(() {
+        _isLoading = false;
+        _errorMessage = errMsg;
+      });
+      _showFloatingSnackBar(errMsg, isError: true);
     }
   }
 
@@ -374,10 +238,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Styled helper for input headers
+  // UI input container styles
   Widget _buildLabel(String text, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(left: 2.0, bottom: 6.0, top: 10.0),
+      padding: const EdgeInsets.only(left: 2.0, bottom: 6.0, top: 12.0),
       child: Text(
         text,
         style: TextStyle(
@@ -389,7 +253,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Consistent card wrapper with subtle layout shadows matching screenshot mockup card
   Widget _buildFieldContainer({required Widget child, required bool isDark}) {
     return Container(
       height: 52,
@@ -407,14 +270,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             blurRadius: 8,
             offset: const Offset(0, 3),
           ),
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
         ],
       ),
-      child: child,
+      child: Center(child: child),
     );
   }
 
@@ -442,10 +300,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 350),
-                  child: _isOtpSent ? _buildOtpView(isDark, navyColor) : _buildFormView(isDark, navyColor),
-                ),
+                child: _buildFormView(isDark, navyColor),
               ),
             ),
             if (!widget.embedInTab)
@@ -467,22 +322,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         scrolledUnderElevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : navyColor, size: 24),
-          onPressed: () {
-            if (_isOtpSent) {
-              setState(() {
-                _isOtpSent = false;
-                _errorMessage = null;
-              });
-            } else {
-              Navigator.of(context).pop();
-            }
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
         title: Text(
-          _isOtpSent 
-            ? (_local('field_grade') == 'የክፍል ደረጃ' ? 'ኮድ ማረጋገጫ' : 'Verification')
-            : (_isLoginForm ? _local('title_login') : _local('title')),
+          _isLoginForm ? _local('title_login') : _local('title'),
           style: TextStyle(
             fontSize: 19.0,
             fontWeight: FontWeight.w900,
@@ -490,45 +334,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
         actions: [
-          // AppBar right action button to toggle mode
-          if (!_isOtpSent)
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isLoginForm = !_isLoginForm;
-                  _resetInputStates();
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1F2937) : const Color(0xFFECEFF1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  _isLoginForm ? 'Register' : 'Log In',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12.0,
-                  ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isLoginForm = !_isLoginForm;
+                _resetInputStates();
+              });
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1F2937) : const Color(0xFFECEFF1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                _isLoginForm ? 'Register' : 'Log In',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12.0,
                 ),
               ),
-            )
+            ),
+          )
         ],
       ),
       body: mainBody,
     );
   }
 
-  // Email submission view (Login / Register view depending on toggled type)
+  // Form Field layout
   Widget _buildFormView(bool isDark, Color navyColor) {
     return Form(
       key: _formKey,
       child: Container(
-        key: const ValueKey("AuthFormView"),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -544,17 +385,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              blurRadius: 28,
-              offset: const Offset(0, 14),
-            ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Head icon matching original layout design mocks
+            // Centered Header Branding
             Center(
               child: Column(
                 children: [
@@ -601,14 +437,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Form inputs depending on layout login/register requirements
+            // 1. Full Name input (sign-up only)
             if (!_isLoginForm) ...[
-              // Full Name label & text field
               _buildLabel(_local('field_fullname'), isDark),
               _buildFieldContainer(
                 isDark: isDark,
                 child: TextFormField(
                   controller: _fullNameController,
+                  textCapitalization: TextCapitalization.words,
                   style: TextStyle(
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 14.5,
@@ -632,10 +468,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 6),
             ],
 
-            // Email Address label & text field (Present on BOTH login & register)
+            // 2. Email Address input (both login and register)
             _buildLabel(_local('field_email'), isDark),
             _buildFieldContainer(
               isDark: isDark,
@@ -661,7 +496,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (val == null || val.trim().isEmpty) {
                     return 'Email Address is required';
                   }
-                  final bool emailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(val.trim());
+                  final bool emailValid = RegExp(
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+"
+                  ).hasMatch(val.trim());
                   if (!emailValid) {
                     return 'Enter a valid email address';
                   }
@@ -669,71 +506,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
             ),
-            const SizedBox(height: 6),
 
+            // 3. Phone Number input (sign-up only)
             if (!_isLoginForm) ...[
-              // Dynamic Grade level chips list as requested: "using an optimized selection method like Radio Buttons or Filter Chips for Grades 9, 10, 11, 12"
-              _buildLabel(_local('field_grade'), isDark),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [9, 10, 11, 12].map((gradeNum) {
-                  bool isSelected = _selectedGrade == gradeNum;
-                  return Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedGrade = gradeNum;
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF1E88E5).withOpacity(0.12)
-                              : (isDark ? const Color(0xFF1E293B) : Colors.white),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF1E88E5)
-                                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                            width: isSelected ? 2.2 : 1.2,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF1E88E5).withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ]
-                              : [],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Grade $gradeNum',
-                          style: TextStyle(
-                            color: isSelected
-                                ? const Color(0xFF1E88E5)
-                                : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A)),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 6),
-
-              // School Name field
-              _buildLabel(_local('field_school'), isDark),
+              _buildLabel(_local('field_phone'), isDark),
               _buildFieldContainer(
                 isDark: isDark,
                 child: TextFormField(
-                  controller: _schoolNameController,
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
                   style: TextStyle(
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                     fontSize: 14.5,
@@ -741,26 +522,109 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    hintText: 'Yeka Secondary School',
+                    hintText: '0911223344',
                     hintStyle: TextStyle(color: Colors.grey[400]),
                     prefixIcon: Icon(
-                      Icons.school_outlined,
+                      Icons.phone_outlined,
                       color: isDark ? Colors.white70 : navyColor,
                       size: 20,
                     ),
                   ),
                   validator: (val) {
                     if (!_isLoginForm && (val == null || val.trim().isEmpty)) {
-                      return 'School Name is required';
+                      return 'Phone Number is required';
                     }
                     return null;
                   },
                 ),
               ),
-              const SizedBox(height: 12),
             ],
 
-            const SizedBox(height: 10),
+            // 4. DropdownButtonFormField for Grade Level (sign-up only)
+            if (!_isLoginForm) ...[
+              _buildLabel(_local('field_grade'), isDark),
+              _buildFieldContainer(
+                isDark: isDark,
+                child: DropdownButtonFormField<int>(
+                  value: _selectedGrade,
+                  dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: isDark ? Colors.white70 : navyColor),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      Icons.school_outlined,
+                      color: isDark ? Colors.white70 : navyColor,
+                      size: 20,
+                    ),
+                  ),
+                  items: [9, 10, 11, 12].map((grade) {
+                    return DropdownMenuItem<int>(
+                      value: grade,
+                      child: Text('Grade $grade'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedGrade = val;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ],
+
+            // 5. Password field (both login and register)
+            _buildLabel(_local('field_password'), isDark),
+            _buildFieldContainer(
+              isDark: isDark,
+              child: TextFormField(
+                controller: _passwordController,
+                obscureText: !_isPasswordVisible,
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '••••••••',
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  prefixIcon: Icon(
+                    Icons.lock_outline_rounded,
+                    color: isDark ? Colors.white70 : navyColor,
+                    size: 20,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                      color: isDark ? Colors.white54 : Colors.grey,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty) {
+                    return 'Password is required';
+                  }
+                  if (val.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 14),
 
             // Inline validation error container preview
             if (_errorMessage != null) ...[
@@ -791,12 +655,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 14),
             ],
 
-            // Submit Button
+            // Primary Log In or Register Authentication button
             _isLoading
                 ? const Center(
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: CircularProgressIndicator(color: Color(0xFF0D2353)),
+                      child: CircularProgressIndicator(),
                     ),
                   )
                 : Container(
@@ -817,7 +681,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                     child: TextButton(
-                      onPressed: _handleSendOtpCode,
+                      onPressed: _isLoginForm ? _handleLogin : _handleRegister,
                       style: TextButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
@@ -834,10 +698,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ),
-
             const SizedBox(height: 20),
 
-            // Footer toggles matching screenshot layouts
+            // Switch option link
             Center(
               child: GestureDetector(
                 onTap: () {
@@ -872,7 +735,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 10),
 
             // Legal Terms
@@ -907,284 +769,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // 6-digit visual OTP inputs screen layout
-  Widget _buildOtpView(bool isDark, Color navyColor) {
-    final emailAddressText = _emailController.text.trim();
-
-    return Container(
-      key: const ValueKey("AuthOtpView"),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Security lock design bubble symbol
-          Center(
-            child: Column(
-              children: [
-                Container(
-                  height: 80,
-                  width: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark ? const Color(0xFF1E293B) : Colors.green.shade50,
-                    border: Border.all(
-                      color: Colors.green.withOpacity(0.25),
-                      width: 2.2,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.mark_email_read_rounded,
-                    color: Colors.green,
-                    size: 38,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  _local('field_grade') == 'የክፍል ደረጃ' ? 'ማረጋገጫ ኮድ ያስገቡ' : 'Enter One-Time Code',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : navyColor,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    "We have sent a 6-digit confirmation key to $emailAddressText. Please verify and input it below.",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 28),
-
-          // Stack providing a beautiful, focused 6-digit layout with hidden actual keyboard-focused TextField overlay
-          Stack(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  _otpFocusNode.requestFocus();
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(6, (index) {
-                    String char = "";
-                    if (_otpController.text.length > index) {
-                      char = _otpController.text[index];
-                    }
-
-                    // highlight currently focused box
-                    bool isActive = index == _otpController.text.length && _otpFocusNode.hasFocus;
-                    bool hasValue = _otpController.text.length > index;
-
-                    return Expanded(
-                      child: Container(
-                        height: 56,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isActive
-                                ? const Color(0xFF1E88E5)
-                                : (hasValue
-                                    ? const Color(0xFF10B981)
-                                    : (isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E2))),
-                            width: isActive ? 2.5 : 1.2,
-                          ),
-                          boxShadow: isActive
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF1E88E5).withOpacity(0.15),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  )
-                                ]
-                              : [],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          char.isNotEmpty ? char : '•',
-                          style: TextStyle(
-                            color: char.isNotEmpty
-                                ? (isDark ? Colors.white : const Color(0xFF0F172A))
-                                : Colors.grey[400],
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              // Invisible overlay TextField mapping inputs right to visual containers and supporting paste/autocomplete
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.0,
-                  child: TextFormField(
-                    controller: _otpController,
-                    focusNode: _otpFocusNode,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    decoration: const InputDecoration(
-                      counterText: "",
-                      border: InputBorder.none,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                    onChanged: (val) {
-                      setState(() {
-                        _errorMessage = null; // Typing resolves previous error views
-                      });
-                      if (val.length == 6) {
-                        _handleVerifyOtp();
-                      }
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 18),
-
-          // OTP visual inline validation errors
-          if (_errorMessage != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.red[500]!.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red[500]!.withOpacity(0.25), width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline_rounded, color: Colors.red[400], size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red[400],
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Verify & Login button
-          _isLoading
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    child: CircularProgressIndicator(color: Color(0xFF0D2353)),
-                  ),
-                )
-              : Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF059669)],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.3),
-                        blurRadius: 14,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: TextButton(
-                    onPressed: _handleVerifyOtp,
-                    style: TextButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                    ),
-                    child: const Text(
-                      "Verify & Enter",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                ),
-
-          const SizedBox(height: 22),
-
-          // Inter-operating links to resend or correct typo email
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isOtpSent = false;
-                    _errorMessage = null;
-                  });
-                },
-                icon: const Icon(Icons.arrow_back, size: 16, color: Color(0xFF1E88E5)),
-                label: const Text(
-                  "Change Email",
-                  style: TextStyle(color: Color(0xFF1E88E5), fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: _isLoading ? null : _handleSendOtpCode,
-                icon: const Icon(Icons.refresh, size: 16, color: Color(0xFF1E88E5)),
-                label: const Text(
-                  "Resend Code",
-                  style: TextStyle(color: Color(0xFF1E88E5), fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Floating bottom navigation bar mirroring HomeScreen bottom nav bar to duplicate the exact screenshot mockup page visual constraints
+  // Visual Bottom Navigation Bar to mimic application layout constraints
   Widget _buildBottomNavigationBar(bool isDark, Color navyColor) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
@@ -1208,7 +793,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(38.0),
           child: BottomNavigationBar(
-            currentIndex: 4, // highlight appropriate tab based on navigation patterns
+            currentIndex: 4,
             elevation: 0,
             onTap: (index) {
               Navigator.of(context).pop();
