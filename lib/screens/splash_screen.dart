@@ -423,7 +423,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                       titleText,
                       style: TextStyle(
                         fontSize: 25,
-                        fontWeight: FontWeight.w950,
+                        fontWeight: FontWeight.w900,
                         color: titleColor,
                         letterSpacing: -0.6,
                         height: 1.15,
@@ -508,7 +508,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 term['index'],
                                 style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w950,
+                                  fontWeight: FontWeight.w900,
                                   color: iconCol,
                                 ),
                               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
@@ -894,11 +895,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     itemBuilder: (context, index) {
                       final video = _featuredVideos[index];
                       return Container(
-                        width: 220.0,
+                        width: 280.0,
                         margin: const EdgeInsets.only(right: 16.0, bottom: 8),
                         decoration: BoxDecoration(
                           color: isLight ? Colors.white : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(20.0),
+                          borderRadius: BorderRadius.circular(24.0),
                           border: Border.all(
                             color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
                             width: 1.0,
@@ -911,162 +912,102 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ),
                           ],
                         ),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(20.0),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => VideoPlayerScreen(
-                                  videoId: video['id']!,
-                                  title: video['title']!,
-                                  duration: video['duration']!,
-                                  isDarkMode: !isLight,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(23.0),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => VideoPlayerScreen(
+                                    videoId: video['id']!,
+                                    title: video['title']!,
+                                    duration: video['duration']!,
+                                    isDarkMode: !isLight,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Video Thumbnail with floating Duration tag & Play marker
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(19.0)),
-                                child: Stack(
-                                  children: [
-                                    SizedBox(
-                                      height: 80.0,
-                                      width: double.infinity,
-                                      child: Image.network(
-                                        video['thumbnail']!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, e, s) => Container(
-                                          color: const Color(0xFFCBD5E1),
-                                          child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 24),
-                                        ),
-                                      ),
+                              );
+                            },
+                            child: Stack(
+                              children: [
+                                // Thumbnail display: cover all
+                                Positioned.fill(
+                                  child: Image.network(
+                                    video['thumbnail']!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, e, s) => Container(
+                                      color: const Color(0xFF1E293B),
+                                      child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 36),
                                     ),
-                                    Positioned.fill(
-                                      child: Container(
-                                        color: Colors.black.withValues(alpha: 0.12),
-                                      ),
-                                    ),
-                                    // Play icon ring in center
-                                    Positioned.fill(
-                                      child: Align(
-                                        alignment: Alignment.center,
-                                        child: Container(
-                                          width: 26,
-                                          height: 26,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.9),
-                                            shape: BoxShape.circle,
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(0.15),
-                                                blurRadius: 4,
-                                              )
-                                            ]
-                                          ),
-                                          child: const Icon(
-                                            Icons.play_arrow_rounded,
-                                            size: 16,
-                                            color: Color(0xFF0F172A),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // Duration badge at the bottom-right corner of image matching screenshot
-                                    Positioned(
-                                      bottom: 4.0,
-                                      right: 4.0,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 2.0),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.75),
-                                          borderRadius: BorderRadius.circular(4.0),
-                                        ),
-                                        child: Text(
-                                          video['duration']!,
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 9.0,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10.0, right: 10.0, top: 8.0, bottom: 4.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      video['title']!,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w800,
-                                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                                        height: 1.2,
+                                // Gradient shading for clean reading
+                                Positioned.fill(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.0),
+                                          Colors.black.withOpacity(0.35),
+                                          Colors.black.withOpacity(0.85),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 6.0),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        // Watch pill button matching screenshot "▶ Watch"
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF0B3C5D), // Match gorgeous dark-blue pill
-                                            borderRadius: BorderRadius.circular(50.0),
+                                  ),
+                                ),
+                                // Play indicator ring in the center
+                                Positioned.fill(
+                                  child: Align(
+                                    alignment: Alignment.center,
+                                    child: Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.92),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.25),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
                                           ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(
-                                                Icons.play_arrow_rounded,
-                                                color: Colors.white,
-                                                size: 11,
-                                              ),
-                                              const SizedBox(width: 2.0),
-                                              const Text(
-                                                "Watch",
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 10.0,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Companion badge
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            "Lesson",
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                              color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
-                                            ),
-                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.play_arrow_rounded,
+                                        size: 28,
+                                        color: Color(0xFF0F172A),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // Text details overlay at the bottom left
+                                Positioned(
+                                  left: 16.0,
+                                  right: 16.0,
+                                  bottom: 16.0,
+                                  child: Text(
+                                    video['title']!,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      height: 1.25,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black80,
+                                          offset: Offset(0, 1),
+                                          blurRadius: 4,
                                         ),
                                       ],
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       );
