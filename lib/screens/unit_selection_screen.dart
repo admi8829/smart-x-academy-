@@ -1200,7 +1200,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 title,
                                 style: TextStyle(
                                   fontSize: 17.5,
-                                  fontWeight: FontWeight.w950,
+                                  fontWeight: FontWeight.w900,
                                   color: headerTextColor,
                                   letterSpacing: -0.4,
                                 ),
