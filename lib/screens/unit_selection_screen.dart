@@ -1123,265 +1123,254 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                         );
                       },
                       child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: cardBgColor,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isLight 
-                              ? const Color(0xFFE2E8F0) 
-                              : const Color(0xFF334155),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
+                        margin: const EdgeInsets.only(bottom: 18),
+                        decoration: BoxDecoration(
+                          color: cardBgColor,
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
                             color: isLight 
-                                ? Colors.black.withValues(alpha: 0.02) 
-                                : Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Stack(
-                          children: [
-                            // Accent line decor indicator on left
-                            Positioned(
-                              left: 0,
-                              top: 0,
-                              bottom: 0,
-                              width: 5,
-                              child: Container(
-                                color: widget.color.withValues(alpha: isDownloaded ? 1.0 : 0.4),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                ? const Color(0xFFEDF0F3) 
+                                : const Color(0xFF334155),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 18.0,
+                              offset: const Offset(0, 6),
+                            )
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Top Row of badges
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  // Unit designation label
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: widget.color.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          languageCode == 'en'
-                                              ? 'UNIT 0${index + 1}'
-                                              : 'ክፍል 0${index + 1}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: widget.color,
-                                          ),
-                                        ),
-                                      ),
-                                      if (isDownloaded)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const Icon(Icons.download_done_rounded, color: Color(0xFF10B981), size: 10),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                _local('downloaded').toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF10B981),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  // Unit Title
-                                  Text(
-                                    title,
-                                    style: TextStyle(
-                                      fontSize: 16.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: headerTextColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  // Unit description
-                                  Text(
-                                    desc,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      height: 1.4,
-                                      fontWeight: FontWeight.w500,
-                                      color: descColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  // Horizontal Divider line
                                   Container(
-                                    height: 1,
-                                    color: isLight 
-                                        ? const Color(0xFFE2E8F0) 
-                                        : const Color(0xFF334155),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  // Bottom Row of Custom Controls (Download + Start Practice)
-                                  Row(
-                                    children: [
-                                      // Customizable Box of Unit Download button
-                                      Expanded(
-                                        child: progress != null
-                                            ? Container(
-                                                height: 40,
-                                                alignment: Alignment.center,
-                                                decoration: BoxDecoration(
-                                                  color: widget.color.withValues(alpha: 0.05),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 14,
-                                                      height: 14,
-                                                      child: CircularProgressIndicator(
-                                                        value: progress,
-                                                        strokeWidth: 2,
-                                                        color: widget.color,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _local('downloading'),
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: widget.color,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              )
-                                            : InkWell(
-                                                onTap: () => _simulateDownload(unitId),
-                                                borderRadius: BorderRadius.circular(12),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(milliseconds: 200),
-                                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                                  alignment: Alignment.center,
-                                                  decoration: BoxDecoration(
-                                                    color: isDownloaded
-                                                        ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                                                        : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
-                                                    borderRadius: BorderRadius.circular(12),
-                                                    border: Border.all(
-                                                      color: isDownloaded
-                                                          ? const Color(0xFF10B981).withValues(alpha: 0.25)
-                                                          : Colors.transparent,
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    children: [
-                                                      Icon(
-                                                        isDownloaded 
-                                                            ? Icons.cloud_done_rounded 
-                                                            : Icons.cloud_download_outlined,
-                                                        size: 16,
-                                                        color: isDownloaded 
-                                                            ? const Color(0xFF10B981) 
-                                                            : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        isDownloaded ? _local('downloaded') : _local('download'),
-                                                        style: TextStyle(
-                                                          fontSize: 12.5,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: isDownloaded 
-                                                              ? const Color(0xFF10B981) 
-                                                              : (isLight ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: widget.color.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      languageCode == 'en'
+                                          ? 'UNIT 0${index + 1}'
+                                          : 'ክፍል 0${index + 1}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        color: widget.color,
+                                        letterSpacing: 0.5,
                                       ),
-                                      const SizedBox(width: 12),
-                                      // Start Practice / Quiz Screen Arena
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (context) => QuizScreen(
-                                                  grade: widget.grade,
-                                                  subject: widget.subjectId,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                  ),
+                                  if (isDownloaded)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withOpacity(0.12),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 12),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _local('downloaded').toUpperCase(),
+                                            style: const TextStyle(
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w900,
+                                              color: Color(0xFF10B981),
+                                              letterSpacing: 0.3,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              // Unit Title
+                              Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 17.5,
+                                  fontWeight: FontWeight.w950,
+                                  color: headerTextColor,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              // Unit description
+                              Text(
+                                desc,
+                                style: TextStyle(
+                                  fontSize: 13.0,
+                                  height: 1.45,
+                                  fontWeight: FontWeight.w600,
+                                  color: descColor,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              // Elegant slim Divider line
+                              Container(
+                                height: 1.5,
+                                color: isLight 
+                                    ? const Color(0xFFEDF0F3) 
+                                    : const Color(0xFF334155),
+                              ),
+                              const SizedBox(height: 14),
+                              // Bottom Row of Custom action Buttons
+                              Row(
+                                children: [
+                                  // Download control
+                                  Expanded(
+                                    child: progress != null
+                                        ? Container(
+                                            height: 42,
                                             alignment: Alignment.center,
                                             decoration: BoxDecoration(
-                                              color: widget.color,
-                                              borderRadius: BorderRadius.circular(12),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: widget.color.withValues(alpha: 0.25),
-                                                  blurRadius: 8,
-                                                  offset: const Offset(0, 3),
-                                                )
-                                              ],
+                                              color: widget.color.withOpacity(0.05),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: widget.color.withOpacity(0.15),
+                                                width: 1,
+                                              ),
                                             ),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
-                                                const Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  size: 16,
-                                                  color: Colors.white,
+                                                SizedBox(
+                                                  width: 14,
+                                                  height: 14,
+                                                  child: CircularProgressIndicator(
+                                                    value: progress,
+                                                    strokeWidth: 2,
+                                                    color: widget.color,
+                                                  ),
                                                 ),
-                                                const SizedBox(width: 4),
+                                                const SizedBox(width: 8),
                                                 Text(
-                                                  _local('start_quiz'),
-                                                  style: const TextStyle(
-                                                    fontSize: 12.5,
+                                                  _local('downloading'),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
+                                                    color: widget.color,
                                                   ),
                                                 ),
                                               ],
                                             ),
+                                          )
+                                        : InkWell(
+                                            onTap: () => _simulateDownload(unitId),
+                                            borderRadius: BorderRadius.circular(16),
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 200),
+                                              height: 42,
+                                              alignment: Alignment.center,
+                                              decoration: BoxDecoration(
+                                                color: isDownloaded
+                                                    ? const Color(0xFF10B981).withOpacity(0.08)
+                                                    : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: isDownloaded
+                                                      ? const Color(0xFF10B981).withOpacity(0.2)
+                                                      : Colors.transparent,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    isDownloaded 
+                                                        ? Icons.cloud_done_rounded 
+                                                        : Icons.cloud_download_outlined,
+                                                    size: 16,
+                                                    color: isDownloaded 
+                                                        ? const Color(0xFF10B981) 
+                                                        : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    isDownloaded ? _local('downloaded') : _local('download'),
+                                                    style: TextStyle(
+                                                      fontSize: 12.5,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: isDownloaded 
+                                                          ? const Color(0xFF10B981) 
+                                                          : (isLight ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Start Practice / Quiz button
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => QuizScreen(
+                                              grade: widget.grade,
+                                              subject: widget.subjectId,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Container(
+                                        height: 42,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: widget.color,
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: widget.color.withOpacity(0.2),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 3),
+                                            )
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.play_arrow_rounded,
+                                              size: 16,
+                                              color: Colors.white,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _local('start_quiz'),
+                                              style: const TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w900,
+                                                color: Colors.white,
+                                                letterSpacing: -0.1,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                   );
                 },
               ),

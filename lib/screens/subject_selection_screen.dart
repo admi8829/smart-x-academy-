@@ -310,17 +310,12 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
 
                 const SizedBox(height: 24.0),
 
-                // 2-Column Responsive Bento Grid matching requested design aspect perfectly
-                GridView.builder(
+                // Redesigned single column subject explorer list for high-fidelity white theme
+                ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16.0,
-                    mainAxisSpacing: 18.0,
-                    childAspectRatio: 0.88, // Slightly taller aspect ratio for the redesigned rich cards
-                  ),
                   itemCount: subjects.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 18.0),
                   itemBuilder: (context, index) {
                     final subject = subjects[index];
                     return _InteractiveSubjectCard(
@@ -444,142 +439,113 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                 ..rotateY(_tiltY + autoTilt),
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: widget.isLight
-                      ? [
-                          Colors.white,
-                          Color.alphaBlend(widget.gradeColor.withOpacity(0.06), Colors.white),
-                        ]
-                      : [
-                          const Color(0xFF1E293B),
-                          Color.alphaBlend(widget.gradeColor.withOpacity(0.09), const Color(0xFF0F172A)),
-                        ],
-                ),
-                borderRadius: BorderRadius.circular(24.0),
+                color: widget.isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(28.0),
                 border: Border.all(
-                  color: widget.gradeColor.withOpacity(widget.isLight ? 0.35 : 0.5),
+                  color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.gradeColor.withOpacity(widget.isLight ? 0.12 : 0.28),
-                    blurRadius: 20.0,
-                    offset: const Offset(0, 8),
-                    spreadRadius: -2,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 18.0,
+                    offset: const Offset(0, 6),
                   )
                 ],
               ),
-              padding: const EdgeInsets.all(14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Upper Content: Titles and custom icon decoration
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                widget.amTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 20.0,
-                                  fontWeight: FontWeight.w900, // Bold subject text in hold!
-                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                                  height: 1.15,
-                                  letterSpacing: -0.5,
-                                ),
+                  // Upper Row containing titles/desc on left and custom graphics vector on right
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.amTitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 21.0,
+                                fontWeight: FontWeight.w900,
+                                color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                                letterSpacing: -0.5,
                               ),
-                              const SizedBox(height: 5.0),
-                              Text(
-                                widget.enTitle.toUpperCase(), // Bold English uppercase description style
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w900, // English title in hold!
-                                  color: widget.gradeColor, // Highlights the chosen grade color
-                                  letterSpacing: 0.8,
-                                ),
+                            ),
+                            const SizedBox(height: 4.0),
+                            Text(
+                              widget.enTitle.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12.0,
+                                fontWeight: FontWeight.w900,
+                                color: widget.gradeColor, // Highlights chosen grade category
+                                letterSpacing: 0.8,
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12.0),
+                      // Premium vector illustration container in custom circular backdrop
+                      Container(
+                        height: 52,
+                        width: 52,
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: widget.color.withOpacity(widget.isLight ? 0.08 : 0.16),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: widget.color.withOpacity(0.24),
+                            width: 1.2,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Rich vector icon wrapper inside circular shaded backdrop
-                        Container(
-                          height: 50,
-                          width: 50,
-                          padding: const EdgeInsets.all(6.0),
-                          decoration: BoxDecoration(
-                            color: widget.color.withOpacity(widget.isLight ? 0.08 : 0.16),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: widget.color.withOpacity(0.3),
-                              width: 1.2,
-                            ),
-                          ),
-                          child: ClipOval(
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: widget.illustration,
-                            ),
+                        child: ClipOval(
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: widget.illustration,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: 16.0),
 
-                  // Pill-shaped high-fidelity START button colored copy to chosen grade
+                  // Pill button styled EXACTLY like the white center "Start Course" button
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.gradeColor,
-                          widget.gradeColor.withBlue((widget.gradeColor.blue + 20).clamp(0, 255)),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
+                        width: 1.5,
                       ),
-                      borderRadius: BorderRadius.circular(16.0),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.gradeColor.withOpacity(0.3),
-                          blurRadius: 10.0,
-                          offset: const Offset(0, 4),
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         )
                       ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 16.0,
-                        ),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          widget.btnStartText,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.btnStartText.toUpperCase(),
+                      style: TextStyle(
+                        color: widget.gradeColor,
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.4,
+                      ),
                     ),
                   ),
                 ],

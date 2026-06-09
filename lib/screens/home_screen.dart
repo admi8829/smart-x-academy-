@@ -1081,7 +1081,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 0.84, // Slightly taller aspect ratio for modern tall widgets support
+              childAspectRatio: 0.81, // Slightly taller for better text wrapping cushion
               children: [
                 // Grade 9
                 _InteractiveGradeCard(
@@ -1091,6 +1091,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF0084FF),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 9" : "ክፍል 9",
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(9),
                 ),
                 // Grade 10
@@ -1101,6 +1102,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF10B981),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 10" : "ክፍል 10",
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(10),
                 ),
                 // Grade 11
@@ -1111,6 +1113,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFFF59E0B),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 11" : "ክፍል 11",
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(11),
                 ),
                 // Grade 12
@@ -1121,156 +1124,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF8B5CF6),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 12" : "ክፍል 12",
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(12),
                 ),
               ],
             ),
           ),
           
-          const SizedBox(height: 24.0),
-
-          // Custom Quick-Access Syllabus Unit Portal: "Syllabus Highlights / Dynamic Units Hub" in "ONE PLACE"
-          _animateItem(
-            index: 3,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isLight 
-                      ? [const Color(0xFFF1F5F9), const Color(0xFFF8FAFC)] 
-                      : [const Color(0xFF1E293B), const Color(0xFF0F172A)],
-                ),
-                borderRadius: BorderRadius.circular(24.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.5,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.auto_awesome_rounded, color: Color(0xFF8B5CF6), size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.languageCode == 'en' ? "Syllabus Unit Hub" : "የክፍል አጠቃላይ ማዕከል",
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w900,
-                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          widget.languageCode == 'en' ? "ONE PLACE" : "በአንድ ቦታ",
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF8B5CF6),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6.0),
-                  Text(
-                    widget.languageCode == 'en' 
-                        ? "Access key high-yield curriculum chapters instantly in one place."
-                        : "ሁሉንም ታዋቂ የትምህርት ክፍሎች በአንድ ቦታ በቀላሉ ያግኙ።",
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w600,
-                      color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                    ),
-                  ),
-                  const SizedBox(height: 14.0),
-                  
-                  // Continuous list of high yield units in one place
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _getHubUnits().length,
-                    itemBuilder: (context, idx) {
-                      final u = _getHubUnits()[idx];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10.0),
-                        decoration: BoxDecoration(
-                          color: isLight ? Colors.white : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                            width: 1.0,
-                          ),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 4.0),
-                          leading: Container(
-                            height: 38,
-                            width: 38,
-                            decoration: BoxDecoration(
-                              color: u['color'].withOpacity(0.12),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(u['icon'], color: u['color'], size: 16),
-                          ),
-                          title: Text(
-                            widget.languageCode == 'en' ? u['enTitle'] : u['amTitle'],
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w900,
-                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'Grade ${u['grade']} • ${u['subject']}',
-                            style: TextStyle(
-                              fontSize: 11.0,
-                              fontWeight: FontWeight.w600,
-                              color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, color: u['color'], size: 12),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (ctx) => UnitSelectionScreen(
-                                  grade: u['grade'],
-                                  subjectId: u['subject'],
-                                  enTitle: u['subject'],
-                                  amTitle: u['subject'],
-                                  color: u['color'],
-                                  icon: Icon(u['icon'], color: Colors.white, size: 24),
-                                  isDarkMode: widget.isDarkMode,
-                                  languageCode: widget.languageCode,
-                                  onToggleTheme: widget.onToggleTheme,
-                                  onToggleLanguage: widget.onToggleLanguage,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 32.0),
+          const SizedBox(height: 12.0),
         ],
       ),
     );
@@ -4440,221 +4301,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           // 3. Performance Analysis Chart Widget
           _buildPerformanceChart(isLight),
 
-          const SizedBox(height: 6),
-
-          // 4. Contributor Portal Form Card: Add question to Supabase
-          Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Form(
-              key: _addQuestionFormKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.cloud_upload_outlined, color: accentColor, size: 24),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          widget.languageCode == 'en' ? "Contributor Portal" : "ዳታ መቆጣጠሪያ",
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w900,
-                            color: textColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    widget.languageCode == 'en' 
-                        ? "Register & post new exam questions to the Supabase server database instantly!"
-                        : "አዳዲስ የፈተና ጥያቄዎችን ፣ ምርጫዎችን እና ማብራሪያዎችን በቀጥታ ሱፓቤስ ሰርቨር ላይ ይውሰዱ!",
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 18),
-                  
-                  // Grade level selector dropdown
-                  DropdownButtonFormField<int>(
-                    value: _addSelectedGrade,
-                    dropdownColor: cardBg,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Target Grade Level"),
-                    items: [9, 10, 11, 12].map((grade) {
-                      return DropdownMenuItem<int>(
-                        value: grade,
-                        child: Text('Grade $grade'),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _addSelectedGrade = val);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Subject selection dropdown
-                  DropdownButtonFormField<String>(
-                    value: _addSelectedSubject,
-                    dropdownColor: cardBg,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Subject Category"),
-                    items: ['Biology', 'Physics', 'Chemistry', 'Mathematics', 'Civics', 'English', 'Geography', 'History'].map((sub) {
-                      return DropdownMenuItem<String>(
-                        value: sub,
-                        child: Text(sub),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _addSelectedSubject = val);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Unit text input
-                  TextFormField(
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Unit / Chapter", hintText: "1"),
-                    initialValue: _addSelectedUnit.toString(),
-                    onChanged: (val) {
-                      final parsed = int.tryParse(val);
-                      if (parsed != null) {
-                        _addSelectedUnit = parsed;
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Question Input
-                  TextFormField(
-                    controller: _addQuestionTextCtrl,
-                    maxLines: 3,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Question text", hintText: "Enter question query..."),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return "Question text is required";
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Option A
-                  TextFormField(
-                    controller: _addOptionACtrl,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Option A", hintText: "Enter option A text"),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return "Option A is required";
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Option B
-                  TextFormField(
-                    controller: _addOptionBCtrl,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Option B", hintText: "Enter option B text"),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return "Option B is required";
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Option C
-                  TextFormField(
-                    controller: _addOptionCCtrl,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Option C", hintText: "Enter option C text"),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return "Option C is required";
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Option D
-                  TextFormField(
-                    controller: _addOptionDCtrl,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Option D", hintText: "Enter option D text"),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return "Option D is required";
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Correct Option selection
-                  DropdownButtonFormField<String>(
-                    value: _addCorrectAnswer,
-                    dropdownColor: cardBg,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Correct Answer Option"),
-                    items: ['A', 'B', 'C', 'D'].map((opt) {
-                      return DropdownMenuItem<String>(
-                        value: opt,
-                        child: Text("Option $opt"),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) setState(() => _addCorrectAnswer = val);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Explanation Input
-                  TextFormField(
-                    controller: _addExplanationCtrl,
-                    maxLines: 2,
-                    style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13.5),
-                    decoration: _getInputDecoration(isLight, labelText: "Add Explanation (Optional)", hintText: "This is correct because..."),
-                  ),
-                  const SizedBox(height: 18),
-
-                  _isSavingQuestion
-                      ? const Center(child: CircularProgressIndicator())
-                      : Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: isLight
-                                  ? [const Color(0xFF0D2353), const Color(0xFF1E40AF)]
-                                  : [const Color(0xFF0F172A), const Color(0xFF1E293B)],
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: TextButton(
-                            onPressed: _submitQuestionToSupabase,
-                            child: const Text(
-                              "Upload To Supabase DB 🚀",
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
-                            ),
-                          ),
-                        ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
 
           // 5. Logout Button
           Container(
@@ -5719,6 +5366,7 @@ class _InteractiveGradeCard extends StatefulWidget {
   final bool isLight;
   final VoidCallback onTap;
   final String statusText;
+  final String buttonText;
 
   const _InteractiveGradeCard({
     required this.title,
@@ -5728,6 +5376,7 @@ class _InteractiveGradeCard extends StatefulWidget {
     required this.isLight,
     required this.onTap,
     required this.statusText,
+    required this.buttonText,
   });
 
   @override
@@ -5808,147 +5457,101 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                 ..rotateY(_tiltY + autoTilt),
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: widget.isLight
-                      ? [
-                          Colors.white,
-                          Color.alphaBlend(widget.btnColor.withOpacity(0.05), Colors.white),
-                        ]
-                      : [
-                          const Color(0xFF1E293B),
-                          Color.alphaBlend(widget.btnColor.withOpacity(0.08), const Color(0xFF0F172A)),
-                        ],
-                ),
-                borderRadius: BorderRadius.circular(24.0),
+                color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(28.0),
                 border: Border.all(
-                  color: widget.btnColor.withOpacity(widget.isLight ? 0.35 : 0.5),
+                  color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.btnColor.withOpacity(widget.isLight ? 0.12 : 0.28),
-                    blurRadius: 20.0,
-                    offset: const Offset(0, 8),
-                    spreadRadius: -2,
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 18.0,
+                    offset: const Offset(0, 6),
                   )
                 ],
               ),
-              padding: const EdgeInsets.all(14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Upper Content: Title, metrics badge and custom vector graphic
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: widget.btnColor.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: widget.btnColor.withOpacity(0.25),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          widget.statusText,
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w900,
-                            color: widget.btnColor,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                      // The cute vector illustration floating on the right
-                      SizedBox(
-                        height: 38,
-                        width: 38,
-                        child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: widget.illustration,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 12.0),
-
-                  // Core grade text in bold (in hold!)
-                  Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 21.0,
-                      fontWeight: FontWeight.w900, // Bold grade text in hold!
-                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-
-                  const SizedBox(height: 4.0),
-
-                  // Elegant descriptive subtitle
+                  // Upper row containing title/subtitle on left and custom graphics/illustration on right
                   Expanded(
-                    child: Text(
-                      widget.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                        height: 1.25,
-                      ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.title,
+                                style: TextStyle(
+                                  fontSize: 22.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  letterSpacing: -0.6,
+                                ),
+                              ),
+                              const SizedBox(height: 6.0),
+                              Text(
+                                widget.subtitle,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12.0,
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                  height: 1.25,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 4.0),
+                        // Premium illustration with custom fitted size
+                        SizedBox(
+                          height: 52,
+                          width: 52,
+                          child: FittedBox(
+                            fit: BoxFit.contain,
+                            child: widget.illustration,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: 10.0),
 
-                  // High-fidelity active Start button matching grade colour
+                  // Pill button styled EXACTLY like the white center "Start Course" button in the image
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 9),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.btnColor,
-                          widget.btnColor.withBlue((widget.btnColor.blue + 25).clamp(0, 255)),
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFEDF0F3),
+                        width: 1.5,
                       ),
-                      borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.btnColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          color: Colors.black.withOpacity(0.03),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         )
                       ],
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.insights_rounded,
-                          color: Colors.white,
-                          size: 14.0,
-                        ),
-                        const SizedBox(width: 4.0),
-                        Text(
-                          "EXPLORE PORTAL",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.buttonText,
+                      style: const TextStyle(
+                        color: Color(0xFF3B5998),
+                        fontSize: 13.0,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.2,
+                      ),
                     ),
                   ),
                 ],
