@@ -540,25 +540,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 physics: const BouncingScrollPhysics(),
                 children: [
                   _buildDrawerTile(
-                    icon: Icons.cloud_download_rounded,
-                    title: widget.languageCode == 'en' ? 'Supabase Quiz Simulator' : 'ሱፓቤስ ፈተና መለማመጃ',
-                    isSelected: false,
-                    isLight: isLight,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (ctx) => DynamicQuizScreen(
-                            isDarkMode: widget.isDarkMode,
-                            languageCode: widget.languageCode,
-                            onToggleTheme: widget.onToggleTheme,
-                            onToggleLanguage: widget.onToggleLanguage,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  _buildDrawerTile(
                     icon: Icons.notifications_none_rounded,
                     title: widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች',
                     isSelected: false,
@@ -1412,7 +1393,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         "A+",
                         style: TextStyle(
                           fontSize: 14.0,
-                          fontWeight: FontWeight.w950,
+                          fontWeight: FontWeight.w900,
                           color: Color(0xFFFBBF24), // Vibrant gold A+ text representation
                           letterSpacing: 0.1,
                           height: 1.0,
