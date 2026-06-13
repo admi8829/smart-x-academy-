@@ -869,176 +869,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Index 3: Rich Dynamic Playlist Video Format (Horizontal scroll viewport containing > 3 videos)
+          // Index 3: Top Featured Video Card inside a high-fidelity framing container matching the exact visual specs
           _animateItem(
             index: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E88E5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _local('featured_title'),
-                      style: TextStyle(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4.0),
-                Text(
-                  _local('featured_sub'),
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w500,
-                    color: isLight ? const Color(0xFF718096) : const Color(0xFF94A3B8),
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                SizedBox(
-                  height: 195.0,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: _featuredVideos.length,
-                    itemBuilder: (context, index) {
-                      final video = _featuredVideos[index];
-                      return Container(
-                        width: 280.0,
-                        margin: const EdgeInsets.only(right: 16.0, bottom: 8),
-                        decoration: BoxDecoration(
-                          color: isLight ? Colors.white : const Color(0xFF1E293B),
-                          borderRadius: BorderRadius.circular(24.0),
-                          border: Border.all(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                            width: 1.0,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.18),
-                              blurRadius: 12.0,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(23.0),
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => VideoPlayerScreen(
-                                    videoId: video['id']!,
-                                    title: video['title']!,
-                                    duration: video['duration']!,
-                                    isDarkMode: !isLight,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Stack(
-                              children: [
-                                // Thumbnail display: cover all
-                                Positioned.fill(
-                                  child: Image.network(
-                                    video['thumbnail']!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, e, s) => Container(
-                                      color: const Color(0xFF1E293B),
-                                      child: const Icon(Icons.video_library_rounded, color: Colors.white, size: 36),
-                                    ),
-                                  ),
-                                ),
-                                // Gradient shading for clean reading
-                                Positioned.fill(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.black.withOpacity(0.0),
-                                          Colors.black.withOpacity(0.35),
-                                          Colors.black.withOpacity(0.85),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Play indicator ring in the center
-                                Positioned.fill(
-                                  child: Align(
-                                    alignment: Alignment.center,
-                                    child: Container(
-                                      width: 44,
-                                      height: 44,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.92),
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.25),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.play_arrow_rounded,
-                                        size: 28,
-                                        color: Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // Text details overlay at the bottom left
-                                Positioned(
-                                  left: 16.0,
-                                  right: 16.0,
-                                  bottom: 16.0,
-                                  child: Text(
-                                    video['title']!,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                      height: 1.25,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black87,
-                                          offset: Offset(0, 1),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+            child: _buildTopFeaturedVideoCard(isLight),
           ),
 
-          const SizedBox(height: 32.0),
+          const SizedBox(height: 24.0),
 
           // Index 1: Free standing Explore Header (DECOUPLED AS REQUESTED!)
           _animateItem(
@@ -1081,7 +918,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 1.05, // Modern squarish aspect ratio to decrease height and provide a compact layout
+              childAspectRatio: 0.90, // Taller modern aspect ratio to prevent clipping and fit gradient buttons beautifully
               children: [
                 // Grade 9
                 _InteractiveGradeCard(
@@ -1309,6 +1146,344 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           languageCode: widget.languageCode,
           onToggleTheme: widget.onToggleTheme,
           onToggleLanguage: widget.onToggleLanguage,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopFeaturedVideoCard(bool isLight) {
+    final video = _featuredVideos[0]; // Mathematics G12 - Unit 1: Sequence & Series Matric Prep
+    return Container(
+      width: double.infinity,
+      height: 165.0, // Reduced height by 15% from 195.0
+      decoration: BoxDecoration(
+        color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(28.0),
+        border: Border.all(
+          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+          width: 5.0, // High-quality outer frame border
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isLight ? 0.04 : 0.15),
+            blurRadius: 12.0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(23.0),
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => VideoPlayerScreen(
+                  videoId: video['id']!,
+                  title: video['title']!,
+                  duration: video['duration']!,
+                  isDarkMode: !isLight,
+                ),
+              ),
+            );
+          },
+          child: Stack(
+            children: [
+              // 1. Grid and Math Curve Background (Right Side)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _MathGraphPainter(isLight),
+                ),
+              ),
+
+              // 2. Math axis text labels for super high-fidelity details
+              Positioned(
+                right: 92,
+                top: 44,
+                child: Text(
+                  'y',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 28,
+                top: 98,
+                child: Text(
+                  'x',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 20,
+                top: 68,
+                child: Text(
+                  'y = √m + x²',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+
+              // 3. Left Side: Student Studying at Desk Illustration
+              Positioned(
+                left: 18,
+                bottom: 12,
+                child: Container(
+                  width: 140,
+                  height: 100,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      // Desk
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: isLight ? const Color(0xFFD1B48C) : const Color(0xFF8B7355),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            border: Border.all(
+                              color: isLight ? const Color(0xFFB09470) : const Color(0xFF6E563E),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Student Body
+                      Positioned(
+                        bottom: 24,
+                        left: 20,
+                        child: Container(
+                          width: 48,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF66BB6A), // Elegant bright green shirt
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF4AAF50),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Student Head
+                      Positioned(
+                        bottom: 66,
+                        left: 32,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFD54F), // Skin tone representation
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFFFFB300),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Hair representation
+                      Positioned(
+                        bottom: 81,
+                        left: 32,
+                        child: Container(
+                          width: 24,
+                          height: 12,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF3E2723), // Dark brown hair
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      // Studying book/paper on desk
+                      Positioned(
+                        bottom: 28,
+                        left: 56,
+                        child: Transform.rotate(
+                          angle: 0.12,
+                          child: Container(
+                            width: 28,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(3),
+                              border: Border.all(
+                                color: Colors.grey[400]!,
+                                width: 1.0,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 2,
+                                )
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: List.generate(
+                                3,
+                                (idx) => Container(
+                                  height: 1,
+                                  width: 18,
+                                  color: Colors.blue[300],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 4. Header Text (Top Left)
+              Positioned(
+                left: 18.0,
+                top: 18.0,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Mathematics G12:",
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        letterSpacing: -0.6,
+                        height: 1.15,
+                      ),
+                    ),
+                    Text(
+                      "Sequence & Series",
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF1E3A8A) : const Color(0xFF93C5FD),
+                        letterSpacing: -0.6,
+                        height: 1.15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 5. A+ Matric Prep Badge (Top Right)
+              Positioned(
+                top: 14.0,
+                right: 14.0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 7.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F5A60), // True match of the dark teal/green shade
+                    borderRadius: BorderRadius.circular(14.0),
+                    border: Border.all(
+                      color: const Color(0xFF76C4CE),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1.5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "A+",
+                        style: TextStyle(
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w950,
+                          color: Color(0xFFFBBF24), // Vibrant gold A+ text representation
+                          letterSpacing: 0.1,
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 2.5),
+                      Text(
+                        "Matric Prep".toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 8.0,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 0.2,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 6. Translucent Play Button Ring in the middle-ish
+              Positioned.fill(
+                child: Align(
+                  alignment: const Alignment(0.0, -0.05),
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.90),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      size: 32,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ),
+              ),
+
+              // 7. Dark Translucent Bottom Bar Title Overlay (exactly matching the image)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  color: Colors.black.withOpacity(0.64),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Text(
+                    video['title']!, // Mathematics G12 - Unit 1: Sequence & Series Matric Prep
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.1,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -5458,20 +5633,20 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(22.0),
+                borderRadius: BorderRadius.circular(16.0), // Rounded corners matching rule 2 exactly
                 border: Border.all(
-                  color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
+                  color: widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 14.0,
-                    offset: const Offset(0, 4),
+                    color: Colors.black.withOpacity(widget.isLight ? 0.03 : 0.12), // Very soft boxShadow as requested
+                    blurRadius: 10.0,
+                    offset: const Offset(0, 3),
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+              padding: const EdgeInsets.all(16.0), // Elegant, spacious responsive padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -5526,36 +5701,50 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                     ),
                   ),
 
-                  const SizedBox(height: 8.0),
+                  const SizedBox(height: 12.0),
 
-                  // Pill button styled EXACTLY like the white center "Start Course" button, made compact
+                  // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 9.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFEDF0F3),
-                        width: 1.5,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF52C29F), // Vibrant mint teal
+                          widget.btnColor, // Accent theme color for each grade category
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       ),
+                      borderRadius: BorderRadius.circular(24.0), // Proper pill button rounding
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                          color: widget.btnColor.withOpacity(0.2),
+                          blurRadius: 6.0,
+                          offset: const Offset(0, 2.5),
                         )
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      widget.buttonText,
-                      style: const TextStyle(
-                        color: Color(0xFF3B5998),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.2,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.buttonText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.0,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(width: 4.0),
+                        const Icon(
+                          Icons.chevron_right, // Required chevron_right arrow icon
+                          color: Colors.white,
+                          size: 15.0,
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -5566,4 +5755,48 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
       },
     );
   }
+}
+
+class _MathGraphPainter extends CustomPainter {
+  final bool isLight;
+  _MathGraphPainter(this.isLight);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paintGrid = Paint()
+      ..color = isLight ? const Color(0xFFCBD5E1).withOpacity(0.25) : const Color(0xFF334155).withOpacity(0.2)
+      ..strokeWidth = 1.0;
+
+    // Draw grid
+    for (double i = 0; i < size.width; i += 18) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paintGrid);
+    }
+    for (double j = 0; j < size.height; j += 18) {
+      canvas.drawLine(Offset(0, j), Offset(size.width, j), paintGrid);
+    }
+
+    final paintAxes = Paint()
+      ..color = isLight ? const Color(0xFF94A3B8) : const Color(0xFF475569)
+      ..strokeWidth = 1.2;
+
+    // Draw main math curve axes on the right side
+    final double originX = size.width * 0.72;
+    final double originY = size.height * 0.58;
+    canvas.drawLine(Offset(originX - 45, originY), Offset(size.width - 15, originY), paintAxes); // X Axis
+    canvas.drawLine(Offset(originX, originY - 50), Offset(originX, size.height - 25), paintAxes); // Y Axis
+
+    // Draw clean parabola curve
+    final paintCurve = Paint()
+      ..color = const Color(0xFF10B981).withOpacity(0.85) // Secondary brand green color
+      ..strokeWidth = 2.2
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    path.moveTo(originX - 35, originY - 40);
+    path.quadraticBezierTo(originX, originY + 18, originX + 35, originY - 40);
+    canvas.drawPath(path, paintCurve);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

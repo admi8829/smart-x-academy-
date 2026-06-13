@@ -318,7 +318,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 0.84, // Optimized aspect ratio to fit the vertical layout beautifully without overflow
+                    childAspectRatio: 0.72, // Optimized ratio to seamlessly accommodate high-fidelity gradient buttons
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (context, index) {
@@ -464,56 +464,106 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Center premium vector illustration container with a subtle background shade
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Center premium vector illustration container with a subtle background shade
+                      Container(
+                        height: 56,
+                        width: 56,
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: widget.color.withOpacity(0.06),
+                          shape: BoxShape.circle,
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: widget.illustration,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 14.0),
+
+                      // Center aligned subject header title
+                      Text(
+                        widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.w900,
+                          color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 4.0),
+
+                      // English / Grade level description subtitle
+                      Text(
+                        widget.languageCode == 'en'
+                            ? 'Grade ${widget.grade}'
+                            : 'ክፍል ${widget.grade}',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
                   Container(
-                    height: 56,
-                    width: 56,
-                    padding: const EdgeInsets.all(8.0),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.06),
-                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF52C29F), // Vibrant mint teal
+                          widget.color, // Subject custom color
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20.0), // Proper pill rounding
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.color.withOpacity(0.18),
+                          blurRadius: 4.0,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
                     ),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: widget.illustration,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 18.0),
-
-                  // Center aligned subject header title
-                  Text(
-                    widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w900,
-                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 6.0),
-
-                  // English / Grade level description subtitle
-                  Text(
-                    widget.languageCode == 'en'
-                        ? 'Grade ${widget.grade}'
-                        : 'ክፍል ${widget.grade}',
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.bold,
-                      color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.btnStartText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(width: 4.0),
+                        const Icon(
+                          Icons.chevron_right, // Required chevron_right arrow icon
+                          color: Colors.white,
+                          size: 14.0,
+                        ),
+                      ],
                     ),
                   ),
                 ],
