@@ -310,12 +310,17 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
 
                 const SizedBox(height: 24.0),
 
-                // Redesigned single column subject explorer list for high-fidelity white theme
-                ListView.separated(
+                // Redesigned 2-column GridView subject selector matching request of 100% high-fidelity bento design
+                GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 16.0,
+                    childAspectRatio: 0.84, // Optimized aspect ratio to fit the vertical layout beautifully without overflow
+                  ),
                   itemCount: subjects.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 18.0),
                   itemBuilder: (context, index) {
                     final subject = subjects[index];
                     return _InteractiveSubjectCard(
@@ -325,6 +330,8 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                       illustration: subject['illustration'],
                       isLight: isLight,
                       gradeColor: gradeColor,
+                      languageCode: currentLang,
+                      grade: widget.grade,
                       btnStartText: _local('btn_start', currentLang),
                       onTap: () => _navigateToUnitSelectionScreen(subject, appState),
                     );
@@ -339,7 +346,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
   }
 }
 
-// Redesigned 3D Physics & Floating Perspective Card
+// Redesigned 3D Center-Aligned Bento Card
 class _InteractiveSubjectCard extends StatefulWidget {
   final String amTitle;
   final String enTitle;
@@ -347,6 +354,8 @@ class _InteractiveSubjectCard extends StatefulWidget {
   final Widget illustration;
   final bool isLight;
   final Color gradeColor;
+  final String languageCode;
+  final int grade;
   final String btnStartText;
   final VoidCallback onTap;
 
@@ -357,6 +366,8 @@ class _InteractiveSubjectCard extends StatefulWidget {
     required this.illustration,
     required this.isLight,
     required this.gradeColor,
+    required this.languageCode,
+    required this.grade,
     required this.btnStartText,
     required this.onTap,
   });
@@ -440,112 +451,69 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 color: widget.isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(28.0),
+                borderRadius: BorderRadius.circular(24.0),
                 border: Border.all(
-                  color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
+                  color: widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18.0,
+                    color: Colors.black.withOpacity(widget.isLight ? 0.04 : 0.16),
+                    blurRadius: 16.0,
                     offset: const Offset(0, 6),
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 20.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Upper Row containing titles/desc on left and custom graphics vector on right
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.amTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 21.0,
-                                fontWeight: FontWeight.w900,
-                                color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4.0),
-                            Text(
-                              widget.enTitle.toUpperCase(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12.0,
-                                fontWeight: FontWeight.w900,
-                                color: widget.gradeColor, // Highlights chosen grade category
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12.0),
-                      // Premium vector illustration container in custom circular backdrop
-                      Container(
-                        height: 52,
-                        width: 52,
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          color: widget.color.withOpacity(widget.isLight ? 0.08 : 0.16),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: widget.color.withOpacity(0.24),
-                            width: 1.2,
-                          ),
-                        ),
-                        child: ClipOval(
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: widget.illustration,
-                          ),
-                        ),
-                      ),
-                    ],
+                  // Center premium vector illustration container with a subtle background shade
+                  Container(
+                    height: 56,
+                    width: 56,
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: widget.color.withOpacity(0.06),
+                      shape: BoxShape.circle,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: widget.illustration,
+                    ),
                   ),
                   
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 18.0),
 
-                  // Pill button styled EXACTLY like the white center "Start Course" button
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
-                        width: 1.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
+                  // Center aligned subject header title
+                  Text(
+                    widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w900,
+                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                      letterSpacing: -0.4,
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      widget.btnStartText.toUpperCase(),
-                      style: TextStyle(
-                        color: widget.gradeColor,
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.4,
-                      ),
+                  ),
+                  
+                  const SizedBox(height: 6.0),
+
+                  // English / Grade level description subtitle
+                  Text(
+                    widget.languageCode == 'en'
+                        ? 'Grade ${widget.grade}'
+                        : 'ክፍል ${widget.grade}',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                      color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                     ),
                   ),
                 ],

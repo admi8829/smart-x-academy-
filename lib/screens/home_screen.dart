@@ -1081,7 +1081,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 0.81, // Slightly taller for better text wrapping cushion
+              childAspectRatio: 1.05, // Modern squarish aspect ratio to decrease height and provide a compact layout
               children: [
                 // Grade 9
                 _InteractiveGradeCard(
@@ -5458,7 +5458,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(28.0),
+                borderRadius: BorderRadius.circular(22.0),
                 border: Border.all(
                   color: widget.isLight ? const Color(0xFFEDF0F3) : const Color(0xFF334155),
                   width: 1.5,
@@ -5466,12 +5466,12 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
-                    blurRadius: 18.0,
-                    offset: const Offset(0, 6),
+                    blurRadius: 14.0,
+                    offset: const Offset(0, 4),
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -5486,33 +5486,37 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                             children: [
                               Text(
                                 widget.title,
-                                style: TextStyle(
-                                  fontSize: 22.0,
-                                  fontWeight: FontWeight.w900,
-                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                                  letterSpacing: -0.6,
-                                ),
-                              ),
-                              const SizedBox(height: 6.0),
-                              Text(
-                                widget.subtitle,
-                                maxLines: 2,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 12.0,
-                                  fontWeight: FontWeight.w600,
-                                  color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                                  height: 1.25,
+                                  fontSize: 18.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4.0),
+                              Expanded(
+                                child: Text(
+                                  widget.subtitle,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.0,
+                                    fontWeight: FontWeight.w600,
+                                    color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                    height: 1.25,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(width: 4.0),
-                        // Premium illustration with custom fitted size
+                        // Premium illustration with custom compact size
                         SizedBox(
-                          height: 52,
-                          width: 52,
+                          height: 42,
+                          width: 42,
                           child: FittedBox(
                             fit: BoxFit.contain,
                             child: widget.illustration,
@@ -5522,15 +5526,15 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                     ),
                   ),
 
-                  const SizedBox(height: 10.0),
+                  const SizedBox(height: 8.0),
 
-                  // Pill button styled EXACTLY like the white center "Start Course" button in the image
+                  // Pill button styled EXACTLY like the white center "Start Course" button, made compact
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: const Color(0xFFEDF0F3),
                         width: 1.5,
@@ -5548,7 +5552,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                       widget.buttonText,
                       style: const TextStyle(
                         color: Color(0xFF3B5998),
-                        fontSize: 13.0,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.2,
                       ),
