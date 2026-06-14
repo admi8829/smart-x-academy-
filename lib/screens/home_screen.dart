@@ -1265,7 +1265,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: const Color(0xFF1E293B),
-                          child: const Icon(Icons.video_library_rounded, size: 50, color: Colors.grey),
+                          child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -1278,18 +1278,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.black.withOpacity(0.0),
-                              Colors.black.withOpacity(0.35),
-                              Colors.black.withOpacity(0.85),
+                              Colors.black.withOpacity(0.25),
+                              Colors.black.withOpacity(0.75),
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                    // Centered Animated pulsing play button
-                    const Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: AnimatedPlayButtonGlow(), // beautiful breathing action play button
                       ),
                     ),
                     // A+ matric prep indicator top-right
@@ -1297,27 +1290,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       top: 10,
                       right: 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F5A60),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFF76C4CE), width: 1.2),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFF76C4CE).withOpacity(0.8), width: 1.0),
                         ),
                         child: const Text(
                           "A+ Matric Prep",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 9.5,
+                            fontSize: 8.5,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
                     ),
-                    // Subject info overlay
+                    // Subject info overlay with decreased text sizes
                     Positioned(
-                      left: 12,
-                      bottom: 12,
-                      right: 12,
+                      left: 10,
+                      bottom: 10,
+                      right: 10,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1325,19 +1318,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             "Mathematics G12",
                             style: TextStyle(
                               color: Colors.teal[300],
-                              fontSize: 11,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1),
                           Text(
                             video['title']!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 11.5,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -1361,10 +1354,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12.0,
-                    color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                    height: 1.4,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 10.5,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    height: 1.35,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -5581,17 +5574,22 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
                 color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(16.0), // Rounded corners matching rule 2 exactly
+                borderRadius: BorderRadius.circular(16.0 + pulse * 6.0), // Dynamic animated border radius (breathing effect)
                 border: Border.all(
-                  color: widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
-                  width: 1.5,
+                  color: Color.lerp(
+                    widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
+                    widget.btnColor.withOpacity(0.55),
+                    pulse,
+                  )!,
+                  width: 1.5 + pulse * 0.7, // Dynamic animated border width
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(widget.isLight ? 0.03 : 0.12), // Very soft boxShadow as requested
-                    blurRadius: 10.0,
-                    offset: const Offset(0, 3),
-                  )
+                    color: widget.btnColor.withOpacity(widget.isLight ? (0.05 + pulse * 0.08) : (0.12 + pulse * 0.16)), // Pulsing brand-tinted shadow
+                    blurRadius: 10.0 + pulse * 10.0, // Dynamic shadow blur radius
+                    spreadRadius: pulse * 1.5, // Dynamic shadow spread expansion
+                    offset: Offset(0, 3 + pulse * 4.0), // Dynamic vertical shadow dropping
+                  ),
                 ],
               ),
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 11.0), // Elegant tighter padding to fit the shortened box

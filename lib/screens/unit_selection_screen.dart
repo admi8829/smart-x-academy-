@@ -1142,7 +1142,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ],
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1194,29 +1194,29 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 10),
                               // Unit Title
                               Text(
                                 title,
                                 style: TextStyle(
-                                  fontSize: 17.5,
+                                  fontSize: 16.0,
                                   fontWeight: FontWeight.w900,
                                   color: headerTextColor,
                                   letterSpacing: -0.4,
                                 ),
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 4),
                               // Unit description
                               Text(
                                 desc,
                                 style: TextStyle(
-                                  fontSize: 13.0,
-                                  height: 1.45,
+                                  fontSize: 12.0,
+                                  height: 1.35,
                                   fontWeight: FontWeight.w600,
                                   color: descColor,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 10),
                               // Elegant slim Divider line
                               Container(
                                 height: 1.5,
@@ -1224,7 +1224,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                     ? const Color(0xFFEDF0F3) 
                                     : const Color(0xFF334155),
                               ),
-                              const SizedBox(height: 14),
+                              const SizedBox(height: 10),
                               // Bottom Row of Custom action Buttons
                               Row(
                                 children: [
@@ -1232,7 +1232,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   Expanded(
                                     child: progress != null
                                         ? Container(
-                                            height: 42,
+                                            height: 38,
                                             alignment: Alignment.center,
                                             decoration: BoxDecoration(
                                               color: widget.color.withOpacity(0.05),
@@ -1271,7 +1271,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                             borderRadius: BorderRadius.circular(16),
                                             child: AnimatedContainer(
                                               duration: const Duration(milliseconds: 200),
-                                              height: 42,
+                                              height: 38,
                                               alignment: Alignment.center,
                                               decoration: BoxDecoration(
                                                 color: isDownloaded
@@ -1329,7 +1329,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                       },
                                       borderRadius: BorderRadius.circular(16),
                                       child: Container(
-                                        height: 42,
+                                        height: 38,
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
                                           color: widget.color,
