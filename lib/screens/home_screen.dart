@@ -1326,7 +1326,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             style: TextStyle(
                               color: Colors.teal[300],
                               fontSize: 11,
-                              fontWeight: FontWeight.w950,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: 0.5,
                             ),
                           ),
