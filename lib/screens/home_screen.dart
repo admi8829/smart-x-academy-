@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -115,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   int _selectedGradeForQuizTab = 9;
   int _carouselIndex = 0;
+  Timer? _carouselTimer;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -218,6 +221,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return _localizedValues[widget.languageCode]?[key] ?? key;
   }
 
+  void _startCarouselTimer() {
+    _carouselTimer?.cancel();
+    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+      if (mounted) {
+        final quizSlides = _getQuizSlidesForGrade(_selectedGradeForQuizTab);
+        if (quizSlides.isNotEmpty) {
+          setState(() {
+            _carouselIndex = (_carouselIndex + 1) % quizSlides.length;
+          });
+        }
+      }
+    });
+  }
+
+  void _resetCarouselTimer() {
+    _startCarouselTimer();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -236,6 +257,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     // Replicating tutorial video with standard Youtube embedded controller
     _loadBannerAd();
+    _startCarouselTimer();
     _fadeController.forward();
     OfflineManager.addListener(_onOfflineDownloadsChanged);
   }
@@ -292,6 +314,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _carouselTimer?.cancel();
     OfflineManager.removeListener(_onOfflineDownloadsChanged);
     _fullNameController.dispose();
     _emailController.dispose();
@@ -899,7 +922,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 0.90, // Taller modern aspect ratio to prevent clipping and fit gradient buttons beautifully
+              childAspectRatio: 1.05, // Decreased physical height proportion
               children: [
                 // Grade 9
                 _InteractiveGradeCard(
@@ -1136,336 +1159,218 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final video = _featuredVideos[0]; // Mathematics G12 - Unit 1: Sequence & Series Matric Prep
     return Container(
       width: double.infinity,
-      height: 165.0, // Reduced height by 15% from 195.0
       decoration: BoxDecoration(
-        color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(28.0),
+        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(24.0),
         border: Border.all(
-          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-          width: 5.0, // High-quality outer frame border
+          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isLight ? 0.04 : 0.15),
-            blurRadius: 12.0,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isLight ? 0.04 : 0.25),
+            blurRadius: 18.0,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(23.0),
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => VideoPlayerScreen(
-                  videoId: video['id']!,
-                  title: video['title']!,
-                  duration: video['duration']!,
-                  isDarkMode: !isLight,
-                ),
-              ),
-            );
-          },
-          child: Stack(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header Row of the general background box
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 1. Grid and Math Curve Background (Right Side)
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _MathGraphPainter(isLight),
-                ),
-              ),
-
-              // 2. Math axis text labels for super high-fidelity details
-              Positioned(
-                right: 92,
-                top: 44,
-                child: Text(
-                  'y',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 28,
-                top: 98,
-                child: Text(
-                  'x',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 20,
-                top: 68,
-                child: Text(
-                  'y = √m + x²',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-
-              // 3. Left Side: Student Studying at Desk Illustration
-              Positioned(
-                left: 18,
-                bottom: 12,
-                child: Container(
-                  width: 140,
-                  height: 100,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      // Desk
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: isLight ? const Color(0xFFD1B48C) : const Color(0xFF8B7355),
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(8),
-                              topRight: Radius.circular(8),
-                            ),
-                            border: Border.all(
-                              color: isLight ? const Color(0xFFB09470) : const Color(0xFF6E563E),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Student Body
-                      Positioned(
-                        bottom: 24,
-                        left: 20,
-                        child: Container(
-                          width: 48,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF66BB6A), // Elegant bright green shirt
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFF4AAF50),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Student Head
-                      Positioned(
-                        bottom: 66,
-                        left: 32,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFD54F), // Skin tone representation
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(0xFFFFB300),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Hair representation
-                      Positioned(
-                        bottom: 81,
-                        left: 32,
-                        child: Container(
-                          width: 24,
-                          height: 12,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF3E2723), // Dark brown hair
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                      // Studying book/paper on desk
-                      Positioned(
-                        bottom: 28,
-                        left: 56,
-                        child: Transform.rotate(
-                          angle: 0.12,
-                          child: Container(
-                            width: 28,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(3),
-                              border: Border.all(
-                                color: Colors.grey[400]!,
-                                width: 1.0,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 2,
-                                )
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(
-                                3,
-                                (idx) => Container(
-                                  height: 1,
-                                  width: 18,
-                                  color: Colors.blue[300],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 4. Header Text (Top Left)
-              Positioned(
-                left: 18.0,
-                top: 18.0,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Mathematics G12:",
-                      style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                        letterSpacing: -0.6,
-                        height: 1.15,
-                      ),
-                    ),
-                    Text(
-                      "Sequence & Series",
-                      style: TextStyle(
-                        fontSize: 20.0,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF1E3A8A) : const Color(0xFF93C5FD),
-                        letterSpacing: -0.6,
-                        height: 1.15,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // 5. A+ Matric Prep Badge (Top Right)
-              Positioned(
-                top: 14.0,
-                right: 14.0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 7.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F5A60), // True match of the dark teal/green shade
-                    borderRadius: BorderRadius.circular(14.0),
-                    border: Border.all(
-                      color: const Color(0xFF76C4CE),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1.5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "A+",
-                        style: TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFFBBF24), // Vibrant gold A+ text representation
-                          letterSpacing: 0.1,
-                          height: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 2.5),
-                      Text(
-                        "Matric Prep".toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 8.0,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 0.2,
-                          height: 1.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 6. Translucent Play Button Ring in the middle-ish
-              Positioned.fill(
-                child: Align(
-                  alignment: const Alignment(0.0, -0.05),
-                  child: Container(
-                    width: 50,
-                    height: 50,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.90),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
+                      color: const Color(0xFF10B981).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.stars_rounded, color: Color(0xFF10B981), size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          widget.languageCode == 'en' ? "FEATURED CLASS" : "የቀኑ ምርጥ ትምህርት",
+                          style: const TextStyle(
+                            color: Color(0xFF10B981),
+                            fontWeight: FontWeight.w900,
+                            fontSize: 9.5,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      size: 32,
-                      color: Color(0xFF1E293B),
-                    ),
                   ),
-                ),
+                ],
               ),
-
-              // 7. Dark Translucent Bottom Bar Title Overlay (exactly matching the image)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  color: Colors.black.withOpacity(0.64),
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Text(
-                    video['title']!, // Mathematics G12 - Unit 1: Sequence & Series Matric Prep
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.1,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                decoration: BoxDecoration(
+                  color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Text(
+                  video['duration'] ?? "1:15:30",
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
                   ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          // The Video Player card with real thumbnail
+          Container(
+            height: 175.0, // perfect display height
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 10.0,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0),
+              child: InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => VideoPlayerScreen(
+                        videoId: video['id']!,
+                        title: video['title']!,
+                        duration: video['duration']!,
+                        isDarkMode: !isLight,
+                      ),
+                    ),
+                  );
+                },
+                child: Stack(
+                  children: [
+                    // Real Thumbnail Image!
+                    Positioned.fill(
+                      child: Image.network(
+                        video['thumbnail']!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: const Color(0xFF1E293B),
+                          child: const Icon(Icons.video_library_rounded, size: 50, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                    // Elegant dark gradient so details read well
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.black.withOpacity(0.0),
+                              Colors.black.withOpacity(0.35),
+                              Colors.black.withOpacity(0.85),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Centered Animated pulsing play button
+                    const Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: AnimatedPlayButtonGlow(), // beautiful breathing action play button
+                      ),
+                    ),
+                    // A+ matric prep indicator top-right
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F5A60),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF76C4CE), width: 1.2),
+                        ),
+                        child: const Text(
+                          "A+ Matric Prep",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Subject info overlay
+                    Positioned(
+                      left: 12,
+                      bottom: 12,
+                      right: 12,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Mathematics G12",
+                            style: TextStyle(
+                              color: Colors.teal[300],
+                              fontSize: 11,
+                              fontWeight: FontWeight.w950,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            video['title']!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // General Box additional text describing the course
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.languageCode == 'en'
+                      ? "Master the Sequence & Series unit with verified solution walkthroughs for past national matric exams, curated by Smart X Academy mentors."
+                      : "በስማርት ኤክስ አካዳሚ መምህራን የተዘጋጀውን የብሄራዊ ማትሪክ ፈተና የተመረጡ ተከታታይ እና ጥያቄዎች ማብራሪያ በዚህ ቪዲዮ ይማሩ።",
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                    height: 1.4,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -2505,25 +2410,85 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header PREVIEW MODE + Glowing Green Dot
+                      // Header REAL PREVIEW + Copy to clipboard action
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'PREVIEW MODE',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF94A3B8),
-                              letterSpacing: 0.8,
-                            ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'REAL PREVIEW',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF10B981),
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
                           ),
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
-                              shape: BoxShape.circle,
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              final String optionsText = options.join("\n");
+                              final String clipboardText = "Quiz Question:\n$questionText\n\nOptions:\n$optionsText";
+                              Clipboard.setData(ClipboardData(text: clipboardText));
+                              ScaffoldMessenger.of(context).clearSnackBars();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          widget.languageCode == 'en' 
+                                              ? 'Quiz text copied! Paste anywhere.' 
+                                              : 'የፈተናው ጥያቄ ተገልብጧል። የትም ቦታ መለጠፍ ይችላሉ።',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: const Color(0xFF1E88E5),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E293B),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF1E88E5).withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.copy_rounded, size: 13, color: Color(0xFF1E88E5)),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    widget.languageCode == 'en' ? 'Copy Question' : 'ትምህርት ቅዳ',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF1E88E5),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -2601,6 +2566,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     IconButton(
                       onPressed: () {
+                        _resetCarouselTimer();
                         setState(() {
                           _carouselIndex = (_carouselIndex - 1 + quizSlides.length) % quizSlides.length;
                         });
@@ -2630,6 +2596,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     const SizedBox(width: 14),
                     IconButton(
                       onPressed: () {
+                        _resetCarouselTimer();
                         setState(() {
                           _carouselIndex = (_carouselIndex + 1) % quizSlides.length;
                         });
@@ -5627,7 +5594,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                   )
                 ],
               ),
-              padding: const EdgeInsets.all(16.0), // Elegant, spacious responsive padding
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 11.0), // Elegant tighter padding to fit the shortened box
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -5645,23 +5612,23 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 18.0,
+                                  fontSize: 17.0, // Slightly more compact font to prevent overflow
                                   fontWeight: FontWeight.w900,
                                   color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
                                   letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(height: 4.0),
+                              const SizedBox(height: 2.0),
                               Expanded(
                                 child: Text(
                                   widget.subtitle,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
-                                    fontSize: 11.0,
+                                    fontSize: 10.5, // Tighter font size
                                     fontWeight: FontWeight.w600,
                                     color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                                    height: 1.25,
+                                    height: 1.2,
                                   ),
                                 ),
                               ),
@@ -5671,8 +5638,8 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                         const SizedBox(width: 4.0),
                         // Premium illustration with custom compact size
                         SizedBox(
-                          height: 42,
-                          width: 42,
+                          height: 36, // Slightly more compact to give the button maximum space
+                          width: 36,
                           child: FittedBox(
                             fit: BoxFit.contain,
                             child: widget.illustration,
@@ -5682,12 +5649,12 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                     ),
                   ),
 
-                  const SizedBox(height: 12.0),
+                  const SizedBox(height: 6.0),
 
-                  // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
+                  // Pill button styled EXACTLY like a beautiful modern gradient pill button, made LARGER
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 9.0),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0), // Increased button height from 9.0 to 12.0
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
@@ -5700,9 +5667,9 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                       borderRadius: BorderRadius.circular(24.0), // Proper pill button rounding
                       boxShadow: [
                         BoxShadow(
-                          color: widget.btnColor.withOpacity(0.2),
-                          blurRadius: 6.0,
-                          offset: const Offset(0, 2.5),
+                          color: widget.btnColor.withOpacity(0.24),
+                          blurRadius: 8.0,
+                          offset: const Offset(0, 3),
                         )
                       ],
                     ),
@@ -5714,7 +5681,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                           widget.buttonText,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 12.0,
+                            fontSize: 13.0, // Increased font size from 12.0 to 13.0
                             fontWeight: FontWeight.w900,
                             letterSpacing: 0.1,
                           ),
@@ -5780,4 +5747,96 @@ class _MathGraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class AnimatedPlayButtonGlow extends StatefulWidget {
+  const AnimatedPlayButtonGlow({super.key});
+
+  @override
+  State<AnimatedPlayButtonGlow> createState() => _AnimatedPlayButtonGlowState();
+}
+
+class _AnimatedPlayButtonGlowState extends State<AnimatedPlayButtonGlow>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat();
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.45).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final double value = _pulseController.value;
+        final double opacity = (1.0 - value).clamp(0.0, 1.0);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outermost glowing ring
+            Transform.scale(
+              scale: _pulseAnimation.value,
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF10B981).withOpacity(opacity * 0.45),
+                ),
+              ),
+            ),
+            // Middle glowing ring
+            Transform.scale(
+              scale: 1.0 + (value * 0.20),
+              child: Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(opacity * 0.3),
+                ),
+              ),
+            ),
+            // The Play Button container itself
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 34,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

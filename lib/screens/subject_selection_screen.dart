@@ -250,65 +250,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                   ),
                 ),
                 
-                const SizedBox(height: 18.0),
-
-                // Prominent Dual Segmented Language Toggle Switch Bar
-                Row(
-                  children: [
-                    Text(
-                      currentLang == 'en' ? "Language:" : "ቋንቋ: ",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF334155) : const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.all(4.0),
-                      decoration: BoxDecoration(
-                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
-                        borderRadius: BorderRadius.circular(50.0),
-                        border: Border.all(
-                          color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-                          width: 1.0,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildLanguageSegment(
-                            langCode: 'en',
-                            label: 'English 🇺🇸',
-                            isSelected: currentLang == 'en',
-                            isLight: isLight,
-                            activeColor: gradeColor,
-                            onTap: () {
-                              if (currentLang != 'en') {
-                                appState.onToggleLanguage();
-                              }
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          _buildLanguageSegment(
-                            langCode: 'am',
-                            label: 'አማርኛ 🇪🇹',
-                            isSelected: currentLang == 'am',
-                            isLight: isLight,
-                            activeColor: gradeColor,
-                            onTap: () {
-                              if (currentLang != 'am') {
-                                appState.onToggleLanguage();
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24.0),
+                const SizedBox(height: 20.0),
 
                 // Redesigned 2-column GridView subject selector matching request of 100% high-fidelity bento design
                 GridView.builder(
@@ -318,7 +260,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 0.72, // Optimized ratio to seamlessly accommodate high-fidelity gradient buttons
+                    childAspectRatio: 0.60, // Optimized taller ratio to seamlessly accommodate high-fidelity gradient buttons without clutter
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (context, index) {
@@ -464,7 +406,7 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -474,9 +416,9 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                     children: [
                       // Center premium vector illustration container with a subtle background shade
                       Container(
-                        height: 56,
-                        width: 56,
-                        padding: const EdgeInsets.all(8.0),
+                        height: 64,
+                        width: 64,
+                        padding: const EdgeInsets.all(10.0),
                         decoration: BoxDecoration(
                           color: widget.color.withOpacity(0.06),
                           shape: BoxShape.circle,
@@ -487,7 +429,7 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                         ),
                       ),
                       
-                      const SizedBox(height: 14.0),
+                      const SizedBox(height: 18.0),
 
                       // Center aligned subject header title
                       Text(
@@ -496,14 +438,14 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 17.0,
+                          fontSize: 17.5,
                           fontWeight: FontWeight.w900,
                           color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
                           letterSpacing: -0.4,
                         ),
                       ),
                       
-                      const SizedBox(height: 4.0),
+                      const SizedBox(height: 6.0),
 
                       // English / Grade level description subtitle
                       Text(
@@ -514,7 +456,7 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 11.5,
+                          fontSize: 12.0,
                           fontWeight: FontWeight.bold,
                           color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                         ),
@@ -525,7 +467,7 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                   // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
