@@ -160,7 +160,7 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
-                        onPressed: () {
+                        onTap: () {
                           setState(() {
                             _selectedStyleIndex = index;
                           });
@@ -292,7 +292,7 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onPressed: () {
+                    onTap: () {
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => QuizScreen(
