@@ -4,6 +4,7 @@ import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
+import 'quiz_style_selection_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
   final int grade;
@@ -1320,9 +1321,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                       onTap: () {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
-                                            builder: (context) => QuizScreen(
+                                            builder: (context) => QuizStyleSelectionScreen(
                                               grade: widget.grade,
-                                              subject: widget.subjectId,
+                                              subjectId: widget.subjectId,
+                                              unit: index + 1,
+                                              themeColor: widget.color,
+                                              isDarkMode: widget.isDarkMode,
+                                              languageCode: widget.languageCode,
                                             ),
                                           ),
                                         );
