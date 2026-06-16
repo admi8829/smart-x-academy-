@@ -13,6 +13,7 @@ import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
 import 'dynamic_quiz_screen.dart';
 import '../services/offline_manager.dart';
+import '../widgets/image_slider_carousel.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -873,10 +874,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Index 3: Top Featured Video Card inside a high-fidelity framing container matching the exact visual specs
+          // Index 3: Premium Educational Image Carousel Slider
           _animateItem(
             index: 3,
-            child: _buildTopFeaturedVideoCard(isLight),
+            child: ImageSliderCarousel(
+              isDarkMode: !isLight,
+              languageCode: widget.languageCode,
+            ),
           ),
 
           const SizedBox(height: 24.0),
@@ -2903,44 +2907,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       IntrinsicHeight(
                         child: Row(
                           children: [
-                            Expanded(
-                              flex: 3,
-                              child: InkWell(
-                                onTap: () => _showVideoPlaylistModal(course['title'], course['playlist'], isLight),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.languageCode == 'en' ? 'Video Lessons' : 'የቪዲዮ ትምህርት',
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.w900,
-                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: placeholders,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      course['videosCount'],
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 0.8,
-                              color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                            ),
                             Expanded(
                               flex: 3,
                               child: InkWell(
