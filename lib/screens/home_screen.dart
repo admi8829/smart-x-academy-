@@ -885,38 +885,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
           const SizedBox(height: 24.0),
 
-          // Index 1: Free standing Explore Header (DECOUPLED AS REQUESTED!)
-          _animateItem(
-            index: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Explore section title matching image
-                Text(
-                  _local('explore_title'),
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.w900,
-                    color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    letterSpacing: -0.6,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 6.0),
-                Text(
-                  _local('explore_sub'),
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w500,
-                    color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 18.0),
-
           // Index 2: Grid Layout of DECOUPLED INDEPENDENT GRADE CARDS with powerful shadows & gorgeous buttons
           _animateItem(
             index: 2,

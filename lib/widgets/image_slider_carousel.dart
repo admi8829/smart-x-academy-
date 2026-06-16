@@ -57,13 +57,13 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
           carouselController: _carouselController,
           itemCount: _slidesData.length,
           options: CarouselOptions(
-            height: 190.0,
+            height: 165.0,
             autoPlay: true,
             autoPlayInterval: const Duration(seconds: 4),
             autoPlayAnimationDuration: const Duration(milliseconds: 800),
             autoPlayCurve: Curves.easeInOutCubic,
-            enlargeCenterPage: true,
-            viewportFraction: 0.92,
+            enlargeCenterPage: false,
+            viewportFraction: 1.0,
             onPageChanged: (index, reason) {
               setState(() {
                 _currentSlideIndex = index;
@@ -77,7 +77,7 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
             final Color accentColor = slide['accentColor']!;
 
             return Container(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(24.0),
                 boxShadow: [
@@ -124,8 +124,8 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.black.withOpacity(0.1),
-                              Colors.black.withOpacity(0.4),
-                              Colors.black.withOpacity(0.85),
+                              Colors.black.withOpacity(0.35),
+                              Colors.black.withOpacity(0.8),
                             ],
                           ),
                         ),
@@ -134,14 +134,14 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
                     // Text details and badge info overlay
                     Positioned(
                       left: 16,
-                      bottom: 16,
+                      bottom: 12,
                       right: 16,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: accentColor.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(8),
@@ -151,31 +151,31 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
                               widget.languageCode == 'en' ? 'SMART X LEARNING' : 'ስማርት ኤክስ ትምህርት',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 8.5,
+                                fontSize: 8.0,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.6,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           Text(
                             title,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 16.5,
+                              fontSize: 15.5,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Text(
                             desc,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.85),
-                              fontSize: 10.5,
-                              height: 1.3,
+                              fontSize: 10.0,
+                              height: 1.25,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
