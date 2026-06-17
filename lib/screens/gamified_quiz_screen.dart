@@ -19,7 +19,7 @@ class GamifiedQuizScreen extends StatefulWidget {
   State<GamifiedQuizScreen> createState() => _GamifiedQuizScreenState();
 }
 
-class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTickerProviderStateMixin {
+class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
   List<QuestionModel> _questions = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -30,14 +30,14 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
   bool _gameOver = false;
   bool _victory = false;
 
-  // Selected option index for contemporary question
+  // Selected option index for the current question
   int? _selectedIdx;
   bool _isChecked = false;
 
   // Question Timer state
   Timer? _questionTimer;
-  int _timeLeft = 30; // 30 seconds per question
-  final int _maxTime = 30;
+  int _timeLeft = 25; // 25 seconds per question
+  final int _maxTime = 25;
 
   @override
   void initState() {
@@ -81,7 +81,6 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
   }
 
   void _handleTimeOut() {
-    // Force answer checking as wrong
     setState(() {
       _isChecked = true;
       _lives--;
@@ -90,12 +89,12 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
       }
     });
 
-    // Notify student about expiration
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text("Time's up! You lost 1 life ❤️"),
+        content: Text("Time is up! You lost 1 life ❤️"),
         duration: Duration(seconds: 2),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -190,38 +189,23 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
   Widget build(BuildContext context) {
     final bool isLight = Theme.of(context).brightness == Brightness.light;
     final backgroundColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
-    final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
+    final cardBgColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final titleTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final descTextColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          widget.subject != null
-              ? "${widget.subject!.toUpperCase()} - Gamified Mode"
-              : "Gamified Quiz",
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
-        ),
-        elevation: 0,
-        backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
-        foregroundColor: titleTextColor,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF9000)))
           : _errorMessage != null
               ? _buildErrorWidget(isLight)
               : _questions.isEmpty
                   ? _buildEmptyWidget(descTextColor)
                   : _gameOver
-                      ? _buildGameOverWidget(isLight, cardColor, titleTextColor)
+                      ? _buildGameOverWidget(isLight, cardBgColor, titleTextColor)
                       : _victory
-                          ? _buildVictoryWidget(isLight, cardColor, titleTextColor)
-                          : _buildGameplayWidget(isLight, cardColor, titleTextColor, descTextColor),
+                          ? _buildVictoryWidget(isLight, cardBgColor, titleTextColor)
+                          : _buildGameplayWidget(isLight, cardBgColor, titleTextColor, descTextColor),
     );
   }
 
@@ -232,16 +216,27 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.amber, size: 48),
+            const Icon(Icons.bolt_rounded, color: Color(0xFFFF9000), size: 56),
             const SizedBox(height: 16),
-            const Text("Offline Setup Check", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+            const Text(
+              "Challenge Interrupted",
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, letterSpacing: -0.5),
+            ),
             const SizedBox(height: 8),
-            Text(_errorMessage ?? "", style: const TextStyle(fontSize: 12, color: Colors.grey), textAlign: TextAlign.center),
-            const SizedBox(height: 16),
+            Text(
+              _errorMessage ?? "",
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadQuestions,
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF59E0B)),
-              child: const Text("Retry Quest", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF9000),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text("Retry Load", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -251,163 +246,239 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
 
   Widget _buildEmptyWidget(Color textColor) {
     return Center(
-      child: Text(
-        "No challenges exist for this unit.",
-        style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  // GAME OVER SCREEN WIDGET
-  Widget _buildGameOverWidget(bool isLight, Color cardColor, Color textColor) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.heart_broken_rounded, size: 72, color: Colors.red),
-          ),
-          const SizedBox(height: 24),
+          const Icon(Icons.explore_outlined, color: Colors.grey, size: 48),
+          const SizedBox(height: 12),
           Text(
-            "Game Over!",
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.5),
+            "No queries found for this module.",
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            "You ran out of hearts. Learn from solutions and try again to master this subject!",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14.5, color: Colors.grey, height: 1.45, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.red.withOpacity(0.32)),
+          const SizedBox(height: 20),
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatColumn("Your Score", "$_score / ${_questions.length}", Colors.amber),
-                _buildStatColumn("Progress", "${((_currentIndex / _questions.length) * 100).toStringAsFixed(0)}%", Colors.blue),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text("Exit Style", style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _loadQuestions,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 4,
-                  ),
-                  child: const Text("Try Again", style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
+            child: const Text("Go Back"),
           ),
         ],
       ),
     );
   }
 
-  // VICTORY SCREEN WIDGET
+  // GAME OVER SCREEN
+  Widget _buildGameOverWidget(bool isLight, Color cardColor, Color textColor) {
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.heart_broken_rounded, size: 80, color: Colors.redAccent),
+            ),
+            const SizedBox(height: 28),
+            Text(
+              "Out of Lives!",
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.8),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "You ran out of hearts. Learn from the incorrect choices, recharge, and strive to conquer this module!",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.5, color: Colors.grey, height: 1.45, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 36),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isLight ? 0.02 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatColumn("Your Score", "$_score / ${_questions.length}", const Color(0xFFFF9000)),
+                  _buildStatColumn("Progress Level", "${((_currentIndex / _questions.length) * 100).toStringAsFixed(0)}%", const Color(0xFF3B82F6)),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text("Exit Style", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.redAccent.withOpacity(0.32),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _loadQuestions,
+                        borderRadius: BorderRadius.circular(16),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: Text(
+                              "Try Again",
+                              style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 15),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // VICTORY SCREEN
   Widget _buildVictoryWidget(bool isLight, Color cardColor, Color textColor) {
-    // Calculation of stars earned
     int ratingStars = 1;
     if (_lives == 3) ratingStars = 3;
     else if (_lives == 2) ratingStars = 2;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withOpacity(0.12),
-              shape: BoxShape.circle,
+    return SafeArea(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF9000).withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.workspace_premium_rounded, size: 84, color: Color(0xFFFF9000)),
             ),
-            child: const Icon(Icons.emoji_events_rounded, size: 72, color: Color(0xFFF59E0B)),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (idx) {
-              final isFilled = idx < ratingStars;
-              return Icon(
-                Icons.star_rounded,
-                size: 40,
-                color: isFilled ? const Color(0xFFF59E0B) : Colors.grey[400],
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "Victory!",
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.5),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "Sensational work! You successfully survived the dynamic gamified challenge.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.4, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.withOpacity(0.32)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (idx) {
+                final isFilled = idx < ratingStars;
+                return Icon(
+                  Icons.star_rounded,
+                  size: 44,
+                  color: isFilled ? const Color(0xFFFFB01F) : Colors.grey[400],
+                );
+              }),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatColumn("Final Score", "$_score / ${_questions.length}", Colors.green),
-                _buildStatColumn("Bonus Lives Left", "❤️ x $_lives", Colors.redAccent),
-              ],
+            const SizedBox(height: 20),
+            Text(
+              "Victory Complete!",
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.8),
             ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF59E0B),
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 4,
+            const SizedBox(height: 10),
+            const Text(
+              "Simply flawless! You successfully survived the dynamic countdown and finished the gamified challenge.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.45, fontWeight: FontWeight.w500),
             ),
-            child: const Text("Finish & Collect Points", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-          ),
-        ],
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.green.withOpacity(0.2)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isLight ? 0.020 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatColumn("Final Score", "$_score / ${_questions.length}", const Color(0xFF10B981)),
+                  _buildStatColumn("Lives Left", "❤️ x $_lives", Colors.redAccent),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF9000), Color(0xFFFF7A00)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF9000).withOpacity(0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(16),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: Text(
+                        "Collect Points & Exit",
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w950, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -417,272 +488,377 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
       children: [
         Text(heading, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 6),
-        Text(content, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: contentColor)),
+        Text(content, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w950, color: contentColor)),
       ],
     );
   }
 
-  // CORE GAMEPLAY CONTAINER
-  Widget _buildGameplayWidget(bool isLight, Color cardColor, Color textColor, Color descColor) {
-    final q = _questions[_currentIndex];
+  // 1. TOP GAME PANEL: Standard Header, Countdown Timer block, Hearts list layout
+  Widget _buildTopGamePanel(bool isLight) {
     final double timePercent = _timeLeft / _maxTime;
-
-    return Column(
-      children: [
-        // 1. Timer indicator bar directly under the header
-        Column(
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12.0, 10.0, 20.0, 10.0),
+        child: Row(
           children: [
-            LinearProgressIndicator(
-              value: timePercent,
-              backgroundColor: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
-              color: _timeLeft <= 8 ? Colors.red : const Color(0xFFF59E0B),
-              minHeight: 6,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.timer_outlined, size: 16, color: Color(0xFFF59E0B)),
-                      const SizedBox(width: 4),
-                      Text(
-                        "$_timeLeft s",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFFF59E0B)),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: List.generate(3, (idx) {
-                      final bool isHeartFilled = idx < _lives;
-                      return Icon(
-                        isHeartFilled ? Icons.favorite : Icons.favorite_border,
-                        color: Colors.redAccent,
-                        size: 20,
-                      );
-                    }),
-                  ),
-                ],
+            // Close / back button
+            IconButton(
+              icon: Icon(
+                Icons.close_rounded,
+                color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                size: 28,
               ),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            const SizedBox(width: 4),
+            // Middle visual countdown timer bar (animated)
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: TweenAnimationBuilder<double>(
+                  duration: const Duration(seconds: 1),
+                  tween: Tween<double>(
+                    begin: (_timeLeft == _maxTime) ? 1.0 : (_timeLeft + 1) / _maxTime,
+                    end: timePercent,
+                  ),
+                  builder: (context, value, child) {
+                    return LinearProgressIndicator(
+                      value: value,
+                      backgroundColor: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      color: value <= 0.32
+                          ? Colors.redAccent
+                          : (value <= 0.6 ? Colors.orangeAccent : const Color(0xFF10B981)),
+                      minHeight: 12,
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Right 3 Hearts representations
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(3, (idx) {
+                final isLit = idx < _lives;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Icon(
+                    Icons.favorite,
+                    color: isLit ? Colors.redAccent : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
+                    size: 24,
+                  ),
+                );
+              }),
             ),
           ],
         ),
+      ),
+    );
+  }
 
-        // Questions single frame panel
+  // CORE GAMEPLAY SCREEN
+  Widget _buildGameplayWidget(bool isLight, Color cardColor, Color textColor, Color descColor) {
+    final q = _questions[_currentIndex];
+
+    return Column(
+      children: [
+        _buildTopGamePanel(isLight),
+        
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Container(
-              padding: const EdgeInsets.all(20.0),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: Column(
+              children: [
+                // 2. QUESTION BOX CARD: Clean floating layout with distinct rounded edges for questions and choices
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isLight ? 0.03 : 0.12),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Subtitle tracker info
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF59E0B).withOpacity(0.12),
+                          color: const Color(0xFFFF9000).withOpacity(0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          "Question ${_currentIndex + 1} of ${_questions.length}",
+                          "QUESTION ${_currentIndex + 1} OF ${_questions.length}",
                           style: const TextStyle(
-                            color: Color(0xFFD97706),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFFF9000),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w950,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    q.questionText,
-                    style: TextStyle(
-                      fontSize: 15.5,
-                      fontWeight: FontWeight.w900,
-                      color: textColor,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ...q.options.asMap().entries.map((entry) {
-                    final optIdx = entry.key;
-                    final optionText = entry.value;
-
-                    final isSelected = _selectedIdx == optIdx;
-                    final isCorrect = _isOptionCorrect(q, optionText, optIdx);
-
-                    Color optBorder = isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155);
-                    Color optBg = Colors.transparent;
-                    Color optTextColor = descColor;
-
-                    if (_isChecked) {
-                      if (isCorrect) {
-                        optBorder = Colors.green;
-                        optBg = Colors.green.withOpacity(isLight ? 0.08 : 0.15);
-                        optTextColor = Colors.green;
-                      } else if (isSelected) {
-                        optBorder = Colors.red;
-                        optBg = Colors.red.withOpacity(isLight ? 0.08 : 0.15);
-                        optTextColor = Colors.red;
-                      }
-                    } else if (isSelected) {
-                      optBorder = const Color(0xFFF59E0B);
-                      optBg = const Color(0xFFF59E0B).withOpacity(isLight ? 0.05 : 0.1);
-                      optTextColor = const Color(0xFFF59E0B);
-                    }
-
-                    return GestureDetector(
-                      onTap: _isChecked
-                          ? null
-                          : () {
-                              setState(() {
-                                _selectedIdx = optIdx;
-                              });
-                            },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(bottom: 12.0),
-                        padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                        decoration: BoxDecoration(
-                          color: optBg,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: optBorder, width: isSelected ? 2.0 : 1.2),
+                      const SizedBox(height: 16),
+                      // Question body styled in high contrast crisp bold typography
+                      Text(
+                        q.questionText,
+                        style: TextStyle(
+                          fontSize: 17.0,
+                          fontWeight: FontWeight.w950,
+                          color: textColor,
+                          height: 1.4,
                         ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? (_isChecked
-                                        ? (isCorrect ? Colors.green : Colors.red)
-                                        : const Color(0xFFF59E0B))
-                                    : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
-                                shape: BoxShape.circle,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // 3. OPTIONS: Tactile, 3D modern option list responding instantly to selections
+                      ...q.options.asMap().entries.map((entry) {
+                        final optIdx = entry.key;
+                        final optionText = entry.value;
+
+                        final isSelected = _selectedIdx == optIdx;
+                        final isCorrect = _isOptionCorrect(q, optionText, optIdx);
+
+                        // Layout styling variables
+                        Color bgCol = Colors.transparent;
+                        Color borderCol = isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155);
+                        Color shadow3DCol = isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B);
+                        Color optionTxtCol = descColor;
+                        Color labelBg = isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155);
+                        Color labelTxt = descColor;
+
+                        if (_isChecked) {
+                          if (isCorrect) {
+                            borderCol = const Color(0xFF10B981);
+                            bgCol = const Color(0xFF10B981).withOpacity(isLight ? 0.08 : 0.15);
+                            shadow3DCol = const Color(0xFF047857);
+                            optionTxtCol = const Color(0xFF059669);
+                            labelBg = const Color(0xFF10B981);
+                            labelTxt = Colors.white;
+                          } else if (isSelected) {
+                            borderCol = const Color(0xFFEF4444);
+                            bgCol = const Color(0xFFEF4444).withOpacity(isLight ? 0.08 : 0.15);
+                            shadow3DCol = const Color(0xFFB91C1C);
+                            optionTxtCol = const Color(0xFFDC2626);
+                            labelBg = const Color(0xFFEF4444);
+                            labelTxt = Colors.white;
+                          }
+                        } else if (isSelected) {
+                          borderCol = const Color(0xFFFF9000);
+                          bgCol = const Color(0xFFFF9000).withOpacity(isLight ? 0.06 : 0.12);
+                          shadow3DCol = const Color(0xFFD97706);
+                          optionTxtCol = const Color(0xFFFF9000);
+                          labelBg = const Color(0xFFFF9000);
+                          labelTxt = Colors.white;
+                        }
+
+                        return GestureDetector(
+                          onTap: _isChecked
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _selectedIdx = optIdx;
+                                  });
+                                },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 100),
+                            margin: const EdgeInsets.only(bottom: 16.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            decoration: BoxDecoration(
+                              color: bgCol,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: borderCol,
+                                width: isSelected || isChecked ? 2.5 : 1.5,
                               ),
-                              child: Center(
-                                child: Text(
-                                  String.fromCharCode(65 + optIdx),
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : descColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w900,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: shadow3DCol,
+                                  offset: (isSelected && !_isChecked) ? const Offset(0, 1.5) : const Offset(0, 4.0),
+                                  blurRadius: 0, // Solid 3D look
+                                )
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: labelBg,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      String.fromCharCode(65 + optIdx),
+                                      style: TextStyle(
+                                        color: labelTxt,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w950,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                optionText,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: optTextColor,
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    optionText,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: optionTxtCol,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                          ),
+                        );
+                      }).toList(),
 
-                  // Detailed answers solution feedback panel
-                  if (_isChecked && q.explanation != null && q.explanation!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withOpacity(0.06),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.2)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Row(
+                      // Tutor Explanation block inside Question box card
+                      if (_isChecked && q.explanation != null && q.explanation!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(14.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9000).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFFF9000).withOpacity(0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF10B981)),
-                              SizedBox(width: 6),
+                              const Row(
+                                children: [
+                                  Icon(Icons.lightbulb_rounded, size: 16, color: Color(0xFFFF9000)),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Tutor explanation",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFFD97706),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
                               Text(
-                                "Tutor Insight",
+                                q.explanation!,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF10B981),
+                                  fontSize: 11.5,
+                                  height: 1.45,
+                                  color: isLight ? const Color(0xFF78350F) : const Color(0xFFFDE68A),
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            q.explanation!,
-                            style: TextStyle(
-                              fontSize: 11,
-                              height: 1.4,
-                              color: isLight ? const Color(0xFF0F5132) : const Color(0xFFD1E7DD),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
 
-        // Action controls bar bottom section of gameplay
+        // 4. BOTTOM FOOTER: Energetic primary colored full width controller button
         Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 24.0),
           child: SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 54,
             child: _isChecked
-                ? ElevatedButton.icon(
-                    onPressed: _nextQuestion,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
+                ? Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF10B981), Color(0xFF059669)],
+                      ),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withOpacity(0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
                     ),
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: Text(
-                      _currentIndex == _questions.length - 1 ? "Finish Quest" : "Next Question",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _nextQuestion,
+                        borderRadius: BorderRadius.circular(18),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _currentIndex == _questions.length - 1 ? "Finish Quest" : "Next Question",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15.5,
+                                  fontWeight: FontWeight.w950,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   )
-                : ElevatedButton(
-                    onPressed: _selectedIdx == null ? null : _checkChoice,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF59E0B),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: _selectedIdx == null ? 0 : 3,
+                : Container(
+                    decoration: BoxDecoration(
+                      gradient: _selectedIdx == null
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFFFF9000), Color(0xFFFF6B00)],
+                            ),
+                      color: _selectedIdx == null
+                          ? (isLight ? const Color(0xFFCBD5E1) : const Color(0xFF334155))
+                          : null,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: _selectedIdx == null
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: const Color(0xFFFF9000).withOpacity(0.30),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                     ),
-                    child: const Text(
-                      "Check Answer",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _selectedIdx == null ? null : _checkChoice,
+                        borderRadius: BorderRadius.circular(18),
+                        child: Center(
+                          child: Text(
+                            "Check Answer",
+                            style: TextStyle(
+                              color: _selectedIdx == null
+                                  ? (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
+                                  : Colors.white,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w950,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
           ),

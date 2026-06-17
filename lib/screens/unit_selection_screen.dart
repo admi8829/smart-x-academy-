@@ -1209,173 +1209,146 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 16),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedUnitIndex = index;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              curve: Curves.easeOutCubic,
-                              decoration: BoxDecoration(
-                                color: isSelected 
-                                    ? widget.color.withValues(alpha: isLight ? 0.05 : 0.08) 
-                                    : cardBgColor,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected 
-                                      ? widget.color 
-                                      : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
-                                  width: isSelected ? 2.5 : 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
+                        child: Row(
+                          children: [
+                            // 1. UNIT CARD
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: cardBgColor,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.15),
+                                      blurRadius: 18,
+                                      offset: const Offset(0, 6),
+                                    ),
+                                  ],
+                                  border: Border.all(
                                     color: isSelected
-                                        ? widget.color.withValues(alpha: isLight ? 0.12 : 0.2)
-                                        : Colors.black.withValues(alpha: isLight ? 0.03 : 0.1),
-                                    blurRadius: isSelected ? 16 : 8,
-                                    offset: Offset(0, isSelected ? 6 : 3),
-                                  )
-                                ],
-                              ),
-                              child: CustomPaint(
-                                foregroundPainter: isSelected
-                                    ? InsetShadowPainter(
-                                        color: widget.color.withValues(alpha: isLight ? 0.15 : 0.35),
-                                        blurRadius: 8.0,
-                                        strokeWidth: 4.0,
-                                        borderRadius: 20.0,
-                                      )
-                                    : null,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Left side: A beautiful circular badge/icon with the Unit number (e.g., "01", "02").
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: isSelected 
-                                              ? widget.color.withValues(alpha: 0.18) 
-                                              : widget.color.withValues(alpha: 0.08),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '0${index + 1}',
-                                            style: TextStyle(
-                                              color: widget.color,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w900,
+                                        ? widget.color
+                                        : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
+                                    width: isSelected ? 2.0 : 1.0,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedUnitIndex = index;
+                                        });
+                                        // 3. Tapping the main white card selects the unit and triggers navigation
+                                        final selectedUnit = filteredUnits[index];
+                                        final originalIndex = allUnits.indexOf(selectedUnit);
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => QuizStyleSelectionScreen(
+                                              grade: widget.grade,
+                                              subjectId: widget.subjectId,
+                                              unit: originalIndex >= 0 ? originalIndex + 1 : 1,
+                                              themeColor: widget.color,
+                                              isDarkMode: widget.isDarkMode,
+                                              languageCode: widget.languageCode,
                                             ),
                                           ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      // Center: Unit Title and subtitle topics in a clean text hierarchy.
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                        child: Row(
                                           children: [
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
+                                            // Left side: A clean, soft blue circular icon badge with a calendar or unit icon
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.calendar_today_rounded,
+                                                  color: Color(0xFF3B82F6),
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 14),
+                                            // Center: Unit Title and topics in a bold, dark text hierarchy wrapped in Expanded
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
                                                     title,
                                                     style: TextStyle(
-                                                      fontSize: 15.5,
+                                                      fontSize: 15.0,
                                                       fontWeight: FontWeight.w900,
                                                       color: headerTextColor,
-                                                      letterSpacing: -0.4,
+                                                      height: 1.25,
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                // Small cloud icon next to the Unit title
-                                                progress != null
-                                                    ? SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child: CircularProgressIndicator(
-                                                          value: progress,
-                                                          strokeWidth: 2,
-                                                          color: widget.color,
-                                                        ),
-                                                      )
-                                                    : InkWell(
-                                                        onTap: () => _simulateDownload(unitId),
-                                                        borderRadius: BorderRadius.circular(50),
-                                                        child: Padding(
-                                                          padding: const EdgeInsets.all(4.0),
-                                                          child: Icon(
-                                                            isDownloaded
-                                                                ? Icons.cloud_done_rounded
-                                                                : Icons.cloud_download_outlined,
-                                                            size: 16,
-                                                            color: isDownloaded
-                                                                ? const Color(0xFF10B981)
-                                                                : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
-                                                          ),
-                                                        ),
-                                                      ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              desc,
-                                              style: TextStyle(
-                                                fontSize: 12.5,
-                                                height: 1.4,
-                                                fontWeight: FontWeight.w500,
-                                                color: descColor,
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    desc,
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12.0,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: descColor,
+                                                      height: 1.35,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            // Right side: A small grey chevron arrow icon
+                                            Icon(
+                                              Icons.chevron_right_rounded,
+                                              color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                              size: 20,
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
-                                      // Right side selection indicator radio feedback
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 12.0),
-                                        child: AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          width: 22,
-                                          height: 22,
-                                          decoration: BoxDecoration(
-                                            color: isSelected 
-                                                ? widget.color 
-                                                : Colors.transparent,
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: isSelected 
-                                                  ? widget.color 
-                                                  : (isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: isSelected
-                                              ? const Icon(
-                                                  Icons.check,
-                                                  color: Colors.white,
-                                                  size: 14,
-                                                )
-                                              : null,
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            // 2. EXTERNAL DOWNLOAD BUTTON
+                            GestureDetector(
+                              onTap: () => _simulateDownload(unitId),
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: progress != null
+                                    ? const Color(0xFFE2E8F0)
+                                    : (isDownloaded ? const Color(0xFF10B981) : const Color(0xFF3B82F6)),
+                                child: progress != null
+                                    ? SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          value: progress,
+                                          strokeWidth: 2,
+                                          color: const Color(0xFF3B82F6),
+                                        ),
+                                      )
+                                    : Icon(
+                                        isDownloaded ? Icons.cloud_done_rounded : Icons.file_download_outlined,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
