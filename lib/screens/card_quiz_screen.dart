@@ -391,7 +391,7 @@ class _CardQuizScreenState extends State<CardQuizScreen> {
                               ? (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
                               : Colors.white,
                           fontSize: 15.0,
-                          fontWeight: FontWeight.w950,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
                         ),
                       ),

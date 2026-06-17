@@ -387,7 +387,7 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                           style: TextStyle(
                             color: headerTextColor,
                             fontSize: 14.5,
-                            fontWeight: isSelected ? FontWeight.black : FontWeight.w500,
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
                           ),
                         ),
                         trailing: Row(
