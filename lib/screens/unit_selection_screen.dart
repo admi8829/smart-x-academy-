@@ -502,6 +502,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   }
 
   String _searchQuery = "";
+  int _selectedUnitIndex = 0;
 
   void _simulateDownload(String unitId) {
     if (_downloadedUnits.contains(unitId)) return;
@@ -855,15 +856,92 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: _isBannerAdLoaded && _bannerAd != null
-          ? Container(
-              height: _bannerAd!.size.height.toDouble(),
-              width: _bannerAd!.size.width.toDouble(),
-              alignment: Alignment.center,
-              color: Colors.transparent,
-              child: AdWidget(ad: _bannerAd!),
-            )
-          : const SizedBox.shrink(),
+      bottomNavigationBar: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: filteredUnits.isNotEmpty
+                        ? [
+                            widget.color,
+                            widget.color.withValues(alpha: 0.85),
+                          ]
+                        : [
+                            Colors.grey.shade400,
+                            Colors.grey.shade400,
+                          ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: filteredUnits.isNotEmpty
+                      ? [
+                          BoxShadow(
+                            color: widget.color.withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
+                        ]
+                      : [],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: filteredUnits.isNotEmpty
+                        ? () {
+                            if (_selectedUnitIndex >= 0 && _selectedUnitIndex < filteredUnits.length) {
+                              final selectedUnit = filteredUnits[_selectedUnitIndex];
+                              final originalIndex = allUnits.indexOf(selectedUnit);
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => QuizStyleSelectionScreen(
+                                    grade: widget.grade,
+                                    subjectId: widget.subjectId,
+                                    unit: originalIndex >= 0 ? originalIndex + 1 : 1,
+                                    themeColor: widget.color,
+                                    isDarkMode: widget.isDarkMode,
+                                    languageCode: widget.languageCode,
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          languageCode == 'en' ? 'Explore Unit' : 'ክፍል ዳስስ',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_isBannerAdLoaded && _bannerAd != null)
+              Container(
+                height: _bannerAd!.size.height.toDouble(),
+                width: _bannerAd!.size.width.toDouble(),
+                alignment: Alignment.center,
+                color: Colors.transparent,
+                child: AdWidget(ad: _bannerAd!),
+              ),
+          ],
+        ),
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -1047,7 +1125,12 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: TextField(
-                                onChanged: (v) => setState(() => _searchQuery = v),
+                                onChanged: (v) {
+                                  setState(() {
+                                    _searchQuery = v;
+                                    _selectedUnitIndex = 0;
+                                  });
+                                },
                                 style: TextStyle(color: headerTextColor, fontSize: 14),
                                 decoration: InputDecoration(
                                   hintText: _local('search_hint'),
@@ -1108,6 +1191,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
 
                     final String title = languageCode == 'en' ? unit['enUnit'] : unit['amUnit'];
                     final String desc = languageCode == 'en' ? unit['enDesc'] : unit['amDesc'];
+                    final bool isSelected = _selectedUnitIndex == index;
 
                     final indexFactor = index * 100;
                     return TweenAnimationBuilder<double>(
@@ -1123,161 +1207,180 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ),
                         );
                       },
-                      child: Card(
-                        elevation: 0,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: isLight 
-                                ? const Color(0xFFEDF0F3) 
-                                : const Color(0xFF334155),
-                            width: 1.5,
-                          ),
-                        ),
-                        color: cardBgColor,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => QuizStyleSelectionScreen(
-                                  grade: widget.grade,
-                                  subjectId: widget.subjectId,
-                                  unit: index + 1,
-                                  themeColor: widget.color,
-                                  isDarkMode: widget.isDarkMode,
-                                  languageCode: widget.languageCode,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedUnitIndex = index;
+                              });
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOutCubic,
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? widget.color.withValues(alpha: isLight ? 0.05 : 0.08) 
+                                    : cardBgColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected 
+                                      ? widget.color 
+                                      : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
+                                  width: isSelected ? 2.5 : 1.5,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isSelected
+                                        ? widget.color.withValues(alpha: isLight ? 0.12 : 0.2)
+                                        : Colors.black.withValues(alpha: isLight ? 0.03 : 0.1),
+                                    blurRadius: isSelected ? 16 : 8,
+                                    offset: Offset(0, isSelected ? 6 : 3),
+                                  )
+                                ],
                               ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                // Left side: A beautiful circular badge/icon with the Unit number (e.g., "01", "02").
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: widget.color.withOpacity(0.08),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      '0${index + 1}',
-                                      style: TextStyle(
-                                        color: widget.color,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w900,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                // Center: Unit Title and subtitle topics in a clean text hierarchy.
-                                Expanded(
-                                  child: Column(
+                              child: CustomPaint(
+                                foregroundPainter: isSelected
+                                    ? InsetShadowPainter(
+                                        color: widget.color.withValues(alpha: isLight ? 0.15 : 0.35),
+                                        blurRadius: 8.0,
+                                        strokeWidth: 4.0,
+                                        borderRadius: 20.0,
+                                      )
+                                    : null,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              title,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 14.5,
-                                                fontWeight: FontWeight.w800,
-                                                color: headerTextColor,
-                                                letterSpacing: -0.3,
-                                              ),
+                                      // Left side: A beautiful circular badge/icon with the Unit number (e.g., "01", "02").
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          color: isSelected 
+                                              ? widget.color.withValues(alpha: 0.18) 
+                                              : widget.color.withValues(alpha: 0.08),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '0${index + 1}',
+                                            style: TextStyle(
+                                              color: widget.color,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w900,
                                             ),
                                           ),
-                                          const SizedBox(width: 6),
-                                          // Small cloud icon next to the Unit title
-                                          progress != null
-                                              ? SizedBox(
-                                                  width: 14,
-                                                  height: 14,
-                                                  child: CircularProgressIndicator(
-                                                    value: progress,
-                                                    strokeWidth: 2,
-                                                    color: widget.color,
-                                                  ),
-                                                )
-                                              : InkWell(
-                                                  onTap: () => _simulateDownload(unitId),
-                                                  borderRadius: BorderRadius.circular(50),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(4.0),
-                                                    child: Icon(
-                                                      isDownloaded
-                                                          ? Icons.cloud_done_rounded
-                                                          : Icons.cloud_download_outlined,
-                                                      size: 16,
-                                                      color: isDownloaded
-                                                          ? const Color(0xFF10B981)
-                                                          : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      // Center: Unit Title and subtitle topics in a clean text hierarchy.
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    title,
+                                                    style: TextStyle(
+                                                      fontSize: 15.5,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: headerTextColor,
+                                                      letterSpacing: -0.4,
                                                     ),
                                                   ),
                                                 ),
-                                        ],
+                                                const SizedBox(width: 8),
+                                                // Small cloud icon next to the Unit title
+                                                progress != null
+                                                    ? SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child: CircularProgressIndicator(
+                                                          value: progress,
+                                                          strokeWidth: 2,
+                                                          color: widget.color,
+                                                        ),
+                                                      )
+                                                    : InkWell(
+                                                        onTap: () => _simulateDownload(unitId),
+                                                        borderRadius: BorderRadius.circular(50),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(4.0),
+                                                          child: Icon(
+                                                            isDownloaded
+                                                                ? Icons.cloud_done_rounded
+                                                                : Icons.cloud_download_outlined,
+                                                            size: 16,
+                                                            color: isDownloaded
+                                                                ? const Color(0xFF10B981)
+                                                                : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
+                                                          ),
+                                                        ),
+                                                      ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              desc,
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                height: 1.4,
+                                                fontWeight: FontWeight.w500,
+                                                color: descColor,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        desc,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          fontSize: 11.5,
-                                          fontWeight: FontWeight.w500,
-                                          color: descColor,
+                                      const SizedBox(width: 12),
+                                      // Right side selection indicator radio feedback
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12.0),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          width: 22,
+                                          height: 22,
+                                          decoration: BoxDecoration(
+                                            color: isSelected 
+                                                ? widget.color 
+                                                : Colors.transparent,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isSelected 
+                                                  ? widget.color 
+                                                  : (isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: isSelected
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  color: Colors.white,
+                                                  size: 14,
+                                                )
+                                              : null,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                // Right side: A small, elegant trailing arrow icon or a compact text action button for "Practice".
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: widget.color.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        languageCode == 'en' ? 'Practice' : 'ልምምድ',
-                                        style: TextStyle(
-                                          color: widget.color,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w900,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 14,
-                                        color: widget.color,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
               const SizedBox(height: 32),
             ],
           ),
@@ -1286,4 +1389,40 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     ),
   );
 }
+}
+
+class InsetShadowPainter extends CustomPainter {
+  final Color color;
+  final double blurRadius;
+  final double strokeWidth;
+  final double borderRadius;
+
+  InsetShadowPainter({
+    required this.color,
+    this.blurRadius = 6.0,
+    this.strokeWidth = 3.0,
+    this.borderRadius = 20.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurRadius);
+
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+    
+    canvas.clipRRect(rrect);
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant InsetShadowPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.blurRadius != blurRadius ||
+      oldDelegate.strokeWidth != strokeWidth ||
+      oldDelegate.borderRadius != borderRadius;
 }

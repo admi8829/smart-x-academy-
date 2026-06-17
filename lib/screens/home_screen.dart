@@ -904,7 +904,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF0084FF),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 9" : "ክፍል 9",
-                  buttonText: widget.languageCode == 'en' ? 'open' : 'ክፈት',
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(9),
                 ),
                 // Grade 10
@@ -915,7 +915,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF10B981),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 10" : "ክፍል 10",
-                  buttonText: widget.languageCode == 'en' ? 'open' : 'ክፈት',
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(10),
                 ),
                 // Grade 11
@@ -926,7 +926,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFFF59E0B),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 11" : "ክፍል 11",
-                  buttonText: widget.languageCode == 'en' ? 'open' : 'ክፈት',
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(11),
                 ),
                 // Grade 12
@@ -937,7 +937,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   btnColor: const Color(0xFF8B5CF6),
                   isLight: isLight,
                   statusText: widget.languageCode == 'en' ? "GRADE 12" : "ክፍል 12",
-                  buttonText: widget.languageCode == 'en' ? 'open' : 'ክፈት',
+                  buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(12),
                 ),
               ],
@@ -5507,14 +5507,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
                 ..rotateY(_tiltY + autoTilt),
               transformAlignment: Alignment.center,
               decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.25,
-                  colors: [
-                    widget.isLight ? const Color(0xFFFFFFFF) : const Color(0xFF1E293B),
-                    widget.isLight ? const Color(0xFFE2E8F0) : const Color(0xFF0D1527), // Modern inner shadow / inset effect
-                  ],
-                ),
+                color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(16.0 + pulse * 6.0), // Dynamic animated border radius (breathing effect)
                 border: Border.all(
                   color: Color.lerp(
@@ -5590,12 +5583,19 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with Singl
 
                   const SizedBox(height: 6.0),
 
-                  // Pill button styled with solid grade theme color
+                  // Pill button styled EXACTLY like a beautiful modern gradient pill button, made LARGER
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12.0), // Consistent button height
+                    padding: const EdgeInsets.symmetric(vertical: 12.0), // Increased button height from 9.0 to 12.0
                     decoration: BoxDecoration(
-                      color: widget.btnColor, // Solid specific Grade theme color
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF52C29F), // Vibrant mint teal
+                          widget.btnColor, // Accent theme color for each grade category
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
                       borderRadius: BorderRadius.circular(24.0), // Proper pill button rounding
                       boxShadow: [
                         BoxShadow(
