@@ -1123,130 +1123,85 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ),
                         );
                       },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 18),
-                        decoration: BoxDecoration(
-                          color: cardBgColor,
-                          borderRadius: BorderRadius.circular(28),
-                          border: Border.all(
+                      child: Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
                             color: isLight 
                                 ? const Color(0xFFEDF0F3) 
                                 : const Color(0xFF334155),
                             width: 1.5,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 18.0,
-                              offset: const Offset(0, 6),
-                            )
-                          ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Top Row of badges
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: widget.color.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
+                        color: cardBgColor,
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => QuizStyleSelectionScreen(
+                                  grade: widget.grade,
+                                  subjectId: widget.subjectId,
+                                  unit: index + 1,
+                                  themeColor: widget.color,
+                                  isDarkMode: widget.isDarkMode,
+                                  languageCode: widget.languageCode,
+                                ),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Left side: A beautiful circular badge/icon with the Unit number (e.g., "01", "02").
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: widget.color.withOpacity(0.08),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
                                     child: Text(
-                                      languageCode == 'en'
-                                          ? 'UNIT 0${index + 1}'
-                                          : 'ክፍል 0${index + 1}',
+                                      '0${index + 1}',
                                       style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w900,
                                         color: widget.color,
-                                        letterSpacing: 0.5,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w900,
                                       ),
                                     ),
                                   ),
-                                  if (isDownloaded)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF10B981).withOpacity(0.12),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                ),
+                                const SizedBox(width: 14),
+                                // Center: Unit Title and subtitle topics in a clean text hierarchy.
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
                                         children: [
-                                          const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 12),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _local('downloaded').toUpperCase(),
-                                            style: const TextStyle(
-                                              fontSize: 9.5,
-                                              fontWeight: FontWeight.w900,
-                                              color: Color(0xFF10B981),
-                                              letterSpacing: 0.3,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              // Unit Title
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.w900,
-                                  color: headerTextColor,
-                                  letterSpacing: -0.4,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              // Unit description
-                              Text(
-                                desc,
-                                style: TextStyle(
-                                  fontSize: 12.0,
-                                  height: 1.35,
-                                  fontWeight: FontWeight.w600,
-                                  color: descColor,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              // Elegant slim Divider line
-                              Container(
-                                height: 1.5,
-                                color: isLight 
-                                    ? const Color(0xFFEDF0F3) 
-                                    : const Color(0xFF334155),
-                              ),
-                              const SizedBox(height: 10),
-                              // Bottom Row of Custom action Buttons
-                              Row(
-                                children: [
-                                  // Download control
-                                  Expanded(
-                                    child: progress != null
-                                        ? Container(
-                                            height: 38,
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              color: widget.color.withOpacity(0.05),
-                                              borderRadius: BorderRadius.circular(16),
-                                              border: Border.all(
-                                                color: widget.color.withOpacity(0.15),
-                                                width: 1,
+                                          Expanded(
+                                            child: Text(
+                                              title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 14.5,
+                                                fontWeight: FontWeight.w800,
+                                                color: headerTextColor,
+                                                letterSpacing: -0.3,
                                               ),
                                             ),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                SizedBox(
+                                          ),
+                                          const SizedBox(width: 6),
+                                          // Small cloud icon next to the Unit title
+                                          progress != null
+                                              ? SizedBox(
                                                   width: 14,
                                                   height: 14,
                                                   child: CircularProgressIndicator(
@@ -1254,125 +1209,69 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     strokeWidth: 2,
                                                     color: widget.color,
                                                   ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  _local('downloading'),
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: widget.color,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : InkWell(
-                                            onTap: () => _simulateDownload(unitId),
-                                            borderRadius: BorderRadius.circular(16),
-                                            child: AnimatedContainer(
-                                              duration: const Duration(milliseconds: 200),
-                                              height: 38,
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                color: isDownloaded
-                                                    ? const Color(0xFF10B981).withOpacity(0.08)
-                                                    : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
-                                                borderRadius: BorderRadius.circular(16),
-                                                border: Border.all(
-                                                  color: isDownloaded
-                                                      ? const Color(0xFF10B981).withOpacity(0.2)
-                                                      : Colors.transparent,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    isDownloaded 
-                                                        ? Icons.cloud_done_rounded 
-                                                        : Icons.cloud_download_outlined,
-                                                    size: 16,
-                                                    color: isDownloaded 
-                                                        ? const Color(0xFF10B981) 
-                                                        : (isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Text(
-                                                    isDownloaded ? _local('downloaded') : _local('download'),
-                                                    style: TextStyle(
-                                                      fontSize: 12.5,
-                                                      fontWeight: FontWeight.w900,
-                                                      color: isDownloaded 
-                                                          ? const Color(0xFF10B981) 
-                                                          : (isLight ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                                )
+                                              : InkWell(
+                                                  onTap: () => _simulateDownload(unitId),
+                                                  borderRadius: BorderRadius.circular(50),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(4.0),
+                                                    child: Icon(
+                                                      isDownloaded
+                                                          ? Icons.cloud_done_rounded
+                                                          : Icons.cloud_download_outlined,
+                                                      size: 16,
+                                                      color: isDownloaded
+                                                          ? const Color(0xFF10B981)
+                                                          : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                                                     ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Start Practice / Quiz button
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => QuizStyleSelectionScreen(
-                                              grade: widget.grade,
-                                              subjectId: widget.subjectId,
-                                              unit: index + 1,
-                                              themeColor: widget.color,
-                                              isDarkMode: widget.isDarkMode,
-                                              languageCode: widget.languageCode,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Container(
-                                        height: 38,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: widget.color,
-                                          borderRadius: BorderRadius.circular(16),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: widget.color.withOpacity(0.2),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 3),
-                                            )
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.play_arrow_rounded,
-                                              size: 16,
-                                              color: Colors.white,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _local('start_quiz'),
-                                              style: const TextStyle(
-                                                fontSize: 12.5,
-                                                fontWeight: FontWeight.w900,
-                                                color: Colors.white,
-                                                letterSpacing: -0.1,
-                                              ),
-                                            ),
-                                          ],
+                                                ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        desc,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          fontWeight: FontWeight.w500,
+                                          color: descColor,
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                                const SizedBox(width: 12),
+                                // Right side: A small, elegant trailing arrow icon or a compact text action button for "Practice".
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: widget.color.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        languageCode == 'en' ? 'Practice' : 'ልምምድ',
+                                        style: TextStyle(
+                                          color: widget.color,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 14,
+                                        color: widget.color,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
+import 'card_quiz_screen.dart';
+import 'list_quiz_screen.dart';
+import 'gamified_quiz_screen.dart';
 
 class QuizStyleSelectionScreen extends StatefulWidget {
   final int grade;
@@ -293,13 +296,30 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
+                      Widget targetScreen;
+                      if (_selectedStyleIndex == 0) {
+                        targetScreen = CardQuizScreen(
+                          grade: widget.grade,
+                          subject: widget.subjectId,
+                          unit: widget.unit,
+                        );
+                      } else if (_selectedStyleIndex == 1) {
+                        targetScreen = ListQuizScreen(
+                          grade: widget.grade,
+                          subject: widget.subjectId,
+                          unit: widget.unit,
+                        );
+                      } else {
+                        targetScreen = GamifiedQuizScreen(
+                          grade: widget.grade,
+                          subject: widget.subjectId,
+                          unit: widget.unit,
+                        );
+                      }
+
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) => QuizScreen(
-                            grade: widget.grade,
-                            subject: widget.subjectId,
-                            unit: widget.unit,
-                          ),
+                          builder: (context) => targetScreen,
                         ),
                       );
                     },
