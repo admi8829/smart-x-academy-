@@ -277,7 +277,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
           const SizedBox(height: 24),
           Text(
             "Game Over!",
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.5),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.5),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -371,7 +371,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
           const SizedBox(height: 16),
           Text(
             "Victory!",
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.5),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.5),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -391,7 +391,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildStatColumn("Final Score", "$_score / ${_questions.length}", Colors.green),
-                _buildStatColumn("Bonus Lives Left", "❤️ x $_lives", Colors.rose),
+                _buildStatColumn("Bonus Lives Left", "❤️ x $_lives", Colors.redAccent),
               ],
             ),
           ),
@@ -458,7 +458,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> with SingleTick
                       final bool isHeartFilled = idx < _lives;
                       return Icon(
                         isHeartFilled ? Icons.favorite : Icons.favorite_border,
-                        color: Colors.rose,
+                        color: Colors.redAccent,
                         size: 20,
                       );
                     }),
