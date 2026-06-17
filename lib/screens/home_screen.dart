@@ -14,6 +14,7 @@ import 'quiz_screen.dart';
 import 'dynamic_quiz_screen.dart';
 import '../services/offline_manager.dart';
 import '../widgets/image_slider_carousel.dart';
+import '../widgets/performance_bar_chart.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -4394,148 +4395,25 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildPerformanceChart(bool isLight) {
-    final barColor = isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8);
-    final shadowColor = isLight ? Colors.black.withOpacity(0.05) : Colors.black.withOpacity(0.2);
-    final bgBarColor = isLight ? Colors.grey.shade100 : const Color(0xFF1E293B);
-
-    final List<Map<String, dynamic>> chartData = [
-      {'subject': 'Biology', 'score': 84, 'icon': Icons.biotech},
-      {'subject': 'Physics', 'score': 68, 'icon': Icons.bolt},
-      {'subject': 'Chemistry', 'score': 74, 'icon': Icons.science_outlined},
-      {'subject': 'Mathematics', 'score': 90, 'icon': Icons.calculate_outlined},
-      {'subject': 'Civics', 'score': 80, 'icon': Icons.gavel_rounded},
-      {'subject': 'English', 'score': 88, 'icon': Icons.translate_rounded},
+    final List<PerformanceSubjectData> chartData = [
+      PerformanceSubjectData(subjectName: 'Biology', subjectCode: 'BIO', scorePercentage: 84, icon: Icons.biotech),
+      PerformanceSubjectData(subjectName: 'Physics', subjectCode: 'PHY', scorePercentage: 68, icon: Icons.bolt),
+      PerformanceSubjectData(subjectName: 'Chemistry', subjectCode: 'CHE', scorePercentage: 74, icon: Icons.science_outlined),
+      PerformanceSubjectData(subjectName: 'Mathematics', subjectCode: 'MAT', scorePercentage: 90, icon: Icons.calculate_outlined),
+      PerformanceSubjectData(subjectName: 'Civics', subjectCode: 'CIV', scorePercentage: 80, icon: Icons.gavel_rounded),
+      PerformanceSubjectData(subjectName: 'English', subjectCode: 'ENG', scorePercentage: 88, icon: Icons.translate_rounded),
     ];
 
-    return Container(
-      padding: const EdgeInsets.all(22),
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: isLight ? Colors.white : const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.languageCode == 'en' ? "Performance Analytics 📉" : "የውጤት ትንተና 📉",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    widget.languageCode == 'en' ? "Based on recent practice achievements" : "ባለፉት ጥያቄዎች ውጤት መሰረት",
-                    style: TextStyle(fontSize: 11, color: Colors.grey[500], fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8)).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  widget.languageCode == 'en' ? "Global Rank #128" : "የደረጃ ቁጥር #128",
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                  ),
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Vertical Columns Chart Grid
-          SizedBox(
-            height: 180,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: chartData.map((data) {
-                final int score = data['score'];
-                final String subject = data['subject'];
-                final IconData icon = data['icon'];
-                
-                return Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // Percentage Text
-                      Text(
-                        "$score%",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Bar Column container
-                      Expanded(
-                        child: Container(
-                          width: 14,
-                          decoration: BoxDecoration(
-                            color: bgBarColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          alignment: Alignment.bottomCenter,
-                          child: AnimatedContainer(
-                            duration: const Duration(seconds: 1),
-                            height: (score / 100) * 120,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: isLight 
-                                  ? [const Color(0xFF1E40AF), const Color(0xFF3B82F6)]
-                                  : [const Color(0xFF0ea5e9), const Color(0xFF38bdf8)],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Icon & Short Tag
-                      Icon(icon, size: 16, color: Colors.grey[400]),
-                      const SizedBox(height: 4),
-                      Text(
-                        subject.length > 3 ? subject.substring(0, 3).toUpperCase() : subject.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+    final String title = widget.languageCode == 'en' ? "Performance Analytics 📉" : "የውጤት ትንተና 📉";
+    final String subtitle = widget.languageCode == 'en' ? "Based on recent practice achievements" : "ባለፉት ጥያቄዎች ውጤት መሰረት";
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: PerformanceBarChart(
+        data: chartData,
+        isDark: !isLight,
+        title: title,
+        subtitle: subtitle,
       ),
     );
   }

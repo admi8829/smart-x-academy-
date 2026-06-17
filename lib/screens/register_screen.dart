@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_phone_field.dart';
 import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -439,104 +441,65 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // 1. Full Name input (sign-up only)
             if (!_isLoginForm) ...[
-              _buildLabel(_local('field_fullname'), isDark),
-              _buildFieldContainer(
+              CustomTextField(
+                label: _local('field_fullname'),
+                hintText: 'Abebe Bekele',
+                controller: _fullNameController,
                 isDark: isDark,
-                child: TextFormField(
-                  controller: _fullNameController,
-                  textCapitalization: TextCapitalization.words,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Abebe Bekele',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(
-                      Icons.person_outline_rounded,
-                      color: isDark ? Colors.white70 : navyColor,
-                      size: 20,
-                    ),
-                  ),
-                  validator: (val) {
-                    if (!_isLoginForm && (val == null || val.trim().isEmpty)) {
-                      return 'Full Name is required';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
-
-            // 2. Email Address input (both login and register)
-            _buildLabel(_local('field_email'), isDark),
-            _buildFieldContainer(
-              isDark: isDark,
-              child: TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.bold,
-                ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'abebe@smartx.com',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-                  prefixIcon: Icon(
-                    Icons.alternate_email_rounded,
-                    color: isDark ? Colors.white70 : navyColor,
-                    size: 20,
-                  ),
+                textCapitalization: TextCapitalization.words,
+                prefixIcon: Icon(
+                  Icons.person_outline_rounded,
+                  color: isDark ? Colors.white70 : navyColor,
+                  size: 20,
                 ),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return 'Email Address is required';
-                  }
-                  final bool emailValid = RegExp(
-                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+"
-                  ).hasMatch(val.trim());
-                  if (!emailValid) {
-                    return 'Enter a valid email address';
+                  if (!_isLoginForm && (val == null || val.trim().isEmpty)) {
+                    return 'Full Name is required';
                   }
                   return null;
                 },
               ),
+            ],
+
+            // 2. Email Address input (both login and register)
+            CustomTextField(
+              label: _local('field_email'),
+              hintText: 'abebe@smartx.com',
+              controller: _emailController,
+              isDark: isDark,
+              keyboardType: TextInputType.emailAddress,
+              prefixIcon: Icon(
+                Icons.alternate_email_rounded,
+                color: isDark ? Colors.white70 : navyColor,
+                size: 20,
+              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return 'Email Address is required';
+                }
+                final bool emailValid = RegExp(
+                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+"
+                ).hasMatch(val.trim());
+                if (!emailValid) {
+                  return 'Enter a valid email address';
+                }
+                return null;
+              },
             ),
 
             // 3. Phone Number input (sign-up only)
             if (!_isLoginForm) ...[
-              _buildLabel(_local('field_phone'), isDark),
-              _buildFieldContainer(
+              CustomPhoneField(
+                label: _local('field_phone'),
+                hintText: '0911223344',
+                controller: _phoneController,
                 isDark: isDark,
-                child: TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: '0911223344',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    prefixIcon: Icon(
-                      Icons.phone_outlined,
-                      color: isDark ? Colors.white70 : navyColor,
-                      size: 20,
-                    ),
-                  ),
-                  validator: (val) {
-                    if (!_isLoginForm && (val == null || val.trim().isEmpty)) {
-                      return 'Phone Number is required';
-                    }
-                    return null;
-                  },
-                ),
+                validator: (val) {
+                  if (!_isLoginForm && (val == null || val.trim().isEmpty)) {
+                    return 'Phone Number is required';
+                  }
+                  return null;
+                },
               ),
             ],
 
@@ -580,49 +543,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
 
             // 5. Password field (both login and register)
-            _buildLabel(_local('field_password'), isDark),
-            _buildFieldContainer(
+            CustomTextField(
+              label: _local('field_password'),
+              hintText: '••••••••',
+              controller: _passwordController,
               isDark: isDark,
-              child: TextFormField(
-                controller: _passwordController,
-                obscureText: !_isPasswordVisible,
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.bold,
+              obscureText: !_isPasswordVisible,
+              prefixIcon: Icon(
+                Icons.lock_outline_rounded,
+                color: isDark ? Colors.white70 : navyColor,
+                size: 20,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
+                  color: isDark ? Colors.white54 : Colors.grey,
+                  size: 20,
                 ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: '••••••••',
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-                  prefixIcon: Icon(
-                    Icons.lock_outline_rounded,
-                    color: isDark ? Colors.white70 : navyColor,
-                    size: 20,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                      color: isDark ? Colors.white54 : Colors.grey,
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isPasswordVisible = !_isPasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-                validator: (val) {
-                  if (val == null || val.isEmpty) {
-                    return 'Password is required';
-                  }
-                  if (val.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
+                onPressed: () {
+                  setState(() {
+                    _isPasswordVisible = !_isPasswordVisible;
+                  });
                 },
               ),
+              validator: (val) {
+                if (val == null || val.isEmpty) {
+                  return 'Password is required';
+                }
+                if (val.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 14),
 

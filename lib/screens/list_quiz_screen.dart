@@ -283,7 +283,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
                           "$qNum.",
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w950,
+                            fontWeight: FontWeight.w900,
                             color: Color(0xFF4F46E5),
                             letterSpacing: -0.5,
                           ),
@@ -542,7 +542,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
             const SizedBox(height: 16),
             const Text(
               "Exam Result Summary",
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w950, letterSpacing: -0.5),
+              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, letterSpacing: -0.5),
             ),
             const SizedBox(height: 12),
             Row(
@@ -701,7 +701,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15.0,
-                          fontWeight: FontWeight.w950,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
                         ),
                       ),

@@ -22,7 +22,7 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
   // 3 Education Oriented high quality slides with translated titles and descriptions
   final List<Map<String, dynamic>> _slidesData = [
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop',
+      'assetPath': 'assets/images/student_phone.jpg',
       'titleEn': 'Collaborative Learning',
       'titleAm': 'የጋራ ጥናት ቡድን',
       'descEn': 'Connect and share summaries and matric preparation strategies with students nationwide.',
@@ -30,7 +30,7 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
       'accentColor': Color(0xFF0084FF),
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop',
+      'assetPath': 'assets/images/student_tablet.jpg',
       'titleEn': 'Excellence in Exams',
       'titleAm': 'ለማትሪክ አሸናፊነት',
       'descEn': 'Unlock high-quality practice tests, interactive flashcards, and verified solutions.',
@@ -38,7 +38,7 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
       'accentColor': Color(0xFF10B981),
     },
     {
-      'imageUrl': 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop',
+      'assetPath': 'assets/images/student_laptop.jpg',
       'titleEn': 'Track Your Progression',
       'titleAm': 'የእርስዎን ጉዞ ይከታተሉ',
       'descEn': 'Monitor study hours, completed chapters, and detailed mock success statistics.',
@@ -94,21 +94,9 @@ class _ImageSliderCarouselState extends State<ImageSliderCarousel> {
                   children: [
                     // Slide Image background
                     Positioned.fill(
-                      child: Image.network(
-                        slide['imageUrl']!,
+                      child: Image.asset(
+                        slide['assetPath']!,
                         fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF0F172A),
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0084FF)),
-                              ),
-                            ),
-                          );
-                        },
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF1E293B),
                           child: Icon(Icons.school_rounded, size: 48, color: accentColor.withOpacity(0.5)),

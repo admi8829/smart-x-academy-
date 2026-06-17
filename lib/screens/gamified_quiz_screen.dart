@@ -289,7 +289,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
             const SizedBox(height: 28),
             Text(
               "Out of Lives!",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.8),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.8),
             ),
             const SizedBox(height: 12),
             const Text(
@@ -413,7 +413,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
             const SizedBox(height: 20),
             Text(
               "Victory Complete!",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w950, color: textColor, letterSpacing: -0.8),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w900, color: textColor, letterSpacing: -0.8),
             ),
             const SizedBox(height: 10),
             const Text(
@@ -470,7 +470,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                     child: Center(
                       child: Text(
                         "Collect Points & Exit",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w950, fontSize: 16),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
                       ),
                     ),
                   ),
@@ -488,7 +488,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
       children: [
         Text(heading, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
         const SizedBox(height: 6),
-        Text(content, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w950, color: contentColor)),
+        Text(content, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: contentColor)),
       ],
     );
   }
@@ -600,7 +600,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                           style: const TextStyle(
                             color: Color(0xFFFF9000),
                             fontSize: 10,
-                            fontWeight: FontWeight.w950,
+                            fontWeight: FontWeight.w900,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -611,7 +611,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                         q.questionText,
                         style: TextStyle(
                           fontSize: 17.0,
-                          fontWeight: FontWeight.w950,
+                          fontWeight: FontWeight.w900,
                           color: textColor,
                           height: 1.4,
                         ),
@@ -676,7 +676,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                               borderRadius: BorderRadius.circular(18),
                               border: Border.all(
                                 color: borderCol,
-                                width: isSelected || isChecked ? 2.5 : 1.5,
+                                width: isSelected || _isChecked ? 2.5 : 1.5,
                               ),
                               boxShadow: [
                                 BoxShadow(
@@ -701,7 +701,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                                       style: TextStyle(
                                         color: labelTxt,
                                         fontSize: 13,
-                                        fontWeight: FontWeight.w950,
+                                        fontWeight: FontWeight.w900,
                                       ),
                                     ),
                                   ),
@@ -807,7 +807,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 15.5,
-                                  fontWeight: FontWeight.w950,
+                                  fontWeight: FontWeight.w900,
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -853,7 +853,7 @@ class _GamifiedQuizScreenState extends State<GamifiedQuizScreen> {
                                   ? (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8))
                                   : Colors.white,
                               fontSize: 15.5,
-                              fontWeight: FontWeight.w950,
+                              fontWeight: FontWeight.w900,
                               letterSpacing: 0.5,
                             ),
                           ),
