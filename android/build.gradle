@@ -13,14 +13,9 @@ subprojects {
     // Force unified versions of conflicting AndroidX and Jetpack components
     project.configurations.all {
         resolutionStrategy {
-            // Unify androidx.work to prevent 'Duplicate class' or compilation version mismatches
+            // Unify work-runtime to prevent 'Duplicate class' or compilation version mismatches
             force 'androidx.work:work-runtime:2.9.0'
             force 'androidx.work:work-runtime-ktx:2.9.0'
-            
-            // Unify sqlite & room
-            force 'androidx.sqlite:sqlite:2.4.0'
-            force 'androidx.sqlite:sqlite-framework:2.4.0'
-            force 'androidx.room:room-runtime:2.6.1'
             
             // Unify Lifecycle components to play nice with modern work/room versions
             force 'androidx.lifecycle:lifecycle-runtime:2.7.0'
