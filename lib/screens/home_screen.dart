@@ -75,6 +75,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _currentIndex = 0;
   late AnimationController _fadeController;
 
+  // Last visited lesson state variables
+  String _lastLessonSubject = "Mathematics";
+  String _lastLessonTitle = "Unit 1: Sequence & Series Matric Prep";
+  int _lastLessonGrade = 12;
+  Color _lastLessonColor = const Color(0xFF0084FF);
+
   // Dynamic User Profile Fields loaded from SharedPreferences
   String _userName = "Abebe Bekele";
   String _userGradeStr = "Grade 12 Student";
@@ -282,6 +288,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _userEmail = prefs.getString('user_email') ?? "abebe@smartx.com";
       _isPremiumUser = prefs.getBool('user_isPremium') ?? true;
       _profileImageRemoved = prefs.getBool('user_imageRemoved') ?? false;
+
+      // Load last visited lesson
+      _lastLessonSubject = prefs.getString('last_lesson_subject') ?? "Mathematics";
+      _lastLessonTitle = prefs.getString('last_lesson_title') ?? "Unit 1: Sequence & Series Matric Prep";
+      _lastLessonGrade = prefs.getInt('last_lesson_grade') ?? 12;
+      final colorVal = prefs.getInt('last_lesson_color') ?? 0xFF0084FF;
+      _lastLessonColor = Color(colorVal);
 
       // Populate text controllers
       _fullNameController.text = _userName;
@@ -869,15 +882,435 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  String _getDailyQuote(String lang) {
+    final quotesEn = [
+      "The beautiful thing about learning is that no one can take it away from you.",
+      "Education is the most powerful weapon which you can use to change the world.",
+      "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+      "Believe you can and you're halfway there.",
+      "The expert in anything was once a beginner.",
+      "Your education is a dress rehearsal for a life that is yours to lead.",
+    ];
+    final quotesAm = [
+      "ስለ መማር ውቡ ነገር ማንም ከእርስዎ ሊወስድብዎት የማይችል መሆኑ ነው።",
+      "ትምህርት ዓለምን ለመለወጥ የምንጠቀምበት በጣም ኃይለኛ መሣሪያ ነው።",
+      "ስኬት የመጨረሻ አይደለም፣ ውድቀትም የሚያጠፋ አይደለም፡ ለመቀጠል ድፍረት ማግኘቱ ነው አስፈላጊው።",
+      "ማሳካት እንደምትችል እመን፤ ግማሽ መንገዱን ተጉዘሃል።",
+      "በማንኛውም መስክ የተካነ ባለሙያ በአንድ ወቅት ጀማሪ ነበር።",
+      "ትምህርትዎ የራስዎን ሕይወት ለመምራት የሚያደርጉት ልምምድ ነው።",
+    ];
+    // Simple deterministic quote selector using the day of month
+    final idx = DateTime.now().day % quotesEn.length;
+    return lang == 'en' ? quotesEn[idx] : quotesAm[idx];
+  }
+
   Widget _buildHomeScreenContent(bool isLight) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Index 3: Premium Educational Image Carousel Slider
+          // 1. WELCOME SECTION (Hello, User Name & Daily Quote)
+          _animateItem(
+            index: 0,
+            child: Row(
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF3B82F6),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      )
+                    ],
+                  ),
+                  child: Center(
+                    child: _profileImageRemoved
+                        ? const Icon(Icons.person_rounded, size: 28, color: Color(0xFF3B82F6))
+                        : const Text(
+                            "🎓",
+                            style: TextStyle(fontSize: 26),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            widget.languageCode == 'en' ? 'Hello, ' : 'ሰላም፣ ',
+                            style: TextStyle(
+                              fontSize: 18.0,
+                              fontWeight: FontWeight.w500,
+                              color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              _userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.w900,
+                                color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        _getDailyQuote(widget.languageCode),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                          color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18.0),
+
+          // 2. MODERN SEARCH BAR
+          _animateItem(
+            index: 1,
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                color: isLight ? Colors.white : const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.12),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                style: TextStyle(
+                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                  fontSize: 14.0,
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  hintText: widget.languageCode == 'en' 
+                      ? 'Search subjects, units, or topic exams...' 
+                      : 'የትምህርት ዓይነቶችን፣ ክፍሎችን ወይም ፈተናዎችን ፈልግ...',
+                  hintStyle: TextStyle(
+                    color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    fontSize: 13.0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                  ),
+                  suffixIcon: Container(
+                    margin: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFF3B82F6).withOpacity(0.08) : const Color(0xFF3B82F6).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.tune_rounded,
+                      size: 16,
+                      color: Color(0xFF3B82F6),
+                    ),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20.0),
+
+          // 3. CONTINUE LEARNING (Last Visited Lesson horizontal card)
+          _animateItem(
+            index: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.languageCode == 'en' ? 'Continue Learning' : 'ትምህርትህን ቀጥል',
+                      style: TextStyle(
+                        fontSize: 15.0,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => _navigateToGradeScreen(_lastLessonGrade),
+                      child: Text(
+                        widget.languageCode == 'en' ? 'Resume' : 'ቀጥል',
+                        style: const TextStyle(
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3B82F6),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10.0),
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(15.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _navigateToGradeScreen(_lastLessonGrade),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _lastLessonColor.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _lastLessonSubject.toLowerCase().contains('math')
+                                      ? Icons.functions_rounded
+                                      : _lastLessonSubject.toLowerCase().contains('bio')
+                                          ? Icons.biotech_rounded
+                                          : _lastLessonSubject.toLowerCase().contains('phys')
+                                              ? Icons.bolt_rounded
+                                              : Icons.menu_book_rounded,
+                                  color: _lastLessonColor,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          widget.languageCode == 'en'
+                                              ? 'GRADE $_lastLessonGrade • $_lastLessonSubject'
+                                              : 'ክፍል $_lastLessonGrade • $_lastLessonSubject',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w900,
+                                            color: _lastLessonColor,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        const Icon(
+                                          Icons.play_circle_filled_rounded,
+                                          size: 16,
+                                          color: Color(0xFF10B981),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(
+                                      _lastLessonTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.w900,
+                                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(4),
+                                            child: const LinearProgressIndicator(
+                                              value: 0.65,
+                                              backgroundColor: Color(0xFFE2E8F0),
+                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                                              minHeight: 5,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Text(
+                                          '65%',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w900,
+                                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20.0),
+
+          // 4. DAILY CHALLENGE (Quiz of the Day)
           _animateItem(
             index: 3,
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4F46E5), Color(0xFF818CF8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withOpacity(0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.emoji_events_rounded, size: 28, color: Colors.amber),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.languageCode == 'en' ? 'QUIZ OF THE DAY' : 'የዛሬው ልዩ ውድድር',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white.withOpacity(0.9),
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          widget.languageCode == 'en' ? 'Grand Matric Daily Challenge' : 'የአጠቃላይ ማትሪክ ዕለታዊ ፈተና',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.languageCode == 'en' ? 'Joined by 12,450+ students today' : 'ዛሬ 12,450+ ተማሪዎች ተሳትፈዋል',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DynamicQuizScreen(
+                            grade: 12,
+                            subject: "General Challenge",
+                            unit: "Daily Quiz",
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF4F46E5),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      widget.languageCode == 'en' ? 'Start' : 'ጀምር',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24.0),
+
+          // 5. EXISTING: Image Carousel Slider
+          _animateItem(
+            index: 4,
             child: ImageSliderCarousel(
               isDarkMode: !isLight,
               languageCode: widget.languageCode,
@@ -886,16 +1319,32 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
           const SizedBox(height: 24.0),
 
-          // Index 2: Grid Layout of DECOUPLED INDEPENDENT GRADE CARDS with powerful shadows & gorgeous buttons
+          // Section Title: Grade selection
           _animateItem(
-            index: 2,
+            index: 5,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                widget.languageCode == 'en' ? 'Select Your Grade' : 'ክፍልዎን ይምረጡ',
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                ),
+              ),
+            ),
+          ),
+
+          // 6. Grid of Grade Cards with individual Progress bars and static White borders with shadow
+          _animateItem(
+            index: 6,
             child: GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 16.0,
               mainAxisSpacing: 16.0,
-              childAspectRatio: 1.05, // Decreased physical height proportion
+              childAspectRatio: 1.05, // Formats dynamically to hold the progress bars perfectly
               children: [
                 // Grade 9
                 _InteractiveGradeCard(
@@ -907,6 +1356,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   statusText: widget.languageCode == 'en' ? "GRADE 9" : "ክፍል 9",
                   buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(9),
+                  progress: 0.65,
                 ),
                 // Grade 10
                 _InteractiveGradeCard(
@@ -918,6 +1368,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   statusText: widget.languageCode == 'en' ? "GRADE 10" : "ክፍል 10",
                   buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(10),
+                  progress: 0.40,
                 ),
                 // Grade 11
                 _InteractiveGradeCard(
@@ -929,6 +1380,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   statusText: widget.languageCode == 'en' ? "GRADE 11" : "ክፍል 11",
                   buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(11),
+                  progress: 0.85,
                 ),
                 // Grade 12
                 _InteractiveGradeCard(
@@ -940,6 +1392,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   statusText: widget.languageCode == 'en' ? "GRADE 12" : "ክፍል 12",
                   buttonText: _local('start_course_btn'),
                   onTap: () => _navigateToGradeScreen(12),
+                  progress: 0.20,
                 ),
               ],
             ),
@@ -1114,18 +1567,48 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _navigateToGradeScreen(int grade) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SubjectSelectionScreen(
-          grade: grade,
-          isDarkMode: widget.isDarkMode,
-          languageCode: widget.languageCode,
-          onToggleTheme: widget.onToggleTheme,
-          onToggleLanguage: widget.onToggleLanguage,
+  void _navigateToGradeScreen(int grade) async {
+    // Save last lesson details when visiting a Grade to make Continue Learning interactive!
+    final prefs = await SharedPreferences.getInstance();
+    String sub = "Mathematics";
+    String title = "Unit 1: Functions and Calculus Intro";
+    int colorInt = 0xFF0084FF;
+    if (grade == 9) {
+      sub = "Mathematics";
+      title = "Unit 1: Number Systems and Logic";
+      colorInt = 0xFF0084FF;
+    } else if (grade == 10) {
+      sub = "Biology";
+      title = "Unit 2: Cells and Microorganisms";
+      colorInt = 0xFF10B981;
+    } else if (grade == 11) {
+      sub = "Physics";
+      title = "Unit 3: Electromagnetism and Magnet";
+      colorInt = 0xFFF59E0B;
+    } else if (grade == 12) {
+      sub = "Mathematics";
+      title = "Unit 1: Sequence & Series Matric Prep";
+      colorInt = 0xFF8B5CF6;
+    }
+    await prefs.setInt('last_lesson_grade', grade);
+    await prefs.setString('last_lesson_subject', sub);
+    await prefs.setString('last_lesson_title', title);
+    await prefs.setInt('last_lesson_color', colorInt);
+    _loadProfileData();
+
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => SubjectSelectionScreen(
+            grade: grade,
+            isDarkMode: widget.isDarkMode,
+            languageCode: widget.languageCode,
+            onToggleTheme: widget.onToggleTheme,
+            onToggleLanguage: widget.onToggleLanguage,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildTopFeaturedVideoCard(bool isLight) {
@@ -1757,8 +2240,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               const SizedBox(height: 6),
               Text(
                 widget.languageCode == 'en'
-                    ? 'Your downloaded lessons, short notes, and practice quizzes are available 100% offline.'
-                    : 'ያወረዷቸው አጫጭር ማስታወሻዎች እና ፈተናዎች ያለ በይነመረብ (Offline) እዚህ ይሰራሉ።',
+                    ? 'Your downloaded practice quizzes are available 100% offline.'
+                    : 'ያወረዷቸው ፈተናዎች ያለ በይነመረብ (Offline) እዚህ ይሰራሉ።',
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1924,23 +2407,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           children: [
                             Expanded(
                               child: TextButton.icon(
-                                onPressed: () => _showOfflineShortNotesSheet(title, subject, id, isLight),
-                                icon: const Icon(Icons.description_rounded, size: 14),
-                                label: Text(
-                                  widget.languageCode == 'en' ? 'Short Note' : 'ማስታወሻ',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
-                                ),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: color,
-                                  backgroundColor: color.withOpacity(0.08),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextButton.icon(
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -1986,120 +2452,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _showOfflineShortNotesSheet(String unitTitle, String subject, String id, bool isLight) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.75,
-          maxChildSize: 0.9,
-          minChildSize: 0.5,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 16),
-                    width: 42,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          widget.languageCode == 'en' ? 'SMART SHORT NOTE' : 'አጭር የጥናት ማስታወሻ',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF10B981),
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, size: 20),
-                        style: IconButton.styleFrom(
-                          backgroundColor: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                  child: Text(
-                    unitTitle,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    subject,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E88E5),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  child: Container(
-                    height: 1,
-                    color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    children: [
-                      Text(
-                        _getShortNotesForUnit(id, subject),
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          height: 1.6,
-                          fontWeight: FontWeight.w600,
-                          color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                )
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _confirmDeleteDownload(String id, String unitTitle) {
     showDialog(
       context: context,
@@ -2108,13 +2460,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return AlertDialog(
           backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
           title: Text(
-            widget.languageCode == 'en' ? 'Delete offline package?' : 'ፓኬጁን ያጥፉ?',
+            widget.languageCode == 'en' ? 'Delete offline questions?' : 'ጥያቄዎችን ያጥፉ?',
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
           ),
           content: Text(
             widget.languageCode == 'en'
-                ? 'Are you sure you want to remove "$unitTitle" from your offline study packages?'
-                : '"$unitTitle" የሚለውን አጭር ማስታወሻ እና ፈተና ማጥፋት ይፈልጋሉ?',
+                ? 'Are you sure you want to remove "$unitTitle" offline questions from your device?'
+                : '"$unitTitle" ከመስመር ውጭ የተቀመጡ ጥያቄዎችን ማጥፋት ይፈልጋሉ?',
             style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
           ),
           actions: [
@@ -2226,54 +2578,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'icon': icon,
       'color': color,
     };
-  }
-
-  String _getShortNotesForUnit(String id, String subject) {
-    if (id.startsWith('math')) {
-      return "• Rational Numbers: Any number that can be expressed as the quotient or fraction p/q of two integers, a numerator p and a non-zero denominator q.\n\n"
-          "• Irrational Numbers: Real numbers that cannot be written as simple fractions. E.g., √2, π (pi), and e. They have non-terminating, non-periodic decimal expansions.\n\n"
-          "• Arithmetic Progression (AP): A sequence of numbers such that the difference of any two successive members is a constant d. Formula: a_n = a_1 + (n-1)d.\n\n"
-          "• Geometric Progression (GP): A sequence where each term after the first is found by multiplying the previous term by a non-zero number called the common ratio r. Formula: a_n = a_1 * r^(n-1).\n\n"
-          "• High-Yield Exam Tip: Arithmetic Mean AM = (a+b)/2, Geometric Mean GM = √(ab). AM is always greater than or equal to GM.";
-    } else if (id.startsWith('bio')) {
-      return "• Biology is the scientific study of life. It covers molecular structures, microscopic cell biology, genetics, anatomy, and global environmental ecology.\n\n"
-          "• Microscope Technology: Cellular biology began after Robert Hooke described plant cork cells in 1665 using an early compound microscope.\n\n"
-          "• Cell Theory Principles:\n"
-          "  1. All living organisms are composed of one or more cells.\n"
-          "  2. The cell is the basic structural and functional unit of life.\n"
-          "  3. All cells arise from pre-existing cells.\n\n"
-          "• Organelles Key Functions:\n"
-          "  - Mitochondria: Powerhouse of the cell, generates ATP via cellular respiration.\n"
-          "  - Nucleus: Site of genetic information storage (DNA).\n"
-          "  - Chloroplasts: Solar panels of plant cells, coordinates photosynthesis processes.\n\n"
-          "• Scientific Inquiry: Formulate Hypothesis -> Operational Experiment -> Empirical Data Collection -> Peer-Reviewed Conclusion.";
-    } else if (id.startsWith('chem')) {
-      return "• Atomic Structure & Quantum Theory: Atoms consist of a heavy, positively charged nucleus surrounded by tiny, negatively charged electrons.\n\n"
-          "• Quantum Numbers:\n"
-          "  1. Principle (n): Specifies the shell energy level.\n"
-          "  2. Angular (l): Codes subshell shape (s, p, d, f).\n"
-          "  3. Magnetic (m): Identifies orbital spatial alignment.\n"
-          "  4. Spin (s): Defines electron self-rotation (+1/2 or -1/2).\n\n"
-          "• Key Atomic Building Rules:\n"
-          "  - Aufbau Principle: Orbitals must be filled in order of ascending energy.\n"
-          "  - Pauli Exclusion: Two electrons cannot share identical quantum indices.\n"
-          "  - Hund's Rule: Orbitals are singly filled before doubling up to minimize Coulombic repulsion.";
-    } else if (id.startsWith('phys')) {
-      return "• Physical Quantities & Vectors:\n"
-          "  - Scalar: Quantity with magnitude only (e.g., speed, mass, energy).\n"
-          "  - Vector: Quantity with both magnitude and direction (e.g., velocity, acceleration, force).\n\n"
-          "• Vector Addition Methods:\n"
-          "  1. Graphical: Head-to-Tail alignment.\n"
-          "  2. Analytical Components: Projecting onto Cartesian coordinates (A_x = A*cos(θ), A_y = A*sin(θ)). Sum components to find resultant magnitude R = √(R_x² + R_y²).\n\n"
-          "• Units System (SI): 7 base units form the blueprint of all derived physical measurements on Earth.";
-    } else {
-      return "• General Summary Notes:\n\n"
-          "This offline module has been successfully compiled and fully saved directly to your local partition. It contains cheat cards, diagrams index, matric-aligned questions, and high-yield notes.\n\n"
-          "• Study Tips:\n"
-          "  - Review this page regularly before trying the offline quiz\n"
-          "  - Tap 'Quiz' on your offline dashboard to test your knowledge retention\n"
-          "  - Active recall and spaced repetition are highly effective for national exams prep.";
-    }
   }
 
   Widget _buildQuizScreenTab(bool isLight) {
@@ -2884,7 +3188,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      widget.languageCode == 'en' ? 'Short Notes' : 'አጫጭር ማስታወሻ',
+                                      widget.languageCode == 'en' ? 'Units & Topics' : 'ክፍሎችና ርዕሶች',
                                       style: TextStyle(
                                         fontSize: 12.5,
                                         fontWeight: FontWeight.w900,
@@ -4319,9 +4623,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     children: [
                       const Icon(Icons.menu_book_rounded, color: Colors.orange, size: 28),
                       const SizedBox(height: 6),
-                      const Text("28 Read", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      const Text("28 Units", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
                       const SizedBox(height: 1),
-                      Text(widget.languageCode == 'en' ? "Short Notes" : "አጫጭር ማስታወሻ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
+                      Text(widget.languageCode == 'en' ? "Units Explored" : "የተጠኑ ክፍሎች", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -5187,7 +5491,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               },
               child: Text(
                 widget.languageCode == 'en' ? 'Confirm Log Out' : 'ውጣ',
-                style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.red),
+                style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.blue),
               ),
             ),
           ],
@@ -5196,95 +5500,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 }
-
-// Separate Page shown when a user taps a Grade selection card
-class GradeCoursesPage extends StatelessWidget {
-  final int grade;
-  final bool isDarkMode;
-  const GradeCoursesPage({super.key, required this.grade, required this.isDarkMode});
-
-  @override
-  Widget build(BuildContext context) {
-    bool isLight = !isDarkMode;
-    return Scaffold(
-      backgroundColor: isLight ? const Color(0xFFF5F7FA) : const Color(0xFF111827),
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: isLight ? const Color(0xFF0D2353) : Colors.white),
-        backgroundColor: isLight ? Colors.white : const Color(0xFF1F2937),
-        elevation: 0.5,
-        title: Text(
-          'Grade $grade Syllabus',
-          style: TextStyle(fontWeight: FontWeight.bold, color: isLight ? const Color(0xFF0D2353) : Colors.white),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        children: [
-          _buildItem(context, "Lesson 1: Introduction to Calculus & Function Analysis", "Duration: 45m", isLight),
-          _buildItem(context, "Lesson 2: Modern Physics Principles and Vectors", "Duration: 55m", isLight),
-          _buildItem(context, "Lesson 3: Advanced Chemical Synthesis & Equilibrium", "Duration: 1h 10m", isLight),
-          _buildItem(context, "Lesson 4: Structure of Cells and Metabolism pathways", "Duration: 38m", isLight),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItem(BuildContext context, String title, String duration, bool isLight) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isLight ? Colors.white : const Color(0xFF1F2937),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: isLight ? Colors.black.withValues(alpha: 0.04) : Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14.5,
-              height: 1.3,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Row(
-              children: [
-                Icon(Icons.timer_outlined, size: 14, color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
-                const SizedBox(width: 4),
-                Text(
-                  duration,
-                  style: TextStyle(
-                    color: isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
-                    fontSize: 12.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.play_circle_fill, color: Color(0xFF1E88E5), size: 32),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Launching video lesson player...")));
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
 
 class _InteractiveGradeCard extends StatefulWidget {
   final String title;
@@ -5295,6 +5510,7 @@ class _InteractiveGradeCard extends StatefulWidget {
   final VoidCallback onTap;
   final String statusText;
   final String buttonText;
+  final double progress;
 
   const _InteractiveGradeCard({
     required this.title,
@@ -5305,212 +5521,184 @@ class _InteractiveGradeCard extends StatefulWidget {
     required this.onTap,
     required this.statusText,
     required this.buttonText,
+    required this.progress,
   });
 
   @override
   State<_InteractiveGradeCard> createState() => _InteractiveGradeCardState();
 }
 
-class _InteractiveGradeCardState extends State<_InteractiveGradeCard> with SingleTickerProviderStateMixin {
-  double _tiltX = 0.0;
-  double _tiltY = 0.0;
+class _InteractiveGradeCardState extends State<_InteractiveGradeCard> {
   double _scale = 1.0;
-  late AnimationController _levitateController;
-
-  @override
-  void initState() {
-    super.initState();
-    _levitateController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _levitateController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _levitateController,
-      builder: (context, child) {
-        final double pulse = _levitateController.value;
-        final double floatOffsetY = (pulse - 0.5) * 4.0;
-        final double autoTilt = (pulse - 0.5) * 0.012;
-
-        return Listener(
-          onPointerDown: (event) {
-            final RenderBox? box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final Offset localPos = box.globalToLocal(event.position);
-            final double midX = box.size.width / 2;
-            final double midY = box.size.height / 2;
-            setState(() {
-              _scale = 0.94;
-              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
-              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
-            });
-          },
-          onPointerMove: (event) {
-            final RenderBox? box = context.findRenderObject() as RenderBox?;
-            if (box == null) return;
-            final Offset localPos = box.globalToLocal(event.position);
-            final double midX = box.size.width / 2;
-            final double midY = box.size.height / 2;
-            setState(() {
-              _tiltY = ((localPos.dx - midX) / midX) * 0.08;
-              _tiltX = -((localPos.dy - midY) / midY) * 0.08;
-            });
-          },
-          onPointerUp: (event) {
-            setState(() {
-              _scale = 1.0;
-              _tiltX = 0.0;
-              _tiltY = 0.0;
-            });
-          },
-          child: GestureDetector(
-            onTap: widget.onTap,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              transform: Matrix4.identity()
-                ..setEntry(3, 2, 0.0012)
-                ..translate(0.0, floatOffsetY)
-                ..scale(_scale)
-                ..rotateX(_tiltX)
-                ..rotateY(_tiltY + autoTilt),
-              transformAlignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: widget.isLight ? const Color(0xFFF8F9FA) : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(16.0 + pulse * 6.0), // Dynamic animated border radius (breathing effect)
-                border: Border.all(
-                  color: Color.lerp(
-                    widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
-                    widget.btnColor.withOpacity(0.55),
-                    pulse,
-                  )!,
-                  width: 1.5 + pulse * 0.7, // Dynamic animated border width
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.btnColor.withOpacity(widget.isLight ? (0.05 + pulse * 0.08) : (0.12 + pulse * 0.16)), // Pulsing brand-tinted shadow
-                    blurRadius: 10.0 + pulse * 10.0, // Dynamic shadow blur radius
-                    spreadRadius: pulse * 1.5, // Dynamic shadow spread expansion
-                    offset: Offset(0, 3 + pulse * 4.0), // Dynamic vertical shadow dropping
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 11.0), // Elegant tighter padding to fit the shortened box
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Upper row containing title/subtitle on left and custom graphics/illustration on right
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 17.0, // Slightly more compact font to prevent overflow
-                                  fontWeight: FontWeight.w900,
-                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 2.0),
-                              Expanded(
-                                child: Text(
-                                  widget.subtitle,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 10.5, // Tighter font size
-                                    fontWeight: FontWeight.w600,
-                                    color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                                    height: 1.2,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 4.0),
-                        // Premium illustration with custom compact size
-                        SizedBox(
-                          height: 36, // Slightly more compact to give the button maximum space
-                          width: 36,
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: widget.illustration,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 6.0),
-
-                  // Pill button styled EXACTLY like a beautiful modern gradient pill button, made LARGER
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12.0), // Increased button height from 9.0 to 12.0
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF52C29F), // Vibrant mint teal
-                          widget.btnColor, // Accent theme color for each grade category
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24.0), // Proper pill button rounding
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.btnColor.withOpacity(0.24),
-                          blurRadius: 8.0,
-                          offset: const Offset(0, 3),
-                        )
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.buttonText,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13.0, // Increased font size from 12.0 to 13.0
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.1,
-                          ),
-                        ),
-                        const SizedBox(width: 4.0),
-                        const Icon(
-                          Icons.chevron_right, // Required chevron_right arrow icon
-                          color: Colors.white,
-                          size: 15.0,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+    return Listener(
+      onPointerDown: (event) {
+        setState(() {
+          _scale = 0.96;
+        });
       },
+      onPointerUp: (event) {
+        setState(() {
+          _scale = 1.0;
+        });
+      },
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.identity()..scale(_scale),
+          transformAlignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.isLight ? Colors.white : const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(18.0),
+            border: Border.all(
+              color: Colors.white,
+              width: 2.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(widget.isLight ? 0.06 : 0.22),
+                blurRadius: 14.0,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0), // Elegant tighter padding to fit the shortened box
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Upper row containing title/subtitle on left and custom graphics/illustration on right
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16.0, // Slightly more compact font to prevent overflow
+                              fontWeight: FontWeight.w900,
+                              color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 1.0),
+                          Expanded(
+                            child: Text(
+                              widget.subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10.0, // Tighter font size
+                                fontWeight: FontWeight.w600,
+                                color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 4.0),
+                    // Premium illustration with custom compact size
+                    SizedBox(
+                      height: 34, // Slightly more compact to give the button maximum space
+                      width: 34,
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: widget.illustration,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 4.0),
+
+              // Dynamic LinearProgressIndicator
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: widget.progress,
+                        backgroundColor: widget.isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                        valueColor: AlwaysStoppedAnimation<Color>(widget.btnColor),
+                        minHeight: 5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${(widget.progress * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: widget.isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 8.0),
+
+              // Pill button styled EXACTLY like a beautiful modern gradient pill button, made LARGER
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10.0), // Increased button height from 9.0 to 10.0
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF52C29F), // Vibrant mint teal
+                      widget.btnColor, // Accent theme color for each grade category
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24.0), // Proper pill button rounding
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.btnColor.withOpacity(0.24),
+                      blurRadius: 8.0,
+                      offset: const Offset(0, 3),
+                    )
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.buttonText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.0, // Increased font size from 12.0 to 13.0
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    const SizedBox(width: 4.0),
+                    const Icon(
+                      Icons.chevron_right, // Required chevron_right arrow icon
+                      color: Colors.white,
+                      size: 14.0,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

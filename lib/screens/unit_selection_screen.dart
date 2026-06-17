@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
+import '../services/quiz_service.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
 import 'quiz_style_selection_screen.dart';
@@ -108,34 +109,34 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
       'en': {
         'back': 'Back',
         'units_title': 'Unit Explorer',
-        'download': 'Download',
-        'downloading': 'Downloading...',
-        'downloaded': 'Downloaded',
+        'download': 'Download Questions',
+        'downloading': 'Downloading Questions...',
+        'downloaded': 'Questions Saved',
         'start_quiz': 'Start Practice',
         'completed': 'Completed',
         'units_count': 'Units Available',
         'progress_label': 'My Learning Progress',
         'search_hint': 'Search unit topics...',
         'no_results': 'No units match your search.',
-        'bytes_info': 'Size: 12.4 MB • Complete PDF & offline questions',
-        'info_sheet': 'Unit Offline Package',
-        'info_desc': 'Downloading saves high-yield summaries, diagrams, and local question databases directly to your device for complete offline learning.',
+        'bytes_info': 'Size: ~100 KB • Complete offline questions database',
+        'info_sheet': 'Unit Questions Package',
+        'info_desc': 'Downloading saves unit-specific exam questions directly to your device for complete offline practice.',
       },
       'am': {
         'back': 'ተመለስ',
         'units_title': 'የትምህርት ክፍሎች',
-        'download': 'ያውርዱ',
-        'downloading': 'በማውረድ ላይ...',
-        'downloaded': 'ተጠናቋል',
+        'download': 'ጥያቄዎችን አውርድ',
+        'downloading': 'ጥያቄዎችን በማውረድ ላይ...',
+        'downloaded': 'ጥያቄዎች ወርደዋል',
         'start_quiz': 'መጠይቅ ጀምር',
         'completed': 'የተጠናቀቀ',
         'units_count': 'ያሉ የትምህርት ክፍሎች',
         'progress_label': 'የእኔ የመማር ሂደት',
         'search_hint': 'የክፍል አርዕስቶችን ፈልግ...',
         'no_results': 'ማንኛውም ክፍል ከአሰሳዎ ጋር አልተገኘም።',
-        'bytes_info': 'መጠን: 12.4 MB • ሙሉ የፒዲኤፍ ማጠቃለያዎች',
-        'info_sheet': 'ክላሲክ የትምህርት ጥቅል',
-        'info_desc': 'ማውረድ ያለ በይነመረብ (ከመስመር ውጭ) እንዲማሩ እና ጥያቄዎችን እንዲለማመዱ ሁሉንም የትምህርት ማጠቃለያዎች ያከማቻል።',
+        'bytes_info': 'መጠን: ~100 KB • ሙሉ ከመስመር ውጪ ጥያቄዎች',
+        'info_sheet': 'የክፍል ጥያቄዎች ጥቅል',
+        'info_desc': 'ማውረድ ያለ በይነመረብ (ከመስመር ውጭ) የፈተና ጥያቄዎችን በቀጥታ በስልክዎ ላይ እንዲለማመዱ ያከማቻል።',
       }
     };
     return localized[languageCode]?[key] ?? key;
@@ -386,83 +387,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
             'id': 'hist_u3',
             'grade': widget.grade,
             'enUnit': 'Unit 3: Medieval Kingdoms and Camel Caravan Routes',
-            'amUnit': 'ክፍል 3: የመካከለኛው ዘመን መንግስታት እና የንግድ መስመሮች',
-            'enDesc': 'The Zagwe dynasty rock-hewn Lalibela architecture, Islamic sultanates, and Gondarian castle period.',
-            'amDesc': 'የዛግዌ ስርወ መንግስት የላሊበላ ውቅር አብያተ ክርስቲያናት እና የጎንደር ነገስታት ከተማ ታሪክ።',
-          },
-          {
-            'id': 'hist_u4',
-            'grade': widget.grade,
-            'enUnit': 'Unit 4: Modern Ethiopia Integration & Adwa Unity',
-            'amUnit': 'ክፍል 4: የዘመናዊት ኢትዮጵያ ምስረታ እና የአድዋ ድል',
-            'enDesc': 'Emperor Tewodros reunification, Emperor Menelik state expansion, and Battle of Adwa victory.',
-            'amDesc': 'የዓፄ ቴዎድሮስ ጥረቶች፣ የዓፄ ምኒልክ አሀዳዊ ምስረታ እና የአድዋ ጦርነት ታሪክ።',
-          },
-          {
-            'id': 'hist_u5',
-            'grade': widget.grade,
-            'enUnit': 'Unit 5: 20th Century Conflicts and African Decolonization',
-            'amUnit': 'ክፍል 5: የ20ኛው ክፍለ ዘመን ጦርነቶች እና የአፍሪካ ነጻነት',
-            'enDesc': 'First & Second World Wars, League of Nations failures, and decolonization timeline.',
-            'amDesc': 'የአንደኛውና ሁለተኛው የዓለም ጦርነት፣ የአፍሪካ ነጻነት ንቅናቄዎች መነሳት።',
-          },
-        ];
-
-      case 'Civics':
-        return [
-          {
-            'id': 'civ_u1',
-            'grade': widget.grade,
-            'enUnit': 'Unit 1: Constitution and Principles of Law',
-            'amUnit': 'ክፍል 1: ህገ-መንግስት እና የህግ መርሆዎች',
-            'enDesc': 'Role of supreme state codes, differences of constitution formats, and law supremacy concepts.',
-            'amDesc': 'የበላይ የህግ ሰነድ ሚና፣ የህገ-መንግስት አይነቶች እና የህግ የበላይነት መርሆዎች።',
-          },
-          {
-            'id': 'civ_u2',
-            'grade': widget.grade,
-            'enUnit': 'Unit 2: Human Rights & Democratic Institutions',
-            'amUnit': 'ክፍል 2: ሰብአዊ መብቶች እና ዴሞክራሲያዊ ተቋማት',
-            'enDesc': 'UN Universal Declaration values, civil liberties definitions, and citizen-state compacts.',
-            'amDesc': 'የተባበሩት መንግስታት የሰብአዊ መብቶች ድንጋጌ (UDHR) እና የዜጎች መሠረታዊ መብቶች።',
-          },
-          {
-            'id': 'civ_u3',
-            'grade': widget.grade,
-            'enUnit': 'Unit 3: Federal Structuring and Local Authority',
-            'amUnit': 'ክፍል 3: የፌደራል መዋቅር እና የአካባቢ አስተዳደር',
-            'enDesc': 'Nations & Nationalities representation, the bicameral systems, and HoPR governance.',
-            'amDesc': 'የብሄር ብሄረሰቦች ተወካይ ምክርቤት፣ የባለ ሁለት ምክርቤቶች ሚና እና የፌደራል አስተዳደር ጥቅሞች።',
-          },
-          {
-            'id': 'civ_u4',
-            'grade': widget.grade,
-            'enUnit': 'Unit 4: Civic Virtues & Social Responsibilities',
-            'amUnit': 'ክፍል 4: የስነ-ምግባር እሴቶች እና ማህበራዊ ኃላፊነት',
-            'enDesc': 'Patriotism foundations, corruption fight directives, and general professional integrity rules.',
-            'amDesc': 'የሀገር ፍቅር መሠረቶች፣ ሙስናን የመዋጋት መንገዶች እና ሙያዊ ታማኝነት።',
-          },
-          {
-            'id': 'civ_u5',
-            'grade': widget.grade,
-            'enUnit': 'Unit 5: Global Relations & International Organizations',
-            'amUnit': 'ክፍል 5: የዓለም አቀፍ ግንኙነቶች እና ተቋማት',
-            'enDesc': 'Ethiopia’s diplomacy history, sovereign equality, AU and UN treaties obligations overview.',
-            'amDesc': 'የኢትዮጵያ የዲፕሎማሲ ታሪክ፣ የአፍሪካ ህብረት እና የተባበሩት መንግስታት ሚና።',
-          },
-        ];
-
-      case 'Agriculture':
-        return [
-          {
-            'id': 'agri_u1',
-            'grade': widget.grade,
-            'enUnit': 'Unit 1: Introduction to Crop Management',
-            'amUnit': 'ክፍል 1: ሰብል አያያዝ እና ልማት መግቢያ',
-            'enDesc': 'Traditional tilling methods, mixed farming practices, and nutritional native crops.',
-            'amDesc': 'የባህላዊ እርሻ ዘዴዎች፣ ድብልቅ እርሻ እና የአካባቢ ተስማሚ ሰብሎች ምርት።',
-          },
-          {
+            'amUnit': 'ክፍል 3: የመካከለኛው ዘመን መን�          {
             'id': 'agri_u2',
             'grade': widget.grade,
             'enUnit': 'Unit 2: Soil Properties & Water Systems',
@@ -504,31 +429,51 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   String _searchQuery = "";
   int _selectedUnitIndex = 0;
 
-  void _simulateDownload(String unitId) {
+  void _simulateDownload(String unitId) async {
     if (_downloadedUnits.contains(unitId)) return;
 
     setState(() {
-      _downloadProgress[unitId] = 0.0;
+      _downloadProgress[unitId] = 0.1;
     });
 
     final String languageCode = AppStateProvider.of(context).languageCode;
     final allUnits = _getUnits();
     final unitMap = allUnits.firstWhere((u) => u['id'] == unitId, orElse: () => <String, dynamic>{});
     final String unitTitle = languageCode == 'en' 
-        ? (unitMap['enUnit'] ?? 'Unit Complete Package') 
-        : (unitMap['amUnit'] ?? 'ክፍል አጠቃላይ ፓኬጅ');
+        ? (unitMap['enUnit'] ?? 'Unit Questions') 
+        : (unitMap['amUnit'] ?? 'የክፍል ጥያቄዎች');
 
-    // Animate custom downloading to feel incredible and completely responsive
-    double current = 0.0;
-    void tick() {
-      if (!mounted) return;
-      current += 0.2;
-      if (current >= 1.0) {
-        OfflineManager.addDownload(unitId);
-        setState(() {
-          _downloadProgress.remove(unitId);
-          _downloadedUnits.add(unitId);
-        });
+    final unitIndex = allUnits.indexWhere((u) => u['id'] == unitId) + 1;
+    final int activeUnitNum = unitIndex > 0 ? unitIndex : 1;
+
+    try {
+      setState(() {
+        _downloadProgress[unitId] = 0.4;
+      });
+
+      final questions = await QuizService.fetchQuestions(
+        grade: widget.grade,
+        subject: widget.subjectId,
+        unit: activeUnitNum,
+      );
+
+      setState(() {
+        _downloadProgress[unitId] = 0.8;
+      });
+
+      if (questions.isEmpty) {
+        throw Exception("No questions available on developer server.");
+      }
+
+      await OfflineManager.saveOfflineQuestions(unitId, questions);
+      await OfflineManager.addDownload(unitId);
+
+      setState(() {
+        _downloadProgress.remove(unitId);
+        _downloadedUnits.add(unitId);
+      });
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -538,19 +483,12 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 Expanded(
                   child: Text(
                     languageCode == 'en'
-                        ? 'Saved! Short note and quiz are available offline.'
-                        : 'ተቀምጧል! አጭር ማስታወሻ እና ፈተናዎች ከመስመር ውጭ ዝግጁ ናቸው።',
+                        ? 'Saved! ${questions.length} questions are available offline.'
+                        : 'ተቀምጧል! ${questions.length} ጥያቄዎች ከመስመር ውጭ ዝግጁ ናቸው።',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                   ),
                 ),
               ],
-            ),
-            action: SnackBarAction(
-              label: languageCode == 'en' ? 'READ NOTE' : 'ማስታወሻ አንብብ',
-              textColor: Colors.white,
-              onPressed: () {
-                _showAfterDownloadShortNotesSheet(unitId, unitTitle);
-              },
             ),
             backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
@@ -558,167 +496,36 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
             duration: const Duration(seconds: 4),
           ),
         );
-      } else {
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _downloadProgress[unitId] = current;
+          _downloadProgress.remove(unitId);
         });
-        Future.delayed(const Duration(milliseconds: 250), tick);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    languageCode == 'en'
+                        ? 'Download failed. Check network connection.'
+                        : 'ጥያቄዎችን ማውረድ አልተቻለም፡ በይነመረብዎን ያረጋግጡ።',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
-
-    Future.delayed(const Duration(milliseconds: 200), tick);
-  }
-
-  String _getShortNotesForUnit(String unitId) {
-    if (unitId.startsWith('math')) {
-      return "• Rational Numbers: Any number that can be expressed as the quotient or fraction p/q of two integers, a numerator p and a non-zero denominator q.\n\n"
-          "• Irrational Numbers: Real numbers that cannot be written as simple fractions. E.g., √2, π (pi), and e. They have non-terminating, non-periodic decimal expansions.\n\n"
-          "• Arithmetic Progression (AP): A sequence of numbers such that the difference of any two successive members is a constant d. Formula: a_n = a_1 + (n-1)d.\n\n"
-          "• Geometric Progression (GP): A sequence where each term after the first is found by multiplying the previous term by a non-zero number called the common ratio r. Formula: a_n = a_1 * r^(n-1).\n\n"
-          "• High-Yield Exam Tip: Arithmetic Mean AM = (a+b)/2, Geometric Mean GM = √(ab). AM is always greater than or equal to GM.";
-    } else if (unitId.startsWith('bio')) {
-      return "• Biology is the scientific study of life. It covers molecular structures, microscopic cell biology, genetics, anatomy, and global environmental ecology.\n\n"
-          "• Microscope Technology: Cellular biology began after Robert Hooke described plant cork cells in 1665 using an early compound microscope.\n\n"
-          "• Cell Theory Principles:\n"
-          "  1. All living organisms are composed of one or more cells.\n"
-          "  2. The cell is the basic structural and functional unit of life.\n"
-          "  3. All cells arise from pre-existing cells.\n\n"
-          "• Organelles Key Functions:\n"
-          "  - Mitochondria: Powerhouse of the cell, generates ATP via cellular respiration.\n"
-          "  - Nucleus: Site of genetic information storage (DNA).\n"
-          "  - Chloroplasts: Solar panels of plant cells, coordinates photosynthesis processes.\n\n"
-          "• Scientific Inquiry: Formulate Hypothesis -> Operational Experiment -> Empirical Data Collection -> Peer-Reviewed Conclusion.";
-    } else if (unitId.startsWith('chem')) {
-      return "• Atomic Structure & Quantum Theory: Atoms consist of a heavy, positively charged nucleus surrounded by tiny, negatively charged electrons.\n\n"
-          "• Quantum Numbers:\n"
-          "  1. Principle (n): Specifies the shell energy level.\n"
-          "  2. Angular (l): Codes subshell shape (s, p, d, f).\n"
-          "  3. Magnetic (m): Identifies orbital spatial alignment.\n"
-          "  4. Spin (s): Defines electron self-rotation (+1/2 or -1/2).\n\n"
-          "• Key Atomic Building Rules:\n"
-          "  - Aufbau Principle: Orbitals must be filled in order of ascending energy.\n"
-          "  - Pauli Exclusion: Two electrons cannot share identical quantum indices.\n"
-          "  - Hund's Rule: Orbitals are singly filled before doubling up to minimize Coulombic repulsion.";
-    } else if (unitId.startsWith('phys')) {
-      return "• Physical Quantities & Vectors:\n"
-          "  - Scalar: Quantity with magnitude only (e.g., speed, mass, energy).\n"
-          "  - Pointing Vectors: Quantity with both magnitude and direction (e.g., velocity, acceleration, force).\n\n"
-          "• Vector Addition Methods:\n"
-          "  1. Graphical: Head-to-Tail alignment.\n"
-          "  2. Analytical Components: Projecting onto Cartesian coordinates (A_x = A*cos(θ), A_y = A*sin(θ)). Sum components to find resultant magnitude R = √(R_x² + R_y²).\n\n"
-          "• Units System (SI): 7 base units form the blueprint of all derived physical measurements on Earth.";
-    } else {
-      return "• General Summary Notes:\n\n"
-          "This offline module has been successfully compiled and fully saved directly to your local partition. It contains cheat cards, diagrams index, matric-aligned questions, and high-yield notes.\n\n"
-          "• Study Tips:\n"
-          "  - Review this page regularly before trying the offline quiz\n"
-          "  - Tap 'Quiz' on your offline dashboard to test your knowledge retention\n"
-          "  - Active recall and spaced repetition are highly effective for national exams prep.";
-    }
-  }
-
-  void _showAfterDownloadShortNotesSheet(String unitId, String unitTitle) {
-    final isLight = !AppStateProvider.of(context).isDarkMode;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.75,
-          maxChildSize: 0.9,
-          minChildSize: 0.5,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 16),
-                    width: 42,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          'DOWNLOAD COMPLETE: SHORT NOTE',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF10B981),
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, size: 20),
-                        style: IconButton.styleFrom(
-                          backgroundColor: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                  child: Text(
-                    unitTitle,
-                    style: TextStyle(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w900,
-                      color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  child: Container(
-                    height: 1,
-                    color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                  ),
-                ),
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    children: [
-                      Text(
-                        _getShortNotesForUnit(unitId),
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.6,
-                          fontWeight: FontWeight.w600,
-                          color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-                    ],
-                  ),
-                )
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 
   void _showInfoSheet() {
@@ -1209,146 +1016,183 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          children: [
-                            // 1. UNIT CARD
-                            Expanded(
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: cardBgColor,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.15),
-                                      blurRadius: 18,
-                                      offset: const Offset(0, 6),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: cardBgColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.15),
+                                blurRadius: 18,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: isSelected
+                                  ? widget.color
+                                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
+                              width: isSelected ? 2.0 : 1.0,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedUnitIndex = index;
+                                  });
+                                  // 3. Tapping the main white card selects the unit and triggers navigation
+                                  final selectedUnit = filteredUnits[index];
+                                  final originalIndex = allUnits.indexOf(selectedUnit);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => QuizStyleSelectionScreen(
+                                        grade: widget.grade,
+                                        subjectId: widget.subjectId,
+                                        unit: originalIndex >= 0 ? originalIndex + 1 : 1,
+                                        themeColor: widget.color,
+                                        isDarkMode: widget.isDarkMode,
+                                        languageCode: widget.languageCode,
+                                      ),
                                     ),
-                                  ],
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? widget.color
-                                        : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
-                                    width: isSelected ? 2.0 : 1.0,
-                                  ),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedUnitIndex = index;
-                                        });
-                                        // 3. Tapping the main white card selects the unit and triggers navigation
-                                        final selectedUnit = filteredUnits[index];
-                                        final originalIndex = allUnits.indexOf(selectedUnit);
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => QuizStyleSelectionScreen(
-                                              grade: widget.grade,
-                                              subjectId: widget.subjectId,
-                                              unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                              themeColor: widget.color,
-                                              isDarkMode: widget.isDarkMode,
-                                              languageCode: widget.languageCode,
+                                  );
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          // Left side: A clean, soft blue circular icon badge with a calendar or unit icon
+                                          Container(
+                                            width: 44,
+                                            height: 44,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.calendar_today_rounded,
+                                                color: Color(0xFF3B82F6),
+                                                size: 18,
+                                              ),
                                             ),
                                           ),
-                                        );
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                                        child: Row(
-                                          children: [
-                                            // Left side: A clean, soft blue circular icon badge with a calendar or unit icon
-                                            Container(
-                                              width: 44,
-                                              height: 44,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.calendar_today_rounded,
-                                                  color: Color(0xFF3B82F6),
-                                                  size: 18,
+                                          const SizedBox(width: 14),
+                                          // Center: Unit Title and topics in a bold, dark text hierarchy wrapped in Expanded
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  title,
+                                                  style: TextStyle(
+                                                    fontSize: 15.0,
+                                                    fontWeight: FontWeight.w900,
+                                                    color: headerTextColor,
+                                                    height: 1.25,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  desc,
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: descColor,
+                                                    height: 1.35,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          // Right side: A small grey chevron arrow icon
+                                          Icon(
+                                            Icons.chevron_right_rounded,
+                                            color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                                            size: 20,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      // Premium "Download Questions" button nested inside the card!
+                                      GestureDetector(
+                                        onTap: () {
+                                          _simulateDownload(unitId);
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: progress != null
+                                                ? widget.color.withValues(alpha: 0.15)
+                                                : (isDownloaded
+                                                    ? const Color(0xFF10B981).withValues(alpha: 0.1)
+                                                    : widget.color.withValues(alpha: 0.08)),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: progress != null
+                                                  ? widget.color.withValues(alpha: 0.3)
+                                                  : (isDownloaded
+                                                      ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                                                      : widget.color.withValues(alpha: 0.15)),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              if (progress != null)
+                                                SizedBox(
+                                                  width: 14,
+                                                  height: 14,
+                                                  child: CircularProgressIndicator(
+                                                    value: progress,
+                                                    strokeWidth: 2,
+                                                    color: widget.color,
+                                                  ),
+                                                )
+                                              else
+                                                Icon(
+                                                  isDownloaded
+                                                      ? Icons.cloud_done_rounded
+                                                      : Icons.get_app_rounded,
+                                                  color: isDownloaded
+                                                      ? const Color(0xFF10B981)
+                                                      : widget.color,
+                                                  size: 15,
+                                                ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                progress != null
+                                                    ? _local('downloading')
+                                                    : (isDownloaded ? _local('downloaded') : _local('download')),
+                                                style: TextStyle(
+                                                  color: isDownloaded
+                                                      ? const Color(0xFF10B981)
+                                                      : widget.color,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w900,
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 14),
-                                            // Center: Unit Title and topics in a bold, dark text hierarchy wrapped in Expanded
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    title,
-                                                    style: TextStyle(
-                                                      fontSize: 15.0,
-                                                      fontWeight: FontWeight.w900,
-                                                      color: headerTextColor,
-                                                      height: 1.25,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    desc,
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: TextStyle(
-                                                      fontSize: 12.0,
-                                                      fontWeight: FontWeight.w500,
-                                                      color: descColor,
-                                                      height: 1.35,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            // Right side: A small grey chevron arrow icon
-                                            Icon(
-                                              Icons.chevron_right_rounded,
-                                              color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                                              size: 20,
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            // 2. EXTERNAL DOWNLOAD BUTTON
-                            GestureDetector(
-                              onTap: () => _simulateDownload(unitId),
-                              child: CircleAvatar(
-                                radius: 20,
-                                backgroundColor: progress != null
-                                    ? const Color(0xFFE2E8F0)
-                                    : (isDownloaded ? const Color(0xFF10B981) : const Color(0xFF3B82F6)),
-                                child: progress != null
-                                    ? SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(
-                                          value: progress,
-                                          strokeWidth: 2,
-                                          color: const Color(0xFF3B82F6),
-                                        ),
-                                      )
-                                    : Icon(
-                                        isDownloaded ? Icons.cloud_done_rounded : Icons.file_download_outlined,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );

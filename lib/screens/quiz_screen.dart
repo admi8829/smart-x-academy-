@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/ad_helper.dart';
 import '../models/question_model.dart';
 import '../services/quiz_service.dart';
+import '../services/offline_manager.dart';
 
 class QuizScreen extends StatefulWidget {
   final int grade;
@@ -89,6 +90,41 @@ class _QuizScreenState extends State<QuizScreen> with SingleTickerProviderStateM
       // Fire entrance animation
       _transitionController.forward(from: 0.0);
     } catch (e) {
+      try {
+        String prefix = (widget.subject ?? '').toLowerCase().trim();
+        if (prefix.contains('math')) {
+          prefix = 'math';
+        } else if (prefix.contains('biol')) {
+          prefix = 'bio';
+        } else if (prefix.contains('phys')) {
+          prefix = 'phys';
+        } else if (prefix.contains('chem')) {
+          prefix = 'chem';
+        } else if (prefix.contains('geog')) {
+          prefix = 'geo';
+        } else if (prefix.contains('hist')) {
+          prefix = 'hist';
+        } else if (prefix.contains('civ')) {
+          prefix = 'civ';
+        } else if (prefix.contains('agri')) {
+          prefix = 'agri';
+        } else if (prefix.length > 4) {
+          prefix = prefix.substring(0, 4);
+        }
+        final String unitId = "${prefix}_u${widget.unit ?? 1}";
+        final localQuestions = await OfflineManager.getOfflineQuestions(unitId);
+        if (localQuestions.isNotEmpty) {
+          setState(() {
+            _questions = localQuestions;
+            _isLoading = false;
+          });
+          _transitionController.forward(from: 0.0);
+          return;
+        }
+      } catch (err) {
+        debugPrint("Local offline fallback fetch failed: $err");
+      }
+
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;

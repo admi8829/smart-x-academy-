@@ -1,9 +1,30 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/question_model.dart';
 
 class OfflineManager {
   static final Set<String> _downloadedUnitIds = {};
   static bool _isLoaded = false;
   static final List<VoidCallback> _listeners = [];
+
+  static Future<void> saveOfflineQuestions(String unitId, List<QuestionModel> questions) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> jsonList = questions.map((q) => jsonEncode(q.toJson())).toList();
+      await prefs.setStringList('offline_questions_$unitId', jsonList);
+    } catch (_) {}
+  }
+
+  static Future<List<QuestionModel>> getOfflineQuestions(String unitId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? jsonList = prefs.getStringList('offline_questions_$unitId');
+      if (jsonList == null || jsonList.isEmpty) return [];
+      return jsonList.map((str) => QuestionModel.fromJson(jsonDecode(str) as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
 
   static Future<void> init() async {
     if (_isLoaded) return;
