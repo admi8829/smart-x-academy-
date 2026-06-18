@@ -67,38 +67,51 @@ subprojects {
         }
     }
 
-    // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all plugins
-    def configureJvmTarget = { proj ->
-        proj.tasks.withType(JavaCompile).configureEach {
-            sourceCompatibility = '17'
-            targetCompatibility = '17'
-        }
-        
-        try {
-            proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                kotlinOptions {
-                    jvmTarget = '17'
-                }
+    // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all subprojects/plugins
+    plugins.withId('com.android.application') {
+        android {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
             }
-        } catch (NoClassDefFoundError | Exception ignored) {
-            proj.tasks.configureEach { task ->
-                if (task.class.name.contains('KotlinCompile')) {
-                    try {
-                        task.kotlinOptions {
-                            jvmTarget = '17'
-                        }
-                    } catch (Exception ignoredTask) {
-                    }
-                }
+        }
+    }
+    plugins.withId('com.android.library') {
+        android {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+    plugins.withId('kotlin-android') {
+        android {
+            kotlinOptions {
+                jvmTarget = '17'
+            }
+        }
+    }
+    plugins.withId('org.jetbrains.kotlin.android') {
+        android {
+            kotlinOptions {
+                jvmTarget = '17'
             }
         }
     }
 
-    if (project.state.executed) {
-        configureJvmTarget(project)
-    } else {
-        project.afterEvaluate { proj ->
-            configureJvmTarget(proj)
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = '17'
+        targetCompatibility = '17'
+    }
+
+    tasks.configureEach { task ->
+        if (task.class.name.contains('KotlinCompile')) {
+            try {
+                task.kotlinOptions {
+                    jvmTarget = '17'
+                }
+            } catch (Exception ignored) {
+            }
         }
     }
 }
