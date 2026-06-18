@@ -399,6 +399,7 @@ class _StudyModeScreenState extends State<StudyModeScreen> {
   Widget _buildStudyCard(QuestionModel q, int index, bool isDark) {
     final titleTextColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final textThemeColor = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final subtitleColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569);
 
     final bool hasSelectedAnswer = _selectedAnswers.containsKey(index);
     final int? selectedOptionIndex = _selectedAnswers[index];

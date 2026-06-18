@@ -34,6 +34,9 @@ dependencies:
   share_plus: ^6.0.0
   percent_indicator: ^4.2.3
 
+dependency_overrides:
+  win32: ^5.5.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
