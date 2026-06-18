@@ -184,7 +184,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
               pw.Header(
                 level: 0,
                 child: pw.Row(
-                  mainpw.MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
                       "Smart X Academy",
@@ -228,7 +228,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
                     ),
                     pw.SizedBox(height: 12),
                     pw.Row(
-                      mainpw.MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text("Grade Level: Grade ${widget.grade}", style: pw.TextStyle(fontSize: 10)),
                         pw.Text("Subject Name: ${widget.subject?.toUpperCase() ?? 'GENERAL'}", style: pw.TextStyle(fontSize: 10)),
@@ -236,7 +236,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
                     ),
                     pw.SizedBox(height: 6),
                     pw.Row(
-                      mainpw.MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text("Unit / Chapter: ${widget.unit ?? 'General'}", style: pw.TextStyle(fontSize: 10)),
                         pw.Text(
@@ -288,7 +288,7 @@ class _ListQuizScreenState extends State<ListQuizScreen> {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Row(
-                        mainpw.MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
                           pw.Text(
                             "Question ${idx + 1}",
