@@ -707,92 +707,17 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      bottomNavigationBar: (_isBannerAdLoaded && _bannerAd != null)
+          ? SafeArea(
               child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: filteredUnits.isNotEmpty
-                        ? [
-                            widget.color,
-                            widget.color.withValues(alpha: 0.85),
-                          ]
-                        : [
-                            Colors.grey.shade400,
-                            Colors.grey.shade400,
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: filteredUnits.isNotEmpty
-                      ? [
-                          BoxShadow(
-                            color: widget.color.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 5),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: filteredUnits.isNotEmpty
-                        ? () {
-                            if (_selectedUnitIndex >= 0 && _selectedUnitIndex < filteredUnits.length) {
-                              final selectedUnit = filteredUnits[_selectedUnitIndex];
-                              final originalIndex = allUnits.indexOf(selectedUnit);
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => QuizStyleSelectionScreen(
-                                    grade: widget.grade,
-                                    subjectId: widget.subjectId,
-                                    unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                    themeColor: widget.color,
-                                    isDarkMode: widget.isDarkMode,
-                                    languageCode: widget.languageCode,
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        : null,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: Text(
-                          languageCode == 'en' ? 'Explore Unit' : 'ክፍል ዳስስ',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            if (_isBannerAdLoaded && _bannerAd != null)
-              Container(
                 height: _bannerAd!.size.height.toDouble(),
                 width: _bannerAd!.size.width.toDouble(),
                 alignment: Alignment.center,
                 color: Colors.transparent,
                 child: AdWidget(ad: _bannerAd!),
               ),
-          ],
-        ),
-      ),
+            )
+          : null,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -1058,185 +983,172 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                           ),
                         );
                       },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: cardBgColor,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.15),
-                                blurRadius: 18,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: isSelected
-                                  ? widget.color
-                                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
-                              width: isSelected ? 2.0 : 1.0,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedUnitIndex = index;
-                                  });
-                                  // 3. Tapping the main white card selects the unit and triggers navigation
-                                  final selectedUnit = filteredUnits[index];
-                                  final originalIndex = allUnits.indexOf(selectedUnit);
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => QuizStyleSelectionScreen(
-                                        grade: widget.grade,
-                                        subjectId: widget.subjectId,
-                                        unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                        themeColor: widget.color,
-                                        isDarkMode: widget.isDarkMode,
-                                        languageCode: widget.languageCode,
-                                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 14.0),
+                        child: Row(
+                          children: [
+                            // 1. MAIN CARD (White/Dark rounded card like the image)
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: cardBgColor,
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: isLight ? 0.03 : 0.15),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  );
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          // Left side: A clean, soft blue circular icon badge with a calendar or unit icon
-                                          Container(
-                                            width: 44,
-                                            height: 44,
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFF3B82F6).withValues(alpha: 0.08),
-                                              shape: BoxShape.circle,
+                                  ],
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? widget.color
+                                        : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
+                                    width: isSelected ? 1.5 : 1.0,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedUnitIndex = index;
+                                        });
+                                        final selectedUnit = filteredUnits[index];
+                                        final originalIndex = allUnits.indexOf(selectedUnit);
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (context) => QuizStyleSelectionScreen(
+                                              grade: widget.grade,
+                                              subjectId: widget.subjectId,
+                                              unit: originalIndex >= 0 ? originalIndex + 1 : 1,
+                                              themeColor: widget.color,
+                                              isDarkMode: widget.isDarkMode,
+                                              languageCode: widget.languageCode,
                                             ),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.calendar_today_rounded,
-                                                color: Color(0xFF3B82F6),
-                                                size: 18,
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                        child: Row(
+                                          children: [
+                                            // Left check/calendar icon container like the image
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
+                                                color: widget.color.withValues(alpha: 0.08),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.event_available_rounded,
+                                                  color: widget.color,
+                                                  size: 22,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 14),
-                                          // Center: Unit Title and topics in a bold, dark text hierarchy wrapped in Expanded
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  title,
-                                                  style: TextStyle(
-                                                    fontSize: 15.0,
-                                                    fontWeight: FontWeight.w900,
-                                                    color: headerTextColor,
-                                                    height: 1.25,
+                                            const SizedBox(width: 14),
+                                            // Center info text
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    style: TextStyle(
+                                                      fontSize: 15.0,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: headerTextColor,
+                                                      height: 1.25,
+                                                    ),
                                                   ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  desc,
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: TextStyle(
-                                                    fontSize: 12.0,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: descColor,
-                                                    height: 1.35,
+                                                  const SizedBox(height: 3),
+                                                  Text(
+                                                    desc,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12.0,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: descColor,
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          // Right side: A small grey chevron arrow icon
-                                          Icon(
-                                            Icons.chevron_right_rounded,
-                                            color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                                            size: 20,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      // Premium "Download Questions" button nested inside the card!
-                                      GestureDetector(
-                                        onTap: () {
-                                          _simulateDownload(unitId);
-                                        },
-                                        child: AnimatedContainer(
-                                          duration: const Duration(milliseconds: 200),
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: progress != null
-                                                ? widget.color.withValues(alpha: 0.15)
-                                                : (isDownloaded
-                                                    ? const Color(0xFF10B981).withValues(alpha: 0.1)
-                                                    : widget.color.withValues(alpha: 0.08)),
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(
-                                              color: progress != null
-                                                  ? widget.color.withValues(alpha: 0.3)
-                                                  : (isDownloaded
-                                                      ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                                                      : widget.color.withValues(alpha: 0.15)),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              if (progress != null)
-                                                SizedBox(
-                                                  width: 14,
-                                                  height: 14,
-                                                  child: CircularProgressIndicator(
-                                                    value: progress,
-                                                    strokeWidth: 2,
-                                                    color: widget.color,
-                                                  ),
-                                                )
-                                              else
-                                                Icon(
-                                                  isDownloaded
-                                                      ? Icons.cloud_done_rounded
-                                                      : Icons.get_app_rounded,
-                                                  color: isDownloaded
-                                                      ? const Color(0xFF10B981)
-                                                      : widget.color,
-                                                  size: 15,
-                                                ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                progress != null
-                                                    ? _local('downloading')
-                                                    : (isDownloaded ? _local('downloaded') : _local('download')),
-                                                style: TextStyle(
-                                                  color: isDownloaded
-                                                      ? const Color(0xFF10B981)
-                                                      : widget.color,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w900,
-                                                ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            // Soft grey chevron-right arrow exactly like the image
+                                            Icon(
+                                              Icons.chevron_right_rounded,
+                                              color: isLight ? const Color(0xFFBCC8D6) : const Color(0xFF64748B),
+                                              size: 20,
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            // 2. STYLISH BLUE DOWNLOAD CIRCULAR CONTAINER BUTTON (Exactly like the image)
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: progress != null
+                                    ? widget.color.withValues(alpha: 0.15)
+                                    : (isDownloaded ? const Color(0xFF10B981) : widget.color),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (progress != null
+                                            ? widget.color
+                                            : (isDownloaded ? const Color(0xFF10B981) : widget.color))
+                                        .withValues(alpha: 0.25),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      _simulateDownload(unitId);
+                                    },
+                                    child: Center(
+                                      child: progress != null
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                value: progress,
+                                                strokeWidth: 2.5,
+                                                color: widget.color,
+                                              ),
+                                            )
+                                          : Icon(
+                                              isDownloaded
+                                                  ? Icons.cloud_done_rounded
+                                                  : Icons.file_download_rounded,
+                                              color: Colors.white,
+                                              size: 20,
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );

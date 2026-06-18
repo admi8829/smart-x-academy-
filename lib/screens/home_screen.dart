@@ -910,92 +910,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. WELCOME SECTION (Hello, User Name & Daily Quote)
+          // 1. MODERN SEARCH BAR
           _animateItem(
             index: 0,
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF3B82F6),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      )
-                    ],
-                  ),
-                  child: Center(
-                    child: _profileImageRemoved
-                        ? const Icon(Icons.person_rounded, size: 28, color: Color(0xFF3B82F6))
-                        : const Text(
-                            "🎓",
-                            style: TextStyle(fontSize: 26),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            widget.languageCode == 'en' ? 'Hello, ' : 'ሰላም፣ ',
-                            style: TextStyle(
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.w500,
-                              color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              _userName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 18.0,
-                                fontWeight: FontWeight.w900,
-                                color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        _getDailyQuote(widget.languageCode),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                          color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                          height: 1.25,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 18.0),
-
-          // 2. MODERN SEARCH BAR
-          _animateItem(
-            index: 1,
             child: Container(
               height: 52,
               decoration: BoxDecoration(
@@ -1054,264 +971,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
           const SizedBox(height: 20.0),
 
-          // 3. CONTINUE LEARNING (Last Visited Lesson horizontal card)
+          // 2. EXISTING: Image Carousel Slider
           _animateItem(
-            index: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.languageCode == 'en' ? 'Continue Learning' : 'ትምህርትህን ቀጥል',
-                      style: TextStyle(
-                        fontSize: 15.0,
-                        fontWeight: FontWeight.w900,
-                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _navigateToGradeScreen(_lastLessonGrade),
-                      child: Text(
-                        widget.languageCode == 'en' ? 'Resume' : 'ቀጥል',
-                        style: const TextStyle(
-                          fontSize: 12.0,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3B82F6),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10.0),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: isLight ? Colors.white : const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(16.0),
-                    border: Border.all(
-                      color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15.0),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _navigateToGradeScreen(_lastLessonGrade),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: _lastLessonColor.withOpacity(0.12),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _lastLessonSubject.toLowerCase().contains('math')
-                                      ? Icons.functions_rounded
-                                      : _lastLessonSubject.toLowerCase().contains('bio')
-                                          ? Icons.biotech_rounded
-                                          : _lastLessonSubject.toLowerCase().contains('phys')
-                                              ? Icons.bolt_rounded
-                                              : Icons.menu_book_rounded,
-                                  color: _lastLessonColor,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          widget.languageCode == 'en'
-                                              ? 'GRADE $_lastLessonGrade • $_lastLessonSubject'
-                                              : 'ክፍል $_lastLessonGrade • $_lastLessonSubject',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w900,
-                                            color: _lastLessonColor,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        const Icon(
-                                          Icons.play_circle_filled_rounded,
-                                          size: 16,
-                                          color: Color(0xFF10B981),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      _lastLessonTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.w900,
-                                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(4),
-                                            child: const LinearProgressIndicator(
-                                              value: 0.65,
-                                              backgroundColor: Color(0xFFE2E8F0),
-                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-                                              minHeight: 5,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '65%',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w900,
-                                            color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20.0),
-
-          // 4. DAILY CHALLENGE (Quiz of the Day)
-          _animateItem(
-            index: 3,
-            child: Container(
-              padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF818CF8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withOpacity(0.3),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.emoji_events_rounded, size: 28, color: Colors.amber),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.languageCode == 'en' ? 'QUIZ OF THE DAY' : 'የዛሬው ልዩ ውድድር',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white.withOpacity(0.9),
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          widget.languageCode == 'en' ? 'Grand Matric Daily Challenge' : 'የአጠቃላይ ማትሪክ ዕለታዊ ፈተና',
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.languageCode == 'en' ? 'Joined by 12,450+ students today' : 'ዛሬ 12,450+ ተማሪዎች ተሳትፈዋል',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DynamicQuizScreen(
-                            isDarkMode: widget.isDarkMode,
-                            languageCode: widget.languageCode,
-                            onToggleTheme: widget.onToggleTheme,
-                            onToggleLanguage: widget.onToggleLanguage,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF4F46E5),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      widget.languageCode == 'en' ? 'Start' : 'ጀምር',
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24.0),
-
-          // 5. EXISTING: Image Carousel Slider
-          _animateItem(
-            index: 4,
+            index: 1,
             child: ImageSliderCarousel(
               isDarkMode: !isLight,
               languageCode: widget.languageCode,
@@ -1322,7 +984,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
           // Section Title: Grade selection
           _animateItem(
-            index: 5,
+            index: 2,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
               child: Text(
@@ -1336,19 +998,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // 6. Grid of Grade Cards with individual Progress bars and static White borders with shadow
-          _animateItem(
-            index: 6,
-            child: GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16.0,
-              mainAxisSpacing: 16.0,
-              childAspectRatio: 1.05, // Formats dynamically to hold the progress bars perfectly
-              children: [
-                // Grade 9
-                _InteractiveGradeCard(
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 16.0,
+            mainAxisSpacing: 16.0,
+            childAspectRatio: 1.1, // Adjusted childAspectRatio for a perfect fit without progress bars
+            children: [
+              // Grade 9
+              _animateItem(
+                index: 3,
+                child: _InteractiveGradeCard(
                   title: _local('g9_title'),
                   subtitle: _local('g9_sub'),
                   illustration: _buildScrollIllustration(),
@@ -1359,8 +1020,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   onTap: () => _navigateToGradeScreen(9),
                   progress: 0.65,
                 ),
-                // Grade 10
-                _InteractiveGradeCard(
+              ),
+              // Grade 10
+              _animateItem(
+                index: 4,
+                child: _InteractiveGradeCard(
                   title: _local('g10_title'),
                   subtitle: _local('g10_sub'),
                   illustration: _buildShieldIllustration(),
@@ -1371,8 +1035,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   onTap: () => _navigateToGradeScreen(10),
                   progress: 0.40,
                 ),
-                // Grade 11
-                _InteractiveGradeCard(
+              ),
+              // Grade 11
+              _animateItem(
+                index: 5,
+                child: _InteractiveGradeCard(
                   title: _local('g11_title'),
                   subtitle: _local('g11_sub'),
                   illustration: _buildOrbitIllustration(),
@@ -1383,8 +1050,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   onTap: () => _navigateToGradeScreen(11),
                   progress: 0.85,
                 ),
-                // Grade 12
-                _InteractiveGradeCard(
+              ),
+              // Grade 12
+              _animateItem(
+                index: 6,
+                child: _InteractiveGradeCard(
                   title: _local('g12_title'),
                   subtitle: _local('g12_sub'),
                   illustration: _buildGraduateIllustration(),
@@ -1395,8 +1065,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   onTap: () => _navigateToGradeScreen(12),
                   progress: 0.20,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
           
           const SizedBox(height: 12.0),
@@ -5622,35 +5292,7 @@ class _InteractiveGradeCardState extends State<_InteractiveGradeCard> {
                 ),
               ),
 
-              const SizedBox(height: 4.0),
-
-              // Dynamic LinearProgressIndicator
-              Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(3),
-                      child: LinearProgressIndicator(
-                        value: widget.progress,
-                        backgroundColor: widget.isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-                        valueColor: AlwaysStoppedAnimation<Color>(widget.btnColor),
-                        minHeight: 5,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${(widget.progress * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: widget.isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8.0),
+              const SizedBox(height: 6.0),
 
               // Pill button styled EXACTLY like a beautiful modern gradient pill button, made LARGER
               Container(
