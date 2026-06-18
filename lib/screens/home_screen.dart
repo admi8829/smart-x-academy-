@@ -1279,10 +1279,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const DynamicQuizScreen(
-                            grade: 12,
-                            subject: "General Challenge",
-                            unit: "Daily Quiz",
+                          builder: (context) => DynamicQuizScreen(
+                            isDarkMode: widget.isDarkMode,
+                            languageCode: widget.languageCode,
+                            onToggleTheme: widget.onToggleTheme,
+                            onToggleLanguage: widget.onToggleLanguage,
                           ),
                         ),
                       );

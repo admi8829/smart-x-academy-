@@ -387,7 +387,51 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
             'id': 'hist_u3',
             'grade': widget.grade,
             'enUnit': 'Unit 3: Medieval Kingdoms and Camel Caravan Routes',
-            'amUnit': 'ክፍል 3: የመካከለኛው ዘመን መን�          {
+            'amUnit': 'ክፍል 3: የመካከለኛው ዘመን መንግስታት እና የንግድ መስመሮች',
+            'enDesc': 'Lasta, Zagwe dynasty, Solomonic restoration, Gondar period, caravan trade routes.',
+            'amDesc': 'ላስታ እና የዛግዌ ስርወ መንግስት፣ የሰለሞናዊያን ስርወ መንግስት መመለስ፣ የጎንደር ዘመን እና የነጋዴዎች መስመሮች።',
+          },
+        ];
+
+      case 'Civics':
+        return [
+          {
+            'id': 'civ_u1',
+            'grade': widget.grade,
+            'enUnit': 'Unit 1: Democratic & Constitutional Values',
+            'amUnit': 'ክፍል 1: ዲሞክራሲያዊ እና ህገ-መንግስታዊ እሴቶች',
+            'enDesc': 'Human rights concepts, citizens participation, rule of law, and democratic institutions.',
+            'amDesc': 'የሰብአዊ መብቶች ጽንሰ-ሀሳብ፣ የተማሪዎች/ዜጎች ተሳትፎ፣ የህግ የበላይነት እና ዲሞክራሲያዊ ተቋማት።',
+          },
+          {
+            'id': 'civ_u2',
+            'grade': widget.grade,
+            'enUnit': 'Unit 2: Active Citizenship & Ethics',
+            'amUnit': 'ክፍል 2: ንቁ ዜግነት እና ስነ-ምግባር',
+            'enDesc': 'Social engagement, patriotic duties, volunteer activities, and civic responsibilities.',
+            'amDesc': 'ማህበራዊ ተሳትፎ፣ የአገር ፍቅር ግዴታዎች፣ የበጎ ፈቃድ ስራዎች እና የዜግነት ኃላፊነቶች።',
+          },
+          {
+            'id': 'civ_u3',
+            'grade': widget.grade,
+            'enUnit': 'Unit 3: Government and Legal Structures',
+            'amUnit': 'ክፍል 3: የመንግስት እና የስነ-ህግ መዋቅሮች',
+            'enDesc': 'Three branches of government, regional state formations, and national constitution pillars.',
+            'amDesc': 'ሶስቱ የመንግስት አካላት፣ የክልል መንግስታት አመሰራረት እና የህገ-መንግስት መሰረቶች።',
+          },
+        ];
+
+      case 'Agriculture':
+        return [
+          {
+            'id': 'agri_u1',
+            'grade': widget.grade,
+            'enUnit': 'Unit 1: Principles of Crop and Livestock Management',
+            'amUnit': 'ክፍል 1: የሰብል እና የእንስሳት እርባታ መሰረታዊ መርሆዎች',
+            'enDesc': 'Sustainable animal breeding, agricultural tools safety, sowing timelines, crop rotation keys.',
+            'amDesc': 'ዘላቂ የእንስሳት እርባታ፣ የግብርና ሰብል እንክብካቤ እና ዘላቂ የሰብል ዝውውር።',
+          },
+          {
             'id': 'agri_u2',
             'grade': widget.grade,
             'enUnit': 'Unit 2: Soil Properties & Water Systems',
