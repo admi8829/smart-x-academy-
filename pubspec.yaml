@@ -27,6 +27,13 @@ dependencies:
   firebase_core: ^3.6.0
   firebase_messaging: ^15.1.3
 
+  # PDF generation and launcher dependencies
+  pdf: ^3.10.8
+  printing: ^5.11.0
+  url_launcher: ^6.2.5
+  share_plus: ^5.0.0
+  percent_indicator: ^4.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
