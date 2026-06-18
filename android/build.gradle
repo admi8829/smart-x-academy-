@@ -68,7 +68,7 @@ subprojects {
     }
 
     // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all plugins
-    afterEvaluate { proj ->
+    def configureJvmTarget = { proj ->
         if (proj.hasProperty('android')) {
             proj.android {
                 compileOptions {
@@ -105,6 +105,14 @@ subprojects {
                     }
                 }
             }
+        }
+    }
+
+    if (project.state.executed) {
+        configureJvmTarget(project)
+    } else {
+        project.afterEvaluate { proj ->
+            configureJvmTarget(proj)
         }
     }
 }
