@@ -8,10 +8,8 @@ import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
-import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import 'quiz_screen.dart';
-import 'dynamic_quiz_screen.dart';
 import '../services/offline_manager.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../widgets/performance_bar_chart.dart';
@@ -1372,15 +1370,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               borderRadius: BorderRadius.circular(16.0),
               child: InkWell(
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => VideoPlayerScreen(
-                        videoId: video['id']!,
-                        title: video['title']!,
-                        duration: video['duration']!,
-                        isDarkMode: !isLight,
-                      ),
-                    ),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Video player unavailable')),
                   );
                 },
                 child: Stack(
@@ -1790,15 +1781,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                         onTap: () {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => VideoPlayerScreen(
-                                videoId: item['id']!,
-                                title: item['title']!,
-                                duration: item['duration']!,
-                                isDarkMode: !isLight,
-                              ),
-                            ),
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Video player unavailable')),
                           );
                         },
                       ),
