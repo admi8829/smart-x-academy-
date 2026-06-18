@@ -10,6 +10,32 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(':app')
 
+    // Dynamic namespace fallback for modern Gradle compatibility (safely extracts package if namespace is missing)
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if (namespace == null) {
+                    try {
+                        def manifestFile = project.file("src/main/AndroidManifest.xml")
+                        if (manifestFile.exists()) {
+                            def manifestContent = manifestFile.getText('UTF-8')
+                            def matcher = manifestContent =~ /package="([^"]*)"/
+                            if (matcher.find()) {
+                                namespace = matcher.group(1)
+                            } else {
+                                namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                            }
+                        } else {
+                            namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                        }
+                    } catch (Exception e) {
+                        namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                    }
+                }
+            }
+        }
+    }
+
     // Force unified versions of conflicting AndroidX and Jetpack components
     project.configurations.all {
         resolutionStrategy {
