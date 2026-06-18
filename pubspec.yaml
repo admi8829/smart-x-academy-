@@ -35,7 +35,7 @@ dependencies:
   percent_indicator: ^4.2.3
 
 dependency_overrides:
-  win32: 5.1.1
+  win32: 5.5.4
   win32_registry: 1.1.1
   package_info_plus: 8.0.2
 
