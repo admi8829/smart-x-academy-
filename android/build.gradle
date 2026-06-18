@@ -11,28 +11,36 @@ subprojects {
     project.evaluationDependsOn(':app')
 
     // Dynamic namespace fallback for modern Gradle compatibility (safely extracts package if namespace is missing)
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
+    def configureNamespace = { proj ->
+        if (proj.hasProperty('android')) {
+            proj.android {
                 if (namespace == null) {
                     try {
-                        def manifestFile = project.file("src/main/AndroidManifest.xml")
+                        def manifestFile = proj.file("src/main/AndroidManifest.xml")
                         if (manifestFile.exists()) {
                             def manifestContent = manifestFile.getText('UTF-8')
                             def matcher = manifestContent =~ /package="([^"]*)"/
                             if (matcher.find()) {
                                 namespace = matcher.group(1)
                             } else {
-                                namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                                namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
                             }
                         } else {
-                            namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                            namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
                         }
                     } catch (Exception e) {
-                        namespace = "com.smartx.fallback.${project.name.replaceAll('[^a-zA-Z0-9]', '')}"
+                        namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
                     }
                 }
             }
+        }
+    }
+
+    if (project.state.executed) {
+        configureNamespace(project)
+    } else {
+        project.afterEvaluate { proj ->
+            configureNamespace(proj)
         }
     }
 
