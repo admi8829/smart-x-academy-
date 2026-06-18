@@ -69,20 +69,6 @@ subprojects {
 
     // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all plugins
     def configureJvmTarget = { proj ->
-        if (proj.hasProperty('android')) {
-            proj.android {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-                if (proj.android.hasProperty('kotlinOptions')) {
-                    proj.android.kotlinOptions {
-                        jvmTarget = '17'
-                    }
-                }
-            }
-        }
-        
         proj.tasks.withType(JavaCompile).configureEach {
             sourceCompatibility = '17'
             targetCompatibility = '17'
