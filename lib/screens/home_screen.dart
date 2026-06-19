@@ -8,7 +8,6 @@ import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
-import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../widgets/performance_bar_chart.dart';
