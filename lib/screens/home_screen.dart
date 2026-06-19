@@ -8,6 +8,7 @@ import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
+import 'video_player_screen.dart';
 import 'unit_selection_screen.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../widgets/performance_bar_chart.dart';
@@ -1368,22 +1369,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               borderRadius: BorderRadius.circular(16.0),
               child: InkWell(
                 onTap: () {
-                  debugPrint('Launching video: ${video['id']}');
+                  debugPrint("Launching video...");
                 },
                 child: Stack(
                   children: [
                     // Real Thumbnail Image!
                     Positioned.fill(
-                      child: Image.asset(
-                        'assets/images/tutorial_banner.jpg',
+                      child: Image.network(
+                        video['thumbnail']!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Image.network(
-                          video['thumbnail']!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            color: const Color(0xFF1E293B),
-                            child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
-                          ),
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: const Color(0xFF1E293B),
+                          child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -1781,7 +1778,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                         onTap: () {
                           Navigator.of(context).pop();
-                          debugPrint('Launching video: ${item['id']}');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => VideoPlayerScreen(
+                                videoId: item['id']!,
+                                title: item['title']!,
+                                duration: item['duration']!,
+                                isDarkMode: !isLight,
+                              ),
+                            ),
+                          );
                         },
                       ),
                     );
