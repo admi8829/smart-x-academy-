@@ -68,8 +68,16 @@ subprojects {
     }
 
     tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = '17'
-        targetCompatibility = '17'
+        try {
+            options.release.set(17)
+        } catch (Exception ignored) {
+            try {
+                sourceCompatibility = '17'
+                targetCompatibility = '17'
+            } catch (Exception ignored2) {
+                options.compilerArgs.addAll(['-source', '17', '-target', '17'])
+            }
+        }
     }
 
     tasks.configureEach { task ->
