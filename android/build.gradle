@@ -68,33 +68,18 @@ subprojects {
     }
 
     // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all subprojects/plugins
-    plugins.withId('com.android.application') {
-        android {
-            compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_17
-                targetCompatibility = JavaVersion.VERSION_17
-            }
-        }
-    }
-    plugins.withId('com.android.library') {
-        android {
-            compileOptions {
-                sourceCompatibility = JavaVersion.VERSION_17
-                targetCompatibility = JavaVersion.VERSION_17
-            }
-        }
-    }
-    plugins.withId('kotlin-android') {
-        android {
-            kotlinOptions {
-                jvmTarget = '17'
-            }
-        }
-    }
-    plugins.withId('org.jetbrains.kotlin.android') {
-        android {
-            kotlinOptions {
-                jvmTarget = '17'
+    project.afterEvaluate {
+        if (project.hasProperty('android')) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+                if (project.plugins.hasPlugin('kotlin-android') || project.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
+                    kotlinOptions {
+                        jvmTarget = '17'
+                    }
+                }
             }
         }
     }
