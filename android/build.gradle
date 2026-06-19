@@ -67,27 +67,18 @@ subprojects {
         }
     }
 
-    // Force uniform JVM target compatibility of Java 17 for both Java compile and Kotlin compile tasks across all subprojects/plugins
-    def configureAndroidTarget = { proj ->
-        if (proj.hasProperty('android')) {
-            proj.android {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-                if (proj.plugins.hasPlugin('kotlin-android') || proj.plugins.hasPlugin('org.jetbrains.kotlin.android')) {
-                    kotlinOptions {
-                        jvmTarget = '17'
-                    }
-                }
-            }
+    // Safely configure compileOptions via the BaseExtension type to prevent lifecycle finalized error
+    project.extensions.withType(com.android.build.gradle.BaseExtension) { ext ->
+        ext.compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
         }
-    }
-
-    if (project.state.executed) {
-        configureAndroidTarget(project)
-    } else {
-        project.afterEvaluate { configureAndroidTarget(it) }
+        try {
+            ext.kotlinOptions {
+                jvmTarget = '17'
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     tasks.withType(JavaCompile).configureEach {
