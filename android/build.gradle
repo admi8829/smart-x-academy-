@@ -67,20 +67,6 @@ subprojects {
         }
     }
 
-    // Safely configure compileOptions via the BaseExtension type to prevent lifecycle finalized error
-    project.extensions.withType(com.android.build.gradle.BaseExtension) { ext ->
-        ext.compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_17
-            targetCompatibility = JavaVersion.VERSION_17
-        }
-        try {
-            ext.kotlinOptions {
-                jvmTarget = '17'
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = '17'
         targetCompatibility = '17'
