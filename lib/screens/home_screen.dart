@@ -1374,12 +1374,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   children: [
                     // Real Thumbnail Image!
                     Positioned.fill(
-                      child: Image.network(
-                        video['thumbnail']!,
+                      child: Image.asset(
+                        'assets/images/tutorial_banner.jpg',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: const Color(0xFF1E293B),
-                          child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
+                        errorBuilder: (context, error, stackTrace) => Image.network(
+                          video['thumbnail']!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: const Color(0xFF1E293B),
+                            child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
+                          ),
                         ),
                       ),
                     ),
