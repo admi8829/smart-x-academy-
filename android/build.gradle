@@ -44,7 +44,6 @@ subprojects {
         }
     }
 
-    // Force unified versions of conflicting AndroidX and Jetpack components
     project.configurations.all {
         resolutionStrategy {
             // Unify work-runtime to prevent 'Duplicate class' or compilation version mismatches
@@ -67,6 +66,7 @@ subprojects {
         }
     }
 
+    // ከስህተት የጠራ እና ሁሉንም ፕለጊኖች (እንደ share_plus) JVM 17 እንዲጠቀሙ በግድ የሚያስገድድ ትክክለኛ መንገድ
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = '17'
         targetCompatibility = '17'
