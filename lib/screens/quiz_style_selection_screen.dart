@@ -3,8 +3,6 @@ import 'quiz_screen.dart';
 import 'card_quiz_screen.dart';
 import 'list_quiz_screen.dart';
 import 'gamified_quiz_screen.dart';
-import 'study_mode_screen.dart';
-import 'mock_exam_screen.dart';
 
 class QuizStyleSelectionScreen extends StatefulWidget {
   final int grade;
@@ -43,10 +41,6 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
         'style2_sub': 'Scroll through all questions in a standard vertical examination layout.',
         'style3_title': 'Gamified Mode',
         'style3_sub': 'Face a timed high-score challenge with restricted hearts / lives.',
-        'style4_title': 'Study Mode (Flashcards)',
-        'style4_sub': 'Swipe horizontal glassmorphic cards with instant correctness feedback and in-depth educational rationale.',
-        'style5_title': 'Mock Examination',
-        'style5_sub': 'Simulate an official exam environment with a countdown timer and navigation grid.',
       },
       'am': {
         'title': 'የፈተና ዘይቤ ይምረጡ',
@@ -58,10 +52,6 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
         'style2_sub': 'ሁሉንም ጥያቄዎች በተለመደው የዝርዝር ቅርጸት ወደ ላይና ወደታች በመሸብለል ይስሩ።',
         'style3_title': 'የጨዋታ ሁነታ',
         'style3_sub': 'የጊዜ ገደብ እና የተወሰኑ ህይወቶችን በመጠቀም ፈታኝ ሙከራ ያድርጉ።',
-        'style4_title': 'የጥናት ሁነታ (ፍላሽ ካርዶች)',
-        'style4_sub': 'የቀረቡትን ካርዶች ወደ ጎን በማንሸራተት ጥያቄዎችን በየየክፍሉ አፋጣኝ ማብራሪያ ይማሩ።',
-        'style5_title': 'ሞዴል ፈተና (Mock Exam)',
-        'style5_sub': 'በጊዜ የተገደበ ኦፊሴላዊ የፈተና ከባቢን በጥያቄ መዳሰሻ ሰሌዳ በማስመሰል ይፈትኑ።',
       }
     };
     return localized[widget.languageCode]?[key] ?? key;
@@ -93,18 +83,6 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
         'subtitle': _local('style3_sub'),
         'icon': Icons.sports_esports_rounded,
         'color': const Color(0xFFF59E0B),
-      },
-      {
-        'title': _local('style4_title'),
-        'subtitle': _local('style4_sub'),
-        'icon': Icons.menu_book_rounded,
-        'color': const Color(0xFF6366F1),
-      },
-      {
-        'title': _local('style5_title'),
-        'subtitle': _local('style5_sub'),
-        'icon': Icons.assignment_turned_in_rounded,
-        'color': const Color(0xFFEC4899),
       }
     ];
 
@@ -331,20 +309,8 @@ class _QuizStyleSelectionScreenState extends State<QuizStyleSelectionScreen> {
                           subject: widget.subjectId,
                           unit: widget.unit,
                         );
-                      } else if (_selectedStyleIndex == 2) {
-                        targetScreen = GamifiedQuizScreen(
-                          grade: widget.grade,
-                          subject: widget.subjectId,
-                          unit: widget.unit,
-                        );
-                      } else if (_selectedStyleIndex == 3) {
-                        targetScreen = StudyModeScreen(
-                          grade: widget.grade,
-                          subject: widget.subjectId,
-                          unit: widget.unit,
-                        );
                       } else {
-                        targetScreen = MockExamScreen(
+                        targetScreen = GamifiedQuizScreen(
                           grade: widget.grade,
                           subject: widget.subjectId,
                           unit: widget.unit,

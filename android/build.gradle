@@ -10,40 +10,6 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(':app')
 
-    // Dynamic namespace fallback for modern Gradle compatibility (safely extracts package if namespace is missing)
-    def configureNamespace = { proj ->
-        if (proj.hasProperty('android')) {
-            proj.android {
-                if (namespace == null) {
-                    try {
-                        def manifestFile = proj.file("src/main/AndroidManifest.xml")
-                        if (manifestFile.exists()) {
-                            def manifestContent = manifestFile.getText('UTF-8')
-                            def matcher = manifestContent =~ /package="([^"]*)"/
-                            if (matcher.find()) {
-                                namespace = matcher.group(1)
-                            } else {
-                                namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
-                            }
-                        } else {
-                            namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
-                        }
-                    } catch (Exception e) {
-                        namespace = "com.smartx.fallback.${proj.name.replaceAll('[^a-zA-Z0-9]', '')}"
-                    }
-                }
-            }
-        }
-    }
-
-    if (project.state.executed) {
-        configureNamespace(project)
-    } else {
-        project.afterEvaluate { proj ->
-            configureNamespace(proj)
-        }
-    }
-
     // Force unified versions of conflicting AndroidX and Jetpack components
     project.configurations.all {
         resolutionStrategy {
@@ -64,44 +30,6 @@ subprojects {
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
             force 'androidx.annotation:annotation:1.8.0'
-        }
-    }
-
-    if (project.state.executed) {
-        if (project.hasProperty('android')) {
-            project.android {
-                compileOptions {
-                    sourceCompatibility = JavaVersion.VERSION_17
-                    targetCompatibility = JavaVersion.VERSION_17
-                }
-            }
-        }
-    } else {
-        project.beforeEvaluate {
-            if (project.hasProperty('android')) {
-                project.android {
-                    compileOptions {
-                        sourceCompatibility = JavaVersion.VERSION_17
-                        targetCompatibility = JavaVersion.VERSION_17
-                    }
-                }
-            }
-        }
-    }
-
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = '17'
-        targetCompatibility = '17'
-    }
-
-    tasks.configureEach { task ->
-        if (task.class.name.contains('KotlinCompile')) {
-            try {
-                task.kotlinOptions {
-                    jvmTarget = '17'
-                }
-            } catch (Exception ignored) {
-            }
         }
     }
 }
