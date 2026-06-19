@@ -305,8 +305,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: _buildFormView(isDark, navyColor),
               ),
             ),
-            if (!widget.embedInTab)
-              _buildBottomNavigationBar(isDark, navyColor),
           ],
         ),
       ),
@@ -721,75 +719,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Visual Bottom Navigation Bar to mimic application layout constraints
-  Widget _buildBottomNavigationBar(bool isDark, Color navyColor) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: BorderRadius.circular(38.0),
-          border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 16.0,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(38.0),
-          child: BottomNavigationBar(
-            currentIndex: 4,
-            elevation: 0,
-            onTap: (index) {
-              Navigator.of(context).pop();
-            },
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.transparent,
-            selectedItemColor: const Color(0xFF1E88E5),
-            unselectedItemColor: isDark ? Colors.white60 : Colors.black45,
-            selectedFontSize: 11,
-            unselectedFontSize: 11,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w900),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
-            items: [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home, size: 24, color: isDark ? Colors.white60 : Colors.black45),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.book_outlined, size: 23, color: isDark ? Colors.white60 : Colors.black45),
-                label: 'Offline',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.check_box_outlined, size: 23, color: isDark ? Colors.white60 : Colors.black45),
-                label: 'Quizzes',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.article_outlined, size: 23, color: isDark ? Colors.white60 : Colors.black45),
-                label: 'Notes',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.person, size: 22, color: navyColor),
-                ),
-                label: 'Account',
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
