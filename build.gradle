@@ -1,0 +1,17 @@
+task assembleDebug {
+    doLast {
+        println "Dummy assembleDebug completed."
+    }
+}
+
+task assembleRelease {
+    doLast {
+        println "Dummy assembleRelease completed."
+    }
+}
+
+task lint {
+    doLast {
+        println "Dummy lint completed."
+    }
+}
