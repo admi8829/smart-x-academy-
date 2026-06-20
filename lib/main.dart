@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,6 +9,8 @@ import 'services/push_notification_service.dart';
 void main() async {
   // Ensure widget bindings are safely initialized before calling native platforms/plugins
   WidgetsFlutterBinding.ensureInitialized();
+  
+  GoogleFonts.config.allowRuntimeFetching = false;
   
   // Initialize Supabase
   try {

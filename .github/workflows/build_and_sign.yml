@@ -40,7 +40,7 @@ jobs:
           gradle signingReport
 
       - name: Build Code Artifact (APK)
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
 
       - name: Upload compiled APK to Artifacts
         uses: actions/upload-artifact@v4
