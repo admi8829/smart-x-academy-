@@ -9,6 +9,8 @@ import 'subject_selection_screen.dart';
 import 'register_screen.dart';
 import '../services/auth_service.dart';
 import 'unit_selection_screen.dart';
+import 'notification_list_screen.dart';
+import '../services/notification_service.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../widgets/performance_bar_chart.dart';
 import '../main.dart';
@@ -118,6 +120,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _obscurePassword = true;
   bool _isSettingsExpanded = false;
   bool _isAboutExpanded = false;
+
+  int _unreadNotificationsCount = 2;
 
   int _selectedGradeForQuizTab = 9;
   int _carouselIndex = 0;
@@ -254,6 +258,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _ageController = TextEditingController();
 
     _loadProfileData();
+    _loadUnreadNotifications();
     _fadeController = AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 1200),
@@ -314,6 +319,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     setState(() {
       _profileImageRemoved = false;
     });
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    final count = await NotificationService.getUnreadCount();
+    if (mounted) {
+      setState(() {
+        _unreadNotificationsCount = count;
+      });
+    }
   }
 
   @override
@@ -570,9 +584,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     title: widget.languageCode == 'en' ? 'Notifications' : 'ማሳወቂያዎች',
                     isSelected: false,
                     isLight: isLight,
-                    onTap: () {
+                    trailing: _unreadNotificationsCount > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              widget.languageCode == 'en' ? 'New' : 'አዲስ',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: () async {
                       Navigator.pop(context);
-                      _showComingSoonDialog();
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationListScreen(
+                            isDarkMode: widget.isDarkMode,
+                            languageCode: widget.languageCode,
+                          ),
+                        ),
+                      );
+                      setState(() {
+                        _unreadNotificationsCount = 0;
+                      });
                     },
                   ),
                   _buildDrawerTile(
@@ -809,6 +851,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     required bool isSelected,
     required bool isLight,
     required VoidCallback onTap,
+    Widget? trailing,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 1.0),
@@ -840,6 +883,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               fontSize: 13.0,
             ),
           ),
+          trailing: trailing,
           onTap: onTap,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
