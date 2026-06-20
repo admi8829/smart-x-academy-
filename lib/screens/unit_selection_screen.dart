@@ -115,8 +115,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
         'completed': 'Completed',
         'units_count': 'Units Available',
         'progress_label': 'My Learning Progress',
-        'search_hint': 'Search unit topics...',
-        'no_results': 'No units match your search.',
         'bytes_info': 'Size: ~100 KB • Complete offline questions database',
         'info_sheet': 'Unit Questions Package',
         'info_desc': 'Downloading saves unit-specific exam questions directly to your device for complete offline practice.',
@@ -131,8 +129,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
         'completed': 'የተጠናቀቀ',
         'units_count': 'ያሉ የትምህርት ክፍሎች',
         'progress_label': 'የእኔ የመማር ሂደት',
-        'search_hint': 'የክፍል አርዕስቶችን ፈልግ...',
-        'no_results': 'ማንኛውም ክፍል ከአሰሳዎ ጋር አልተገኘም።',
         'bytes_info': 'መጠን: ~100 KB • ሙሉ ከመስመር ውጪ ጥያቄዎች',
         'info_sheet': 'የክፍል ጥያቄዎች ጥቅል',
         'info_desc': 'ማውረድ ያለ በይነመረብ (ከመስመር ውጭ) የፈተና ጥያቄዎችን በቀጥታ በስልክዎ ላይ እንዲለማመዱ ያከማቻል።',
@@ -469,7 +465,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
-  String _searchQuery = "";
   int _selectedUnitIndex = 0;
 
   void _simulateDownload(String unitId) async {
@@ -665,12 +660,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
 
     final allUnits = _getUnits();
-    final filteredUnits = allUnits.where((u) {
-      final text = languageCode == 'en' 
-          ? '${u['enUnit']} ${u['enDesc']}'.toLowerCase()
-          : '${u['amUnit']} ${u['amDesc']}'.toLowerCase();
-      return text.contains(_searchQuery.toLowerCase());
-    }).toList();
+    final filteredUnits = allUnits;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -753,7 +743,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                     )
                   ],
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 child: Column(
                   children: [
                     Row(
@@ -761,16 +751,16 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                       children: [
                         // Dynamic scaled illustration in unique background box
                         Container(
-                          width: 85,
-                          height: 85,
+                          width: 70,
+                          height: 70,
                           decoration: BoxDecoration(
                             color: widget.color.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(22),
                           ),
                           child: Center(
                             child: SizedBox(
-                              width: 55,
-                              height: 55,
+                              width: 45,
+                              height: 45,
                               child: widget.icon,
                             ),
                           ),
@@ -799,7 +789,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 4),
                               Text(
                                 languageCode == 'en' ? widget.enTitle : widget.amTitle,
                                 style: TextStyle(
@@ -825,9 +815,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
                     const Divider(height: 1, thickness: 1),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     // Progress metric section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -875,54 +865,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
               ),
 
-              // Search field in workspace layout
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: cardBgColor,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isLight 
-                                ? const Color(0xFFE2E8F0) 
-                                : const Color(0xFF334155),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.search_rounded, color: descColor, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: TextField(
-                                onChanged: (v) {
-                                  setState(() {
-                                    _searchQuery = v;
-                                    _selectedUnitIndex = 0;
-                                  });
-                                },
-                                style: TextStyle(color: headerTextColor, fontSize: 14),
-                                decoration: InputDecoration(
-                                  hintText: _local('search_hint'),
-                                  hintStyle: TextStyle(color: descColor.withValues(alpha: 0.6), fontSize: 13.5),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               // Subject count text label
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
@@ -942,10 +884,10 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
                   child: Column(
                     children: [
-                      Icon(Icons.search_off_rounded, color: descColor.withValues(alpha: 0.4), size: 48),
+                      Icon(Icons.layers_clear_rounded, color: descColor.withValues(alpha: 0.4), size: 48),
                       const SizedBox(height: 12),
                       Text(
-                        _local('no_results'),
+                        languageCode == 'en' ? 'No units available yet.' : 'ምንም የትምህርት ክፍሎች አልተገኙም።',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: descColor, fontSize: 14, fontWeight: FontWeight.w600),
                       ),
