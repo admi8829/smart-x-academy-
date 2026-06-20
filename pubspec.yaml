@@ -21,6 +21,8 @@ dependencies:
 
   # Supabase Integration
   supabase_flutter: ^2.6.0
+  device_info_plus: ^11.0.0
+  package_info_plus: ^8.0.0
 
   # Monitization and google ads
   google_mobile_ads: ^7.0.0
