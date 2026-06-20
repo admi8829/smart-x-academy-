@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/question_model.dart';
+import '../services/quiz_service.dart';
 
 class QuizScreen extends StatefulWidget {
   final int grade;
@@ -20,7 +21,7 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  List<Map<String, dynamic>> _questions = [];
+  List<QuestionModel> _questions = [];
   
   int _currentIndex = 0;
   final Map<int, int> _selectedAnswers = {};
@@ -43,20 +44,21 @@ class _QuizScreenState extends State<QuizScreen> {
     });
 
     try {
-      final response = await Supabase.instance.client
-          .from('questions')
-          .select('*, options(*), correct_answers(*)')
-          .eq('unit_id', widget.unit ?? 1)
-          .order('id');
-          
-      final data = List<Map<String, dynamic>>.from(response as List);
-      
-      for (var i = 0; i < data.length; i++) {
+      final fetched = await QuizService.fetchQuestions(
+        grade: widget.grade,
+        subject: widget.subject,
+        unit: widget.unit,
+      );
+
+      for (var i = 0; i < fetched.length; i++) {
         _itemKeys[i] = GlobalKey();
       }
 
       setState(() {
-        _questions = data;
+        // Here we map QuestionModel back into the Map structure you built for the UI
+        // or just use QuestionModel directly. For simplicity, let's convert to map so the UI code below mostly stays.
+        // Actually, let's keep it as QuestionModel and I'll adjust the UI to use QuestionModel.
+        _questions = fetched;
         _isLoading = false;
       });
       
@@ -67,7 +69,7 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     } catch (e) {
       setState(() {
-        _errorMessage = "Failed to load quiz. Please check your connection.";
+        _errorMessage = e.toString();
         _isLoading = false;
       });
       debugPrint("Error loading questions: $e");
@@ -201,14 +203,12 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
-  Widget _buildQuestionCard(int index, Map<String, dynamic> q) {
+  Widget _buildQuestionCard(int index, QuestionModel q) {
     final isActive = index == _currentIndex;
     final opacity = isActive ? 1.0 : 0.4;
     
-    final optionsData = q['options'] is List ? (q['options'] as List) : [];
-    
-    // Support generic question structures
-    final qText = q['question_text']?.toString() ?? q['question']?.toString() ?? 'Challenge details missing.';
+    final optionsData = q.options;
+    final qText = q.questionText;
 
     final bool isLight = Theme.of(context).brightness == Brightness.light;
     final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
@@ -269,12 +269,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 ),
               ...optionsData.asMap().entries.map((entry) {
                 final optIdx = entry.key;
-                final optMap = entry.value as Map<String, dynamic>;
-                
-                final optText = optMap['option_text']?.toString() ?? 
-                                optMap['text']?.toString() ?? 
-                                optMap['option']?.toString() ?? 
-                                'Option ${optIdx + 1}';
+                final optText = entry.value;
                 
                 final isSelected = _selectedAnswers[index] == optIdx;
 
@@ -379,23 +374,30 @@ class _QuizScreenState extends State<QuizScreen> {
     );
   }
 
+  bool _isOptionCorrect(QuestionModel q, String option, int index) {
+    if (option.trim().toLowerCase() == q.correctAnswer.trim().toLowerCase()) {
+      return true;
+    }
+    if (q.correctAnswer.trim() == index.toString()) {
+      return true;
+    }
+    final Map<String, int> letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+    final String cleanCorrect = q.correctAnswer.trim().toLowerCase();
+    if (letterMap.containsKey(cleanCorrect) && letterMap[cleanCorrect] == index) {
+      return true;
+    }
+    return false;
+  }
+
   void _showResults() {
     int score = 0;
     
     for (int i = 0; i < _questions.length; i++) {
         final q = _questions[i];
-        final correctAnsList = q['correct_answers'] is List ? (q['correct_answers'] as List) : [];
-        if (correctAnsList.isNotEmpty && _selectedAnswers.containsKey(i)) {
-            final selectedIdx = _selectedAnswers[i];
-            final optionsData = q['options'] is List ? (q['options'] as List) : [];
-            
-            if (selectedIdx != null && selectedIdx < optionsData.length) {
-                final selectedOption = optionsData[selectedIdx];
-                final isCorrect = correctAnsList.any((ans) => 
-                     ans['option_id'] == selectedOption['id'] || 
-                     ans['text'] == selectedOption['option_text'] ||
-                     ans['id'] == selectedOption['id']);
-                
+        if (_selectedAnswers.containsKey(i)) {
+            final selectedIdx = _selectedAnswers[i]!;
+            if (selectedIdx < q.options.length) {
+                final isCorrect = _isOptionCorrect(q, q.options[selectedIdx], selectedIdx);
                 if (isCorrect) score++;
             }
         }
