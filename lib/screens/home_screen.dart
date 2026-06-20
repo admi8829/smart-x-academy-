@@ -263,13 +263,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadBannerAd();
     _startCarouselTimer();
     _fadeController.forward();
-    OfflineManager.addListener(_onOfflineDownloadsChanged);
-  }
-
-  void _onOfflineDownloadsChanged() {
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   Future<void> _loadProfileData() async {
@@ -326,7 +319,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   void dispose() {
     _carouselTimer?.cancel();
-    OfflineManager.removeListener(_onOfflineDownloadsChanged);
     _fullNameController.dispose();
     _emailController.dispose();
     _schoolNameController.dispose();
@@ -1777,16 +1769,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                         onTap: () {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => VideoPlayerScreen(
-                                videoId: item['id']!,
-                                title: item['title']!,
-                                duration: item['duration']!,
-                                isDarkMode: !isLight,
-                              ),
-                            ),
-                          );
+                          debugPrint("Clicked");
                         },
                       ),
                     );
@@ -1820,14 +1803,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _navigateToCourseQuiz(Map<String, dynamic> course) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => QuizScreen(
-          grade: _selectedGradeForCourses,
-          subject: course['subjectId'].toString().toLowerCase(),
-        ),
-      ),
-    );
+    debugPrint("Clicked");
   }
 
   Widget _buildPlayButton() {
@@ -1875,7 +1851,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildOfflineScreen(bool isLight) {
     return FutureBuilder<Set<String>>(
-      future: OfflineManager.getDownloadedUnitIds(),
+      future: Future.value(<String>{}),
       builder: (context, snapshot) {
         final downloadedIds = snapshot.data ?? {};
         
@@ -2066,12 +2042,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Expanded(
                               child: TextButton.icon(
                                 onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => QuizScreen(grade: 9, subject: subject),
-                                    ),
-                                  );
+                                  debugPrint("Clicked");
                                 },
                                 icon: const Icon(Icons.help_rounded, size: 14),
                                 label: Text(
@@ -2137,7 +2108,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
             TextButton(
               onPressed: () {
-                OfflineManager.removeDownload(id);
+                debugPrint("Removed offline download");
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -2547,14 +2518,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      grade: _selectedGradeForQuizTab,
-                    ),
-                  ),
-                );
+                debugPrint("Clicked");
               },
               icon: const Icon(Icons.play_circle_filled_rounded, size: 18),
               label: Text(

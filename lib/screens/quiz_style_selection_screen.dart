@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'quiz_screen.dart';
 import 'card_quiz_screen.dart';
 import 'list_quiz_screen.dart';
 import 'gamified_quiz_screen.dart';
