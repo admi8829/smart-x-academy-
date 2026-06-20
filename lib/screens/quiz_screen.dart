@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../models/question_model.dart';
 import '../services/quiz_service.dart';
 
-class CardQuizScreen extends StatefulWidget {
+class QuizScreen extends StatefulWidget {
   final int grade;
   final String? subject;
   final int? unit;
 
-  const CardQuizScreen({
+  const QuizScreen({
     super.key,
     required this.grade,
     this.subject,
@@ -15,10 +15,10 @@ class CardQuizScreen extends StatefulWidget {
   });
 
   @override
-  State<CardQuizScreen> createState() => _CardQuizScreenState();
+  State<QuizScreen> createState() => _QuizScreenState();
 }
 
-class _CardQuizScreenState extends State<CardQuizScreen> {
+class _QuizScreenState extends State<QuizScreen> {
   List<QuestionModel> _questions = [];
   bool _isLoading = true;
   String? _errorMessage;

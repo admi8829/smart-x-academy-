@@ -4,7 +4,7 @@ import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
 import '../services/quiz_service.dart';
 import '../main.dart';
-import 'quiz_style_selection_screen.dart';
+import 'quiz_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
   final int grade;
@@ -43,12 +43,67 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
 
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+  
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _loadBannerAd();
+    _loadRewardedAd();
     _loadOfflineDownloads();
+  }
+
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: AdHelper.rewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          ad.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadRewardedAd();
+            },
+            onAdFailedToShowFullScreenContent: (ad, err) {
+              ad.dispose();
+              _loadRewardedAd();
+            },
+          );
+          _rewardedAd = ad;
+          _isRewardedAdLoaded = true;
+        },
+        onAdFailedToLoad: (err) {
+          debugPrint('Failed to load a rewarded ad: ${err.message}');
+          _isRewardedAdLoaded = false;
+        },
+      ),
+    );
+  }
+
+  void _executeWithRewardedAd(VoidCallback action) {
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _loadRewardedAd();
+          action();
+        },
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _loadRewardedAd();
+          action();
+        },
+      );
+      _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        // Reward earned. Action is called on dismiss.
+      });
+      _rewardedAd = null;
+      _isRewardedAdLoaded = false;
+    } else {
+      action();
+    }
   }
 
   void _loadOfflineDownloads() async {
@@ -63,6 +118,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   @override
   void dispose() {
     _bannerAd?.dispose();
+    _rewardedAd?.dispose();
     super.dispose();
   }
 
@@ -743,7 +799,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                     )
                   ],
                 ),
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                 child: Column(
                   children: [
                     Row(
@@ -751,28 +807,28 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                       children: [
                         // Dynamic scaled illustration in unique background box
                         Container(
-                          width: 70,
-                          height: 70,
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
                             color: widget.color.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
                             child: SizedBox(
-                              width: 45,
-                              height: 45,
+                              width: 36,
+                              height: 36,
                               child: widget.icon,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 18),
+                        const SizedBox(width: 14),
                         // Titles and Grade
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: widget.color.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
@@ -793,13 +849,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                               Text(
                                 languageCode == 'en' ? widget.enTitle : widget.amTitle,
                                 style: TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w900,
                                   color: headerTextColor,
                                   letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Text(
                                 languageCode == 'en'
                                     ? 'High-quality comprehensive unit reviews'
@@ -815,23 +871,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     const Divider(height: 1, thickness: 1),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     // Progress metric section
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           _local('progress_label'),
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: headerTextColor),
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: headerTextColor),
                         ),
                         Text(
                           languageCode == 'en'
                               ? '${_downloadedUnits.length} / ${allUnits.length} Offline'
                               : '${_downloadedUnits.length} / ${allUnits.length} ወርዷል',
                           style: TextStyle(
-                            fontSize: 12.5,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: widget.color,
                           ),
@@ -959,18 +1015,17 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         });
                                         final selectedUnit = filteredUnits[index];
                                         final originalIndex = allUnits.indexOf(selectedUnit);
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) => QuizStyleSelectionScreen(
-                                              grade: widget.grade,
-                                              subjectId: widget.subjectId,
-                                              unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                              themeColor: widget.color,
-                                              isDarkMode: widget.isDarkMode,
-                                              languageCode: widget.languageCode,
+                                        _executeWithRewardedAd(() {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => QuizScreen(
+                                                grade: widget.grade,
+                                                subject: widget.subjectId,
+                                                unit: originalIndex >= 0 ? originalIndex + 1 : 1,
+                                              ),
                                             ),
-                                          ),
-                                        );
+                                          );
+                                        });
                                       },
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -1064,7 +1119,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: () {
-                                      _simulateDownload(unitId);
+                                      _executeWithRewardedAd(() {
+                                        _simulateDownload(unitId);
+                                      });
                                     },
                                     child: Center(
                                       child: progress != null
