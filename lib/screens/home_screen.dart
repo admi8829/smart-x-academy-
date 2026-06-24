@@ -6,13 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
-import 'register_screen.dart';
 import '../services/auth_service.dart';
 import 'unit_selection_screen.dart';
 import 'notification_list_screen.dart';
 import '../services/notification_service.dart';
 import '../widgets/image_slider_carousel.dart';
-import '../widgets/performance_bar_chart.dart';
 import '../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -149,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'nav_home': 'Home',
       'nav_courses': 'Offline',
       'nav_quiz': 'Quizzes',
-      'nav_notes': 'Notes',
+      'nav_notes': 'Short Note',
       'nav_account': 'Account',
       'nav_profile': 'Profile',
       'nav_settings': 'Settings',
@@ -180,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       'nav_home': 'መነሻ',
       'nav_courses': 'ከመስመር ውጭ',
       'nav_quiz': 'ጥያቄዎች',
-      'nav_notes': 'ማስታወሻዎች',
+      'nav_notes': 'አጫጭር ማስታወሻዎች',
       'nav_account': 'መለያ',
       'nav_profile': 'መገለጫ',
       'nav_settings': 'ማስተካከያዎች',
@@ -391,7 +389,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final bool isCoursesActive = _currentIndex == 1;
     final bool isQuizActive = _currentIndex == 2;
     final bool isNotesActive = _currentIndex == 3;
-    final bool isProfileActive = _currentIndex == 4;
     final bool isCustomDarkHeader = false;
 
     return Scaffold(
@@ -423,11 +420,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ? (widget.languageCode == 'en' ? 'Quizzes' : 'ጥያቄዎች')
                   : (isNotesActive
                       ? (widget.languageCode == 'en' ? 'My Notes' : 'የእኔ ማስታወሻዎች')
-                      : (isProfileActive 
-                          ? (_isLoginForm
-                              ? (widget.languageCode == 'en' ? 'Log In' : 'ይግቡ')
-                              : (widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ'))
-                          : _local('title')))),
+                      : _local('title'))),
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w900,
@@ -437,79 +430,49 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ),
         actions: isCustomDarkHeader
             ? null
-            : (isProfileActive
-                ? [
-                    // Log In/Register toggle switcher button
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _isLoginForm = !_isLoginForm;
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFECEFF1) : const Color(0xFF1F2937),
-                          borderRadius: BorderRadius.circular(10),
+            : [
+                // Light/Dark Theme Switcher (Represents custom dark mode icon)
+                IconButton(
+                  icon: Icon(
+                    widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
+                    color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
+                    size: 24,
+                  ),
+                  onPressed: widget.onToggleTheme,
+                ),
+                
+                // Compact, elegant language globe button matching design with EN/አማ
+                GestureDetector(
+                  onTap: widget.onToggleLanguage,
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 16, left: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.public_outlined,
+                          size: 18,
+                          color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
                         ),
-                        child: Text(
-                          _isLoginForm
-                              ? (widget.languageCode == 'en' ? 'Register' : 'ይመዝገቡ')
-                              : (widget.languageCode == 'en' ? 'Log In' : 'ይግቡ'),
+                        const SizedBox(width: 4),
+                        Text(
+                          "EN/አማ",
                           style: TextStyle(
-                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                            fontSize: 10,
                             fontWeight: FontWeight.w800,
-                            fontSize: 12.5,
+                            color: isLight ? const Color(0xFF0D2353) : Colors.white,
                           ),
                         ),
-                      ),
-                    )
-                  ]
-                : [
-                    // Light/Dark Theme Switcher (Represents custom dark mode icon)
-                    IconButton(
-                      icon: Icon(
-                        widget.isDarkMode ? Icons.wb_sunny_rounded : Icons.nights_stay_outlined,
-                        color: isLight ? const Color(0xFF0D2353) : Colors.amberAccent,
-                        size: 24,
-                      ),
-                      onPressed: widget.onToggleTheme,
+                      ],
                     ),
-                    
-                    // Compact, elegant language globe button matching design with EN/አማ
-                    GestureDetector(
-                      onTap: widget.onToggleLanguage,
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 16, left: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF374151),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.public_outlined,
-                              size: 18,
-                              color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              "EN/አማ",
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: isLight ? const Color(0xFF0D2353) : Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  ]),
+                  ),
+                )
+              ],
       ),
       drawer: Drawer(
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
@@ -781,13 +744,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   label: _local('nav_notes'),
                   isLight: isLight,
                 ),
-                _buildBottomNavItem(
-                  index: 4,
-                  iconActive: Icons.person,
-                  iconInactive: Icons.person_outline,
-                  label: _local('nav_account'),
-                  isLight: isLight,
-                ),
               ],
             ),
           ),
@@ -806,8 +762,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return _buildQuizScreenTab(isLight); // Quiz
       case 3:
         return _buildNotesScreenPlaceholder(isLight); // Notes
-      case 4:
-        return _buildProfileScreen(isLight); // Account
       default:
         return _buildHomeScreenContent(isLight);
     }
@@ -4114,279 +4068,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildProfileScreen(bool isLight) {
-    if (_isLoggedIn) {
-      return _buildProfileDashboard(isLight);
-    } else {
-      return RegisterScreen(
-        isDarkMode: !isLight,
-        languageCode: widget.languageCode,
-        onToggleTheme: widget.onToggleTheme,
-        onToggleLanguage: widget.onToggleLanguage,
-        embedInTab: true,
-      );
-    }
-  }
 
-  Widget _buildProfileDashboard(bool isLight) {
-    final bool isDark = !isLight;
-    final Color navyColor = const Color(0xFF0D2353);
-    final Color cardBg = isLight ? Colors.white : const Color(0xFF1E293B);
-    final Color textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-    final Color accentColor = isLight ? const Color(0xFF1E88E5) : const Color(0xFF38BDF8);
-
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. Sleek Gradient Profile Header Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: isLight
-                    ? [const Color(0xFF0D2353), const Color(0xFF1E40AF)]
-                    : [const Color(0xFF0F172A), const Color(0xFF1E293B)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    // Avatar layout
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2.5),
-                        color: isLight ? Colors.blue.shade100 : Colors.teal.shade800,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _userName.length > 2 ? _userName.substring(0, 2).toUpperCase() : _userName.toUpperCase(),
-                        style: TextStyle(
-                          color: isLight ? navyColor : Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _userName,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2.5),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              _userGradeStr,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Divider(color: Colors.white24, height: 1),
-                const SizedBox(height: 16),
-                
-                // Details Grid (Phone & Email)
-                Row(
-                  children: [
-                    const Icon(Icons.alternate_email_rounded, color: Colors.white70, size: 16),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _userEmail,
-                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    const Icon(Icons.phone_rounded, color: Colors.white70, size: 16),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        _userPhoneNumber.isNotEmpty ? _userPhoneNumber : "No Phone Added",
-                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 14),
-
-          // 2. High-Polished Study Stats Row
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.check_circle_outline_rounded, color: accentColor, size: 28),
-                      const SizedBox(height: 6),
-                      const Text("154 Solved", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-                      const SizedBox(height: 1),
-                      Text(widget.languageCode == 'en' ? "Practice" : "ልምምድ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.menu_book_rounded, color: Colors.orange, size: 28),
-                      const SizedBox(height: 6),
-                      const Text("28 Units", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-                      const SizedBox(height: 1),
-                      Text(widget.languageCode == 'en' ? "Units Explored" : "የተጠኑ ክፍሎች", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155), width: 1.2),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.timer_outlined, color: Colors.green, size: 28),
-                      const SizedBox(height: 6),
-                      const Text("14.5 Hrs", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
-                      const SizedBox(height: 1),
-                      Text(widget.languageCode == 'en' ? "Study Time" : "የማጠናያ ጊዜ", style: TextStyle(fontSize: 10.5, color: Colors.grey[500], fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // 3. Performance Analysis Chart Widget
-          _buildPerformanceChart(isLight),
-
-          const SizedBox(height: 12),
-
-          // 5. Logout Button
-          Container(
-            height: 52,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.red.shade400, width: 1.5),
-              borderRadius: BorderRadius.circular(26),
-            ),
-            child: TextButton.icon(
-              onPressed: () async {
-                final authService = AuthService();
-                await authService.signOut();
-                setState(() {
-                  _isLoggedIn = false;
-                });
-                await _loadProfileData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Logged out successfully"),
-                    backgroundColor: Colors.blue,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              icon: Icon(Icons.logout_rounded, color: Colors.red[400], size: 20),
-              label: Text(
-                widget.languageCode == 'en' ? "Log Out Session" : "መለያ ውጣ",
-                style: TextStyle(
-                  color: Colors.red[400],
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14.5,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPerformanceChart(bool isLight) {
-    final List<PerformanceSubjectData> chartData = [
-      PerformanceSubjectData(subjectName: 'Biology', subjectCode: 'BIO', scorePercentage: 84, icon: Icons.biotech),
-      PerformanceSubjectData(subjectName: 'Physics', subjectCode: 'PHY', scorePercentage: 68, icon: Icons.bolt),
-      PerformanceSubjectData(subjectName: 'Chemistry', subjectCode: 'CHE', scorePercentage: 74, icon: Icons.science_outlined),
-      PerformanceSubjectData(subjectName: 'Mathematics', subjectCode: 'MAT', scorePercentage: 90, icon: Icons.calculate_outlined),
-      PerformanceSubjectData(subjectName: 'Civics', subjectCode: 'CIV', scorePercentage: 80, icon: Icons.gavel_rounded),
-      PerformanceSubjectData(subjectName: 'English', subjectCode: 'ENG', scorePercentage: 88, icon: Icons.translate_rounded),
-    ];
-
-    final String title = widget.languageCode == 'en' ? "Performance Analytics 📉" : "የውጤት ትንተና 📉";
-    final String subtitle = widget.languageCode == 'en' ? "Based on recent practice achievements" : "ባለፉት ጥያቄዎች ውጤት መሰረት";
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: PerformanceBarChart(
-        data: chartData,
-        isDark: !isLight,
-        title: title,
-        subtitle: subtitle,
-      ),
-    );
-  }
 
   InputDecoration _getInputDecoration(bool isLight, {required String labelText, String? hintText}) {
     final Color borderCol = isLight ? const Color(0xFFD2D6DC) : const Color(0xFF334155);
