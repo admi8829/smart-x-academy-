@@ -2208,407 +2208,365 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildQuizScreenTab(bool isLight) {
-    final quizSlides = _getQuizSlidesForGrade(_selectedGradeForQuizTab);
-    final currentSlide = quizSlides[_carouselIndex % quizSlides.length];
-    final String questionText = currentSlide['question'];
-    final List<String> options = currentSlide['options'];
-    final int correctIndex = currentSlide['correctIndex'];
+    final List<Map<String, dynamic>> subjects = [
+      {
+        'id': 'Mathematics',
+        'amTitle': 'ሂሳብ',
+        'enTitle': 'Mathematics',
+        'color': const Color(0xFF0084FF),
+      },
+      {
+        'id': 'Biology',
+        'amTitle': 'ስነ-ህይወት',
+        'enTitle': 'Biology',
+        'color': const Color(0xFF2E7D32),
+      },
+      {
+        'id': 'Physics',
+        'amTitle': 'ፊዚክስ',
+        'enTitle': 'Physics',
+        'color': const Color(0xFFE53935),
+      },
+      {
+        'id': 'Chemistry',
+        'amTitle': 'ኬሚስትሪ',
+        'enTitle': 'Chemistry',
+        'color': const Color(0xFFEF6C00),
+      },
+      {
+        'id': 'Geography',
+        'amTitle': 'ጂኦግራፊ',
+        'enTitle': 'Geography',
+        'color': const Color(0xFF8E24AA),
+      },
+      {
+        'id': 'History',
+        'amTitle': 'ታሪክ',
+        'enTitle': 'History',
+        'color': const Color(0xFFF5B041),
+      },
+      {
+        'id': 'Civics',
+        'amTitle': 'ዜግነት',
+        'enTitle': 'Civics',
+        'color': const Color(0xFF1E88E5),
+      },
+      {
+        'id': 'Agriculture',
+        'amTitle': 'ግብርና',
+        'enTitle': 'Agriculture',
+        'color': const Color(0xFF8D6E63),
+      },
+    ];
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 26.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.languageCode == 'en' ? 'National Exam Quizzes' : 'ብሄራዊ የፈተና ጥያቄዎች',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: isLight ? const Color(0xFF0F172A) : Colors.white,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            widget.languageCode == 'en'
-                ? 'Select a high school grade below to start official matric-level mock exams.'
-                : 'ብሄራዊ የልምምድ ፈተና መፈተን ለመጀመር ከታች የአንዱን ክፍል ካርድ ይጫኑ።',
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
-              color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Beautiful grade grid cards matching home page design conceptually
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12.0,
-            mainAxisSpacing: 12.0,
-            childAspectRatio: 1.55,
-            children: [
-              _buildGradeQuizSelectorCard(9, widget.languageCode == 'en' ? 'Grade 9' : 'ክፍል 9', widget.languageCode == 'en' ? 'Start Journey!' : 'ጉዞዎን ይጀምሩ!', const Color(0xFF0084FF), isLight),
-              _buildGradeQuizSelectorCard(10, widget.languageCode == 'en' ? 'Grade 10' : 'ክፍል 10', widget.languageCode == 'en' ? 'Expand knowledge!' : 'እውቀትዎን ያሳድጉ!', const Color(0xFF10B981), isLight),
-              _buildGradeQuizSelectorCard(11, widget.languageCode == 'en' ? 'Grade 11' : 'ክፍል 11', widget.languageCode == 'en' ? 'Prepare for excellence!' : 'ለላቀ ውጤት ይዘጋጁ!', const Color(0xFFF59E0B), isLight),
-              _buildGradeQuizSelectorCard(12, widget.languageCode == 'en' ? 'Grade 12' : 'ክፍል 12', widget.languageCode == 'en' ? 'Achieve goals!' : 'ግብዎን ያሳኩ!', const Color(0xFF8B5CF6), isLight),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          // PREVIEW MODE section styled exactly like reference image
-          Row(
-            children: [
-              Icon(Icons.style_rounded, size: 18, color: isLight ? const Color(0xFF0F172A) : Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                widget.languageCode == 'en' ? 'Interactive Preview' : 'በይነተገናኝ ማሳያ',
-                style: TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w900,
-                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                ),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+        image: DecorationImage(
+          image: const AssetImage('assets/images/education_bg_pattern.png'),
+          repeat: ImageRepeat.repeat,
+          opacity: isLight ? 0.09 : 0.03,
+          colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
+        ),
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Headings / Subtitle matching subject selection screen look
+            Text(
+              widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                letterSpacing: -0.4,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                width: 1,
-              ),
             ),
-            child: Column(
-              children: [
-                // Inner Card mimicking exactly the user's reference image
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-                  decoration: BoxDecoration(
-                    color: isLight ? Colors.white : const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header REAL PREVIEW + Copy to clipboard action
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF10B981),
-                                  shape: BoxShape.circle,
-                                ),
+            const SizedBox(height: 12),
+            
+            // Grade Selector Top Bar (Horizontal Filter)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [9, 10, 11, 12].map((int gradeNum) {
+                  final bool isSelected = _selectedGradeForQuizTab == gradeNum;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedGradeForQuizTab = gradeNum;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF1E88E5)
+                            : (isLight ? Colors.white : const Color(0xFF1E293B)),
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? null
+                            : Border.all(
+                                color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                                width: 1.2,
                               ),
-                              const SizedBox(width: 6),
-                              const Text(
-                                'REAL PREVIEW',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF10B981),
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ],
-                          ),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(20),
-                            onTap: () {
-                              final String optionsText = options.join("\n");
-                              final String clipboardText = "Quiz Question:\n$questionText\n\nOptions:\n$optionsText";
-                              Clipboard.setData(ClipboardData(text: clipboardText));
-                              ScaffoldMessenger.of(context).clearSnackBars();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          widget.languageCode == 'en' 
-                                              ? 'Quiz text copied! Paste anywhere.' 
-                                              : 'የፈተናው ጥያቄ ተገልብጧል። የትም ቦታ መለጠፍ ይችላሉ።',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  backgroundColor: const Color(0xFF1E88E5),
-                                  behavior: SnackBarBehavior.floating,
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E293B),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
                                   color: const Color(0xFF1E88E5).withOpacity(0.3),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.copy_rounded, size: 13, color: Color(0xFF1E88E5)),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    widget.languageCode == 'en' ? 'Copy Question' : 'ትምህርት ቅዳ',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFF1E88E5),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                                  blurRadius: 8.0,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]
+                            : null,
                       ),
-                      const SizedBox(height: 18),
-                      // Question text
-                      Text(
-                        questionText,
+                      child: Text(
+                        widget.languageCode == 'en' ? 'Grade $gradeNum' : 'ክፍል $gradeNum',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          height: 1.3,
-                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                          color: isSelected
+                              ? Colors.white
+                              : (isLight ? const Color(0xFF0F172A) : Colors.white),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14.5,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      // Options list with Addis Ababa / correct green check highlight
-                      ...List.generate(options.length, (idx) {
-                        final bool isCorrectHighlight = idx == correctIndex;
-                        final String optionValue = options[idx];
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SizedBox(height: 24.0),
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: isCorrectHighlight
-                                ? (isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E3A8A).withOpacity(0.3))
-                                : (isLight ? Colors.white : const Color(0xFF1E293B)),
-                            border: Border.all(
-                              color: isCorrectHighlight
-                                  ? const Color(0xFF1E88E5)
-                                  : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-                              width: isCorrectHighlight ? 1.5 : 1,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                optionValue,
-                                style: TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w900,
-                                  color: isCorrectHighlight
-                                      ? const Color(0xFF1E88E5)
-                                      : (isLight ? const Color(0xFF475569) : Colors.white70),
-                                ),
-                              ),
-                              if (isCorrectHighlight)
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF10B981),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.check,
-                                    color: Colors.white,
-                                    size: 11,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
+            // Secondary subtitle
+            Text(
+              widget.languageCode == 'en'
+                  ? 'Select your subject to access quizzes and mock exams.'
+                  : 'የፈተና ጥያቄዎችን ለመለማመድ ከታች የትምህርት ዓይነት ይምረጡ።',
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+
+            // Subject Cards Grid
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: 1.10,
+              ),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                return InteractiveQuizSubjectCard(
+                  subject: subject,
+                  isLight: isLight,
+                  grade: _selectedGradeForQuizTab,
+                  languageCode: widget.languageCode,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => UnitSelectionScreen(
+                          grade: _selectedGradeForQuizTab,
+                          subjectId: subject['id'],
+                          enTitle: subject['enTitle'],
+                          amTitle: subject['amTitle'],
+                          color: subject['color'],
+                          icon: SubjectVectors.getIconForSubject(subject['id']),
+                          isDarkMode: widget.isDarkMode,
+                          languageCode: widget.languageCode,
+                          onToggleTheme: widget.onToggleTheme,
+                          onToggleLanguage: widget.onToggleLanguage,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class InteractiveQuizSubjectCard extends StatefulWidget {
+  final Map<String, dynamic> subject;
+  final bool isLight;
+  final int grade;
+  final String languageCode;
+  final VoidCallback onTap;
+
+  const InteractiveQuizSubjectCard({
+    super.key,
+    required this.subject,
+    required this.isLight,
+    required this.grade,
+    required this.languageCode,
+    required this.onTap,
+  });
+
+  @override
+  State<InteractiveQuizSubjectCard> createState() => _InteractiveQuizSubjectCardState();
+}
+
+class _InteractiveQuizSubjectCardState extends State<InteractiveQuizSubjectCard> {
+  double _scale = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final subject = widget.subject;
+    final String enTitle = subject['enTitle'];
+    final String amTitle = subject['amTitle'];
+    final Color subjectColor = subject['color'];
+    final String title = widget.languageCode == 'en' ? enTitle : amTitle;
+    final String subtitle = widget.languageCode == 'en' ? 'Grade ${widget.grade}' : 'ክፍል ${widget.grade}';
+    final String btnText = widget.languageCode == 'en' ? 'START' : 'ጀምር';
+
+    return Listener(
+      onPointerDown: (_) => setState(() => _scale = 0.95),
+      onPointerUp: (_) => setState(() => _scale = 1.0),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          transform: Matrix4.identity()..scale(_scale),
+          transformAlignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.isLight ? Colors.white : const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(24.0),
+            border: Border.all(
+              color: widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(widget.isLight ? 0.04 : 0.16),
+                blurRadius: 16.0,
+                offset: const Offset(0, 6),
+              )
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Center premium vector illustration container with a subtle background shade
+                  Container(
+                    height: 48,
+                    width: 48,
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      color: subjectColor.withOpacity(0.06),
+                      shape: BoxShape.circle,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: SubjectVectors.getIconForSubject(subject['id']),
+                    ),
                   ),
+                  
+                  const SizedBox(height: 8.0),
+
+                  // Center aligned subject header title
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.w900,
+                      color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                      letterSpacing: -0.4,
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 4.0),
+
+                  // English / Grade level description subtitle
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.bold,
+                      color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF52C29F), // Vibrant mint teal
+                      subjectColor, // Subject custom color
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20.0), // Proper pill rounding
+                  boxShadow: [
+                    BoxShadow(
+                      color: subjectColor.withOpacity(0.18),
+                      blurRadius: 4.0,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
                 ),
-                const SizedBox(height: 16),
-                // Slideshow Carousel controls (Next, Prev)
-                Row(
+                alignment: Alignment.center,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    IconButton(
-                      onPressed: () {
-                        _resetCarouselTimer();
-                        setState(() {
-                          _carouselIndex = (_carouselIndex - 1 + quizSlides.length) % quizSlides.length;
-                        });
-                      },
-                      icon: Icon(Icons.arrow_back_rounded, color: isLight ? const Color(0xFF475569) : Colors.white70),
-                      style: IconButton.styleFrom(
-                        backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
-                        padding: const EdgeInsets.all(10),
+                    Text(
+                      btnText,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.1,
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Row(
-                      children: List.generate(quizSlides.length, (dotIdx) {
-                        final bool isCurrent = dotIdx == (_carouselIndex % quizSlides.length);
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: isCurrent ? 20 : 6,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: isCurrent ? const Color(0xFF1E88E5) : const Color(0xFF94A3B8).withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(width: 14),
-                    IconButton(
-                      onPressed: () {
-                        _resetCarouselTimer();
-                        setState(() {
-                          _carouselIndex = (_carouselIndex + 1) % quizSlides.length;
-                        });
-                      },
-                      icon: Icon(Icons.arrow_forward_rounded, color: isLight ? const Color(0xFF475569) : Colors.white70),
-                      style: IconButton.styleFrom(
-                        backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
-                        padding: const EdgeInsets.all(10),
-                      ),
+                    const SizedBox(width: 4.0),
+                    const Icon(
+                      Icons.chevron_right, // Required chevron_right arrow icon
+                      color: Colors.white,
+                      size: 14.0,
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          // Giant action button to trigger comprehensive exam screen
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                debugPrint("Clicked");
-              },
-              icon: const Icon(Icons.play_circle_filled_rounded, size: 18),
-              label: Text(
-                widget.languageCode == 'en'
-                    ? 'Start Grade $_selectedGradeForQuizTab Practice Exam'
-                    : 'የክፍል $_selectedGradeForQuizTab የልምምድ ፈተና ጀምር',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
               ),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: _selectedGradeForQuizTab == 9
-                    ? const Color(0xFF0084FF)
-                    : (_selectedGradeForQuizTab == 10
-                        ? const Color(0xFF10B981)
-                        : (_selectedGradeForQuizTab == 11
-                            ? const Color(0xFFF59E0B)
-                            : const Color(0xFF8B5CF6))),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradeQuizSelectorCard(int gradeNum, String title, String subtitle, Color btnColor, bool isLight) {
-    bool isSelected = _selectedGradeForQuizTab == gradeNum;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedGradeForQuizTab = gradeNum;
-          _carouselIndex = 0;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        decoration: BoxDecoration(
-          color: isSelected ? btnColor : (isLight ? Colors.white : const Color(0xFF1E293B)),
-          borderRadius: BorderRadius.circular(18.0),
-          border: Border.all(
-            color: isSelected ? btnColor : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isSelected ? btnColor.withOpacity(0.2) : Colors.black.withOpacity(0.01),
-              blurRadius: 8.0,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.school,
-                  size: 16,
-                  color: isSelected ? Colors.white : btnColor,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
-                    color: isSelected ? Colors.white : (isLight ? const Color(0xFF0F172A) : Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white.withOpacity(0.8) : (isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
-              ),
-            ),
-          ],
         ),
       ),
     );
   }
+
 
   List<Map<String, dynamic>> _getQuizSlidesForGrade(int grade) {
     if (grade == 9) {
