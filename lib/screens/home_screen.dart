@@ -2426,195 +2426,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-}
-
-class InteractiveQuizSubjectCard extends StatefulWidget {
-  final Map<String, dynamic> subject;
-  final bool isLight;
-  final int grade;
-  final String languageCode;
-  final VoidCallback onTap;
-
-  const InteractiveQuizSubjectCard({
-    super.key,
-    required this.subject,
-    required this.isLight,
-    required this.grade,
-    required this.languageCode,
-    required this.onTap,
-  });
-
-  @override
-  State<InteractiveQuizSubjectCard> createState() => _InteractiveQuizSubjectCardState();
-}
-
-class _InteractiveQuizSubjectCardState extends State<InteractiveQuizSubjectCard> {
-  double _scale = 1.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final subject = widget.subject;
-    final String enTitle = subject['enTitle'];
-    final String amTitle = subject['amTitle'];
-    final Color subjectColor = subject['color'];
-    final String title = widget.languageCode == 'en' ? enTitle : amTitle;
-    final String subtitle = widget.languageCode == 'en' ? 'Grade ${widget.grade}' : 'ክፍል ${widget.grade}';
-    final String btnText = widget.languageCode == 'en' ? 'START' : 'ጀምር';
-
-    return Listener(
-      onPointerDown: (_) => setState(() => _scale = 0.95),
-      onPointerUp: (_) => setState(() => _scale = 1.0),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          transform: Matrix4.identity()..scale(_scale),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.isLight ? Colors.white : const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(24.0),
-            border: Border.all(
-              color: widget.isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(widget.isLight ? 0.04 : 0.16),
-                blurRadius: 16.0,
-                offset: const Offset(0, 6),
-              )
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double maxHeight = constraints.maxHeight;
-              
-              final double iconSize = (maxHeight * 0.25).clamp(24.0, 44.0);
-              final double titleFontSize = (maxHeight * 0.09).clamp(11.0, 14.0);
-              final double subFontSize = (maxHeight * 0.07).clamp(9.0, 11.0);
-              final double btnPadding = (maxHeight * 0.04).clamp(4.0, 8.0);
-              final double spacing = (maxHeight * 0.04).clamp(2.0, 6.0);
-
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Center premium vector illustration container with a subtle background shade
-                        Container(
-                          height: iconSize,
-                          width: iconSize,
-                          padding: EdgeInsets.all(iconSize * 0.15),
-                          decoration: BoxDecoration(
-                            color: subjectColor.withOpacity(0.06),
-                            shape: BoxShape.circle,
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SubjectVectors.getIconForSubject(subject['id']),
-                          ),
-                        ),
-                        
-                        SizedBox(height: spacing),
-
-                        // Center aligned subject header title
-                        Flexible(
-                          child: Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: titleFontSize,
-                              fontWeight: FontWeight.w900,
-                              color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                        ),
-                        
-                        SizedBox(height: spacing / 2),
-
-                        // English / Grade level description subtitle
-                        Flexible(
-                          child: Text(
-                            subtitle,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: subFontSize,
-                              fontWeight: FontWeight.bold,
-                              color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: spacing),
-
-                  // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: btnPadding),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF52C29F), // Vibrant mint teal
-                          subjectColor, // Subject custom color
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20.0), // Proper pill rounding
-                      boxShadow: [
-                        BoxShadow(
-                          color: subjectColor.withOpacity(0.18),
-                          blurRadius: 4.0,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            btnText,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: subFontSize + 1.0,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 0.1,
-                            ),
-                          ),
-                          const SizedBox(width: 4.0),
-                          const Icon(
-                            Icons.chevron_right, // Required chevron_right arrow icon
-                            color: Colors.white,
-                            size: 14.0,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
 
 
   List<Map<String, dynamic>> _getQuizSlidesForGrade(int grade) {
@@ -4854,6 +4665,51 @@ class _InteractiveQuizSubjectCardState extends State<InteractiveQuizSubjectCard>
       },
     );
   }
+
+  void _showFromMyvideos(bool isLight) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.languageCode == 'en' ? 'My Saved Videos' : 'የእኔ ቪዲዮዎች',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.languageCode == 'en' 
+                    ? 'Your bookmarked or recently watched videos will appear here.'
+                    : 'የተቀመጡ ወይም በቅርብ ጊዜ ያዩዋቸው ቪዲዮዎች እዚህ ይገኛሉ።',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomShadow() {
+    return Container(
+      height: 10,
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _InteractiveGradeCard extends StatefulWidget {
@@ -5164,4 +5020,5 @@ class _AnimatedPlayButtonGlowState extends State<AnimatedPlayButtonGlow>
       },
     );
   }
-}
+
+
