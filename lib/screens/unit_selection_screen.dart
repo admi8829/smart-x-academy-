@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
 import '../services/quiz_service.dart';
@@ -47,12 +48,453 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
 
+  bool _isRegistered = false;
+
   @override
   void initState() {
     super.initState();
     _loadBannerAd();
     _loadRewardedAd();
     _loadOfflineDownloads();
+    _checkRegistrationStatus();
+  }
+
+  void _checkRegistrationStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isRegistered = prefs.getBool('is_authenticated') ?? false;
+      });
+    }
+  }
+
+  void _showRegistrationDialog() {
+    final bool isLight = !widget.isDarkMode;
+    final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final Color descColor = isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+
+    final _formKey = GlobalKey<FormState>();
+    final _fullNameController = TextEditingController();
+    final _phoneController = TextEditingController();
+    final _emailController = TextEditingController();
+    int _dialogSelectedGrade = widget.grade; // Default to current screen's grade
+    String _dialogSelectedCountryCode = '+251'; // Default
+
+    final List<Map<String, String>> countryCodes = [
+      {'code': '+251', 'flag': '🇪🇹', 'name': 'Ethiopia'},
+      {'code': '+1', 'flag': '🇺🇸', 'name': 'USA'},
+      {'code': '+44', 'flag': '🇬🇧', 'name': 'UK'},
+      {'code': '+254', 'flag': '🇰🇪', 'name': 'Kenya'},
+      {'code': '+256', 'flag': '🇺🇬', 'name': 'Uganda'},
+    ];
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
+              backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: BoxDecoration(
+                                color: widget.color.withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.lock_person_rounded,
+                                color: widget.color,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.languageCode == 'en' ? 'Unlock All Units' : 'ሁሉንም ክፍሎች ይክፈቱ',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      color: headerTextColor,
+                                      letterSpacing: -0.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.languageCode == 'en' 
+                                        ? 'Register to unlock prep content' 
+                                        : 'ይዘቶችን ለማግኘት ይመዝገቡ',
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: descColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.close, color: descColor, size: 20),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        const Divider(height: 1, color: Colors.grey, thickness: 0.1),
+                        const SizedBox(height: 18),
+
+                        // Full Name Field
+                        _buildDialogLabel(
+                          widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *',
+                          isLight,
+                        ),
+                        _buildDialogFieldContainer(
+                          isLight: isLight,
+                          child: TextFormField(
+                            controller: _fullNameController,
+                            style: TextStyle(
+                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
+                              hintStyle: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.normal,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.person_outline_rounded,
+                                color: widget.color,
+                                size: 18,
+                              ),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                    return widget.languageCode == 'en' 
+                                        ? 'Please enter your name' 
+                                        : 'እባክዎን ስምዎን ያስገቡ';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Phone Number Field with Country Code
+                        _buildDialogLabel(
+                          widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *',
+                          isLight,
+                        ),
+                        _buildDialogFieldContainer(
+                          isLight: isLight,
+                          child: Row(
+                            children: [
+                              // Country code selector dropdown
+                              DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _dialogSelectedCountryCode,
+                                  dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                                  icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey),
+                                  style: TextStyle(
+                                    color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  items: countryCodes.map((country) {
+                                    return DropdownMenuItem<String>(
+                                      value: country['code'],
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            country['flag']!,
+                                            style: const TextStyle(fontSize: 16),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            country['code']!,
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setDialogState(() {
+                                        _dialogSelectedCountryCode = val;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                width: 1,
+                                height: 20,
+                                color: isLight ? Colors.grey[300] : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  style: TextStyle(
+                                    color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: '911234567',
+                                    hintStyle: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    if (val == null || val.trim().isEmpty) {
+                                      return widget.languageCode == 'en' 
+                                          ? 'Please enter phone' 
+                                          : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Grade Level Dropdown
+                        _buildDialogLabel(
+                          widget.languageCode == 'en' ? 'Grade Level *' : 'የክፍል ደረጃ *',
+                          isLight,
+                        ),
+                        _buildDialogFieldContainer(
+                          isLight: isLight,
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<int>(
+                              value: _dialogSelectedGrade,
+                              isExpanded: true,
+                              icon: Icon(Icons.arrow_drop_down, color: widget.color, size: 24),
+                              dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                              style: TextStyle(
+                                color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              items: [9, 10, 11, 12].map((int val) {
+                                return DropdownMenuItem<int>(
+                                  value: val,
+                                  child: Text(
+                                    widget.languageCode == 'en' ? 'Grade $val' : 'ክፍል $val',
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setDialogState(() {
+                                    _dialogSelectedGrade = val;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Optional Email Address
+                        _buildDialogLabel(
+                          widget.languageCode == 'en' ? 'Email Address (Optional)' : 'የኢሜል አድራሻ (አማራጭ)',
+                          isLight,
+                        ),
+                        _buildDialogFieldContainer(
+                          isLight: isLight,
+                          child: TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: TextStyle(
+                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: widget.languageCode == 'en' ? 'e.g. abebe@smartx.com' : 'ምሳሌ: abebe@smartx.com',
+                              hintStyle: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.normal,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: widget.color,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Action Buttons: Cancel & Register
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  side: BorderSide(
+                                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
+                                    width: 1.5,
+                                  ),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                ),
+                                child: Text(
+                                  widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
+                                  style: TextStyle(
+                                    color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    final String fullName = _fullNameController.text.trim();
+                                    final String phone = _phoneController.text.trim();
+                                    final String email = _emailController.text.trim();
+                                    final String fullPhone = '$_dialogSelectedCountryCode $phone';
+
+                                    // Save locally to SharedPreferences
+                                    final prefs = await SharedPreferences.getInstance();
+                                    await prefs.setString('user_fullName', fullName);
+                                    await prefs.setString('user_phoneNumber', fullPhone);
+                                    await prefs.setString('user_grade', 'Grade $_dialogSelectedGrade');
+                                    if (email.isNotEmpty) {
+                                      await prefs.setString('user_email', email);
+                                    }
+                                    await prefs.setBool('is_authenticated', true);
+
+                                    // Update state
+                                    if (this.mounted) {
+                                      this.setState(() {
+                                        _isRegistered = true;
+                                      });
+                                    }
+
+                                    // Close dialog
+                                    Navigator.of(context).pop();
+
+                                    // Show success snackbar
+                                    ScaffoldMessenger.of(this.context).clearSnackBars();
+                                    ScaffoldMessenger.of(this.context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          children: [
+                                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                widget.languageCode == 'en' 
+                                                    ? 'Successfully registered! Premium content unlocked.' 
+                                                    : 'በስኬት ተመዝግበዋል! ሁሉም የትምህርት ክፍሎች ተከፍተዋል::',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: const Color(0xFF10B981),
+                                        behavior: SnackBarBehavior.floating,
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: widget.color,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  elevation: 2,
+                                ),
+                                child: Text(
+                                  widget.languageCode == 'en' ? 'Register' : 'ተመዝገብ',
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogLabel(String text, bool isLight) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0, left: 2.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogFieldContainer({required Widget child, required bool isLight}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      decoration: BoxDecoration(
+        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+          width: 1.2,
+        ),
+      ),
+      child: child,
+    );
   }
 
   void _loadRewardedAd() {
@@ -921,18 +1363,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
               ),
 
-              // Subject count text label
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: Text(
-                  '${_local('units_count')} (${filteredUnits.length})',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w800,
-                    color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 8.0),
 
               // Filtered list of Units
               if (filteredUnits.isEmpty)
@@ -1010,6 +1441,10 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () {
+                                        if (index > 0 && !_isRegistered) {
+                                          _showRegistrationDialog();
+                                          return;
+                                        }
                                         setState(() {
                                           _selectedUnitIndex = index;
                                         });
@@ -1036,13 +1471,19 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               width: 44,
                                               height: 44,
                                               decoration: BoxDecoration(
-                                                color: widget.color.withValues(alpha: 0.08),
+                                                color: (index > 0 && !_isRegistered)
+                                                    ? Colors.grey.withValues(alpha: 0.08)
+                                                    : widget.color.withValues(alpha: 0.08),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: Center(
                                                 child: Icon(
-                                                  Icons.event_available_rounded,
-                                                  color: widget.color,
+                                                  (index > 0 && !_isRegistered)
+                                                      ? Icons.lock_outline_rounded
+                                                      : Icons.event_available_rounded,
+                                                  color: (index > 0 && !_isRegistered)
+                                                      ? const Color(0xFF94A3B8)
+                                                      : widget.color,
                                                   size: 22,
                                                 ),
                                               ),
@@ -1059,7 +1500,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     style: TextStyle(
                                                       fontSize: 15.0,
                                                       fontWeight: FontWeight.w900,
-                                                      color: headerTextColor,
+                                                      color: (index > 0 && !_isRegistered)
+                                                          ? headerTextColor.withValues(alpha: 0.7)
+                                                          : headerTextColor,
                                                       height: 1.25,
                                                     ),
                                                   ),
@@ -1071,17 +1514,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     style: TextStyle(
                                                       fontSize: 12.0,
                                                       fontWeight: FontWeight.w500,
-                                                      color: descColor,
+                                                      color: (index > 0 && !_isRegistered)
+                                                          ? descColor.withValues(alpha: 0.7)
+                                                          : descColor,
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                             const SizedBox(width: 8),
-                                            // Soft grey chevron-right arrow exactly like the image
+                                            // Soft grey chevron/lock icon representation
                                             Icon(
-                                              Icons.chevron_right_rounded,
-                                              color: isLight ? const Color(0xFFBCC8D6) : const Color(0xFF64748B),
+                                              (index > 0 && !_isRegistered)
+                                                  ? Icons.lock_outline_rounded
+                                                  : Icons.chevron_right_rounded,
+                                              color: (index > 0 && !_isRegistered)
+                                                  ? const Color(0xFFEF4444)
+                                                  : (isLight ? const Color(0xFFBCC8D6) : const Color(0xFF64748B)),
                                               size: 20,
                                             ),
                                           ],
@@ -1098,15 +1547,19 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: progress != null
-                                    ? widget.color.withValues(alpha: 0.15)
-                                    : (isDownloaded ? const Color(0xFF10B981) : widget.color),
+                                color: (index > 0 && !_isRegistered)
+                                    ? const Color(0xFF64748B)
+                                    : (progress != null
+                                        ? widget.color.withValues(alpha: 0.15)
+                                        : (isDownloaded ? const Color(0xFF10B981) : widget.color)),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: (progress != null
-                                            ? widget.color
-                                            : (isDownloaded ? const Color(0xFF10B981) : widget.color))
+                                    color: ((index > 0 && !_isRegistered)
+                                            ? const Color(0xFF64748B)
+                                            : (progress != null
+                                                ? widget.color
+                                                : (isDownloaded ? const Color(0xFF10B981) : widget.color)))
                                         .withValues(alpha: 0.25),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
@@ -1119,6 +1572,10 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: () {
+                                      if (index > 0 && !_isRegistered) {
+                                        _showRegistrationDialog();
+                                        return;
+                                      }
                                       _executeWithRewardedAd(() {
                                         _simulateDownload(unitId);
                                       });
@@ -1135,9 +1592,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               ),
                                             )
                                           : Icon(
-                                              isDownloaded
-                                                  ? Icons.cloud_done_rounded
-                                                  : Icons.file_download_rounded,
+                                              (index > 0 && !_isRegistered)
+                                                  ? Icons.lock_outline_rounded
+                                                  : (isDownloaded
+                                                      ? Icons.cloud_done_rounded
+                                                      : Icons.file_download_rounded),
                                               color: Colors.white,
                                               size: 20,
                                             ),

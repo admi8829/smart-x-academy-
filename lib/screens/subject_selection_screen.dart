@@ -433,109 +433,133 @@ class _InteractiveSubjectCardState extends State<_InteractiveSubjectCard> with S
                   )
                 ],
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 12.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final double maxHeight = constraints.maxHeight;
+                  
+                  final double iconSize = (maxHeight * 0.25).clamp(24.0, 44.0);
+                  final double titleFontSize = (maxHeight * 0.09).clamp(11.0, 14.0);
+                  final double subFontSize = (maxHeight * 0.07).clamp(9.0, 11.0);
+                  final double btnPadding = (maxHeight * 0.04).clamp(4.0, 8.0);
+                  final double spacing = (maxHeight * 0.04).clamp(2.0, 6.0);
+
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Center premium vector illustration container with a subtle background shade
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Center premium vector illustration container with a subtle background shade
+                            Container(
+                              height: iconSize,
+                              width: iconSize,
+                              padding: EdgeInsets.all(iconSize * 0.15),
+                              decoration: BoxDecoration(
+                                color: widget.color.withOpacity(0.06),
+                                shape: BoxShape.circle,
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: widget.illustration,
+                              ),
+                            ),
+                            
+                            SizedBox(height: spacing),
+
+                            // Center aligned subject header title
+                            Flexible(
+                              child: Text(
+                                widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.w900,
+                                  color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  letterSpacing: -0.4,
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(height: spacing / 2),
+
+                            // English / Grade level description subtitle
+                            Flexible(
+                              child: Text(
+                                widget.languageCode == 'en'
+                                    ? 'Grade ${widget.grade}'
+                                    : 'ክፍል ${widget.grade}',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: subFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: spacing),
+
+                      // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
                       Container(
-                        height: 48,
-                        width: 48,
-                        padding: const EdgeInsets.all(8.0),
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: btnPadding),
                         decoration: BoxDecoration(
-                          color: widget.color.withOpacity(0.06),
-                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF52C29F), // Vibrant mint teal
+                              widget.color, // Subject custom color
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20.0), // Proper pill rounding
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.color.withOpacity(0.18),
+                              blurRadius: 4.0,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
                         ),
+                        alignment: Alignment.center,
                         child: FittedBox(
-                          fit: BoxFit.contain,
-                          child: widget.illustration,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 8.0),
-
-                      // Center aligned subject header title
-                      Text(
-                        widget.languageCode == 'en' ? widget.enTitle : widget.amTitle,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15.0,
-                          fontWeight: FontWeight.w900,
-                          color: widget.isLight ? const Color(0xFF0F172A) : Colors.white,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 4.0),
-
-                      // English / Grade level description subtitle
-                      Text(
-                        widget.languageCode == 'en'
-                            ? 'Grade ${widget.grade}'
-                            : 'ክፍል ${widget.grade}',
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11.0,
-                          fontWeight: FontWeight.bold,
-                          color: widget.isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                widget.btnStartText,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: subFontSize + 1.0,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                              const SizedBox(width: 4.0),
+                              const Icon(
+                                Icons.chevron_right, // Required chevron_right arrow icon
+                                color: Colors.white,
+                                size: 14.0,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
-                  ),
-
-                  // Pill button styled EXACTLY like a beautiful modern gradient pill button as shown in the image
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF52C29F), // Vibrant mint teal
-                          widget.color, // Subject custom color
-                        ],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20.0), // Proper pill rounding
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.color.withOpacity(0.18),
-                          blurRadius: 4.0,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.btnStartText,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.1,
-                          ),
-                        ),
-                        const SizedBox(width: 4.0),
-                        const Icon(
-                          Icons.chevron_right, // Required chevron_right arrow icon
-                          color: Colors.white,
-                          size: 14.0,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
