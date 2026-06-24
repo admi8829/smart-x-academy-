@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:convert';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,7 +10,6 @@ import 'subject_selection_screen.dart';
 import '../services/auth_service.dart';
 import 'unit_selection_screen.dart';
 import 'notification_list_screen.dart';
-import '../services/notification_service.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../main.dart';
 
@@ -320,11 +320,36 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Future<void> _loadUnreadNotifications() async {
-    final count = await NotificationService.getUnreadCount();
-    if (mounted) {
-      setState(() {
-        _unreadNotificationsCount = count;
-      });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? list = prefs.getStringList('local_notifications');
+      int count = 0;
+      if (list != null) {
+        for (final item in list) {
+          try {
+            final Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(item));
+            if (map['is_read'] == false) {
+              count++;
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+      } else {
+        // If it's the very first time, we seeded 2 unread notifications, so let's count them!
+        count = 2;
+      }
+      if (mounted) {
+        setState(() {
+          _unreadNotificationsCount = count;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationsCount = 0;
+        });
+      }
     }
   }
 

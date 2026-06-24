@@ -54,7 +54,7 @@ class _QuizScreenState extends State<QuizScreen> {
         setState(() {
           _questions = [];
           _isLoading = false;
-          _errorMessage = "No questions available for this unit yet.";
+          _errorMessage = "No questions available";
         });
         return;
       }
@@ -64,9 +64,6 @@ class _QuizScreenState extends State<QuizScreen> {
       }
 
       setState(() {
-        // Here we map QuestionModel back into the Map structure you built for the UI
-        // or just use QuestionModel directly. For simplicity, let's convert to map so the UI code below mostly stays.
-        // Actually, let's keep it as QuestionModel and I'll adjust the UI to use QuestionModel.
         _questions = fetched;
         _isLoading = false;
       });
@@ -86,6 +83,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _onOptionSelected(int qIndex, int optionIndex) {
+    if (_questions.isEmpty || qIndex >= _questions.length || qIndex < 0) return;
     setState(() {
       _selectedAnswers[qIndex] = optionIndex;
     });
@@ -116,6 +114,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _scrollToIndex(int index) {
+    if (_questions.isEmpty || index >= _questions.length || index < 0) return;
     if (!_itemKeys.containsKey(index)) return;
     final context = _itemKeys[index]!.currentContext;
     if (context != null) {
@@ -350,7 +349,8 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Widget _buildFinishedSection() {
-    final bool allAnswered = _selectedAnswers.length == _questions.length;
+    if (_questions.isEmpty) return const SizedBox.shrink();
+    final bool allAnswered = _selectedAnswers.isNotEmpty && _selectedAnswers.length == _questions.length;
     
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 300),
@@ -399,6 +399,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _showResults() {
+    if (_questions.isEmpty) return;
     int score = 0;
     
     for (int i = 0; i < _questions.length; i++) {

@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../services/notification_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -26,30 +27,117 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
   }
 
   Future<void> _loadNotifications() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
-    final data = await NotificationService.fetchNotifications();
-    if (mounted) {
-      setState(() {
-        _notifications = data;
-        _isLoading = false;
-      });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      List<String>? list = prefs.getStringList('local_notifications');
+      
+      // If it's the very first time, seed welcome notifications
+      if (list == null) {
+        final List<Map<String, dynamic>> defaultNotifications = [
+          {
+            'id': 'welcome_1',
+            'title': widget.languageCode == 'en' ? 'Welcome to Smart X Academy!' : 'እንኳን ወደ Smart X አካዳሚ በደህና መጡ!',
+            'message': widget.languageCode == 'en' 
+                ? 'Start your learning journey by exploring Grade 12 Mathematics.' 
+                : 'የ12ኛ ክፍል ሂሳብን በመመርመር የትምህርት ጉዞዎን ይጀምሩ።',
+            'time': widget.languageCode == 'en' ? '2 hours ago' : 'ከ2 ሰዓት በፊት',
+            'is_read': false,
+          },
+          {
+            'id': 'welcome_2',
+            'title': widget.languageCode == 'en' ? 'Offline Mode Active' : 'ከመስመር ውጭ ሁነታ ንቁ ነው',
+            'message': widget.languageCode == 'en' 
+                ? 'You can download unit questions to practice quizzes offline anytime.' 
+                : 'ከመስመር ውጭ በማንኛውም ጊዜ ጥያቄዎችን ለመለማመድ የክፍል ጥያቄዎችን ማውረድ ይችላሉ።',
+            'time': widget.languageCode == 'en' ? '5 hours ago' : 'ከ5 ሰዓት በፊት',
+            'is_read': false,
+          }
+        ];
+        list = defaultNotifications.map((n) => jsonEncode(n)).toList();
+        await prefs.setStringList('local_notifications', list);
+      }
+      
+      final List<Map<String, dynamic>> parsedList = [];
+      for (final item in list) {
+        try {
+          parsedList.add(Map<String, dynamic>.from(jsonDecode(item)));
+        } catch (e) {
+          debugPrint('Error parsing notification item: $e');
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _notifications = parsedList;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading notifications: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _sendTestNotification() async {
     try {
-      final supabase = NotificationService.fetchNotifications(); // just to check connection
-      // We'll use a mocked insert logic if they don't have the table yet
-      // In a real scenario, this would be: 
-      // await Supabase.instance.client.from('notifications').insert({...})
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> list = prefs.getStringList('local_notifications') ?? [];
+      final testNotification = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'title': widget.languageCode == 'en' ? 'Smart Quiz Tip!' : 'የፈተና ምክር!',
+        'message': widget.languageCode == 'en' 
+            ? 'Practice makes perfect. Complete daily unit quizzes to master your courses.' 
+            : 'መልመጃ ፍጹም ያደርጋል። ኮርሶችዎን ለማስተናገድ ዕለታዊ የክፍል ፈተናዎችን ያጠናቅቁ።',
+        'time': widget.languageCode == 'en' ? 'Just now' : 'አሁን',
+        'is_read': false,
+      };
+      list.insert(0, jsonEncode(testNotification));
+      await prefs.setStringList('local_notifications', list);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Test notification sent! Refreshing...')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(widget.languageCode == 'en' ? 'Test notification added!' : 'የሙከራ ማሳወቂያ ታክሏል!'),
+          ),
+        );
+      }
       
       await _loadNotifications();
     } catch (e) {
       debugPrint('Error sending test notification: $e');
+    }
+  }
+
+  Future<void> _markAsRead(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> list = prefs.getStringList('local_notifications') ?? [];
+      final List<String> updatedList = [];
+      for (final item in list) {
+        final Map<String, dynamic> map = Map<String, dynamic>.from(jsonDecode(item));
+        if (map['id'].toString() == id) {
+          map['is_read'] = true;
+        }
+        updatedList.add(jsonEncode(map));
+      }
+      await prefs.setStringList('local_notifications', updatedList);
+      await _loadNotifications();
+    } catch (e) {
+      debugPrint('Error marking notification as read: $e');
+    }
+  }
+
+  Future<void> _clearAllNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('local_notifications', []);
+      await _loadNotifications();
+    } catch (e) {
+      debugPrint('Error clearing notifications: $e');
     }
   }
 
@@ -72,6 +160,39 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
         backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
         foregroundColor: titleColor,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_rounded),
+            tooltip: widget.languageCode == 'en' ? 'Clear All' : 'ሁሉንም አጽዳ',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(widget.languageCode == 'en' ? 'Clear All' : 'ሁሉንም አጽዳ'),
+                    content: Text(widget.languageCode == 'en' 
+                      ? 'Are you sure you want to clear all notifications?' 
+                      : 'እርግጠኛ ነዎት ሁሉንም ማሳወቂያዎች ማጽዳት ይፈልጋሉ?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(widget.languageCode == 'en' ? 'Cancel' : 'ይቅር'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          _clearAllNotifications();
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
+                          widget.languageCode == 'en' ? 'Clear' : 'አጽዳ',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadNotifications,
@@ -104,7 +225,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   itemCount: _notifications.length,
                   itemBuilder: (context, index) {
                     final notification = _notifications[index];
-                    final bool isRead = notification['is_read'] ?? notification['isRead'] ?? false;
+                    final bool isRead = notification['is_read'] ?? false;
                     final String time = notification['time'] ?? 'Just now';
 
                     return Container(
@@ -132,15 +253,20 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF3B82F6).withOpacity(0.1),
+                            color: isRead 
+                                ? Colors.grey.withOpacity(0.1)
+                                : const Color(0xFF3B82F6).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.notifications_active_outlined, color: Color(0xFF3B82F6)),
+                          child: Icon(
+                            isRead ? Icons.notifications_none_rounded : Icons.notifications_active_rounded, 
+                            color: isRead ? Colors.grey : const Color(0xFF3B82F6),
+                          ),
                         ),
                         title: Text(
                           notification['title'] ?? 'Notification',
                           style: TextStyle(
-                            fontWeight: isRead ? FontWeight.bold : FontWeight.w900,
+                            fontWeight: isRead ? FontWeight.normal : FontWeight.w900,
                             fontSize: 15,
                             color: titleColor,
                           ),
@@ -151,19 +277,21 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                             const SizedBox(height: 4),
                             Text(
                               notification['message'] ?? '',
-                              style: TextStyle(color: subtitleColor, fontSize: 13),
+                              style: TextStyle(
+                                color: isRead ? subtitleColor.withOpacity(0.7) : subtitleColor, 
+                                fontSize: 13,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               time,
-                              style: TextStyle(color: subtitleColor.withOpacity(0.7), fontSize: 11),
+                              style: TextStyle(color: subtitleColor.withOpacity(0.5), fontSize: 11),
                             ),
                           ],
                         ),
                         onTap: () async {
                           if (!isRead) {
-                            await NotificationService.markAsRead(notification['id'].toString());
-                            _loadNotifications();
+                            await _markAsRead(notification['id'].toString());
                           }
                         },
                       ),
