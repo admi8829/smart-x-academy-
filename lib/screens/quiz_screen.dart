@@ -54,7 +54,7 @@ class _QuizScreenState extends State<QuizScreen> {
         setState(() {
           _questions = [];
           _isLoading = false;
-          _errorMessage = "No questions available";
+          _errorMessage = "No questions available.";
         });
         return;
       }
