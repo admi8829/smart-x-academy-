@@ -965,102 +965,120 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
 
   int _selectedUnitIndex = 0;
 
-  void _simulateDownload(String unitId) async {
+  void _downloadUnitWithAd(String unitId) {
     if (_downloadedUnits.contains(unitId)) return;
-
-    setState(() {
-      _downloadProgress[unitId] = 0.1;
-    });
 
     final String languageCode = AppStateProvider.of(context).languageCode;
     final allUnits = _getUnits();
-    final unitMap = allUnits.firstWhere((u) => u['id'] == unitId, orElse: () => <String, dynamic>{});
-    final String unitTitle = languageCode == 'en' 
-        ? (unitMap['enUnit'] ?? 'Unit Questions') 
-        : (unitMap['amUnit'] ?? 'የክፍል ጥያቄዎች');
-
     final unitIndex = allUnits.indexWhere((u) => u['id'] == unitId) + 1;
     final int activeUnitNum = unitIndex > 0 ? unitIndex : 1;
 
-    try {
+    void performDownload() async {
       setState(() {
-        _downloadProgress[unitId] = 0.4;
+        _downloadProgress[unitId] = 0.1;
       });
 
-      final questions = await QuizService.fetchQuestions(
-        grade: widget.grade,
-        subject: widget.subjectId,
-        unit: activeUnitNum,
-      );
+      try {
+        setState(() {
+          _downloadProgress[unitId] = 0.4;
+        });
 
-      setState(() {
-        _downloadProgress[unitId] = 0.8;
-      });
-
-      if (questions.isEmpty) {
-        throw Exception("No questions available on developer server.");
-      }
-
-      await OfflineManager.saveOfflineQuestions(unitId, questions);
-      await OfflineManager.addDownload(unitId);
-
-      setState(() {
-        _downloadProgress.remove(unitId);
-        _downloadedUnits.add(unitId);
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    languageCode == 'en'
-                        ? 'Saved! ${questions.length} questions are available offline.'
-                        : 'ተቀምጧል! ${questions.length} ጥያቄዎች ከመስመር ውጭ ዝግጁ ናቸው።',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 4),
-          ),
+        final fetchedQuestions = await QuizService.fetchQuestions(
+          grade: widget.grade,
+          subject: widget.subjectId,
+          unit: activeUnitNum,
         );
-      }
-    } catch (e) {
-      if (mounted) {
+
+        setState(() {
+          _downloadProgress[unitId] = 0.8;
+        });
+
+        if (fetchedQuestions.isEmpty) {
+          throw Exception("No questions available on developer server.");
+        }
+
+        await OfflineManager.saveOfflineQuestions(unitId, fetchedQuestions);
+        await OfflineManager.addDownload(unitId);
+
         setState(() {
           _downloadProgress.remove(unitId);
+          _downloadedUnits.add(unitId);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    languageCode == 'en'
-                        ? 'Download failed. Check network connection.'
-                        : 'ጥያቄዎችን ማውረድ አልተቻለም፡ በይነመረብዎን ያረጋግጡ።',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      languageCode == 'en'
+                          ? 'Saved! ${fetchedQuestions.length} questions are available offline.'
+                          : 'ተቀምጧል! ${fetchedQuestions.length} ጥያቄዎች ከመስመር ውጭ ዝግጁ ናቸው።',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              backgroundColor: const Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
             ),
-            backgroundColor: const Color(0xFFEF4444),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            duration: const Duration(seconds: 4),
-          ),
-        );
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _downloadProgress.remove(unitId);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      languageCode == 'en'
+                          ? 'Download failed. Check network connection.'
+                          : 'ጥያቄዎችን ማውረድ አልተቻለም፡ በይነመረብዎን ያረጋግጡ።',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFFEF4444),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
+    }
+
+    if (_isRewardedAdLoaded && _rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _loadRewardedAd();
+        },
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _loadRewardedAd();
+          performDownload();
+        },
+      );
+      _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        performDownload();
+      });
+      _rewardedAd = null;
+      _isRewardedAdLoaded = false;
+    } else {
+      performDownload();
     }
   }
 
@@ -1576,9 +1594,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         _showRegistrationDialog();
                                         return;
                                       }
-                                      _executeWithRewardedAd(() {
-                                        _simulateDownload(unitId);
-                                      });
+                                      _downloadUnitWithAd(unitId);
                                     },
                                     child: Center(
                                       child: progress != null
