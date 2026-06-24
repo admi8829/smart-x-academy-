@@ -102,33 +102,6 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
     ];
   }
 
-}
-
-class SubjectVectors {
-  static Widget getIconForSubject(String id) {
-    switch (id) {
-      case 'Mathematics':
-        return const _DraftingGeometryWidget();
-      case 'Biology':
-        return const _CellBiologyWidget();
-      case 'Physics':
-        return const _AtomPhysicsWidget();
-      case 'Chemistry':
-        return const _ChemistryFlaskWidget();
-      case 'Geography':
-        return const _WorldMapGeographyWidget();
-      case 'History':
-        return const _AksumObeliskWidget();
-      case 'Civics':
-        return const _CivicsGavelWidget();
-      case 'Agriculture':
-        return const _AgricultureSproutWidget();
-      default:
-        return const Icon(Icons.book);
-    }
-  }
-}
-
   void _navigateToUnitSelectionScreen(Map<String, dynamic> subject, AppStateProvider appState) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -1093,3 +1066,29 @@ class _AgricultureSproutPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+class SubjectVectors {
+  static Widget getIconForSubject(String id) {
+    switch (id) {
+      case 'Mathematics':
+        return const _DraftingGeometryWidget();
+      case 'Biology':
+        return const _CellBiologyWidget();
+      case 'Physics':
+        return const _AtomPhysicsWidget();
+      case 'Chemistry':
+        return const _ChemistryFlaskWidget();
+      case 'Geography':
+        return const _WorldMapGeographyWidget();
+      case 'History':
+        return const _AksumObeliskWidget();
+      case 'Civics':
+        return const _CivicsGavelWidget();
+      case 'Agriculture':
+        return const _AgricultureSproutWidget();
+      default:
+        return const Icon(Icons.book);
+    }
+  }
+}
+
