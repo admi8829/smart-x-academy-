@@ -50,6 +50,15 @@ class _QuizScreenState extends State<QuizScreen> {
         unit: widget.unit,
       );
 
+      if (fetched.isEmpty) {
+        setState(() {
+          _questions = [];
+          _isLoading = false;
+          _errorMessage = "No questions available for this unit yet.";
+        });
+        return;
+      }
+
       for (var i = 0; i < fetched.length; i++) {
         _itemKeys[i] = GlobalKey();
       }
