@@ -34,10 +34,17 @@ jobs:
       - name: Get Packages
         run: flutter pub get
 
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
       - name: Run Gradle Signing Report
         run: |
           cd android
-          gradle signingReport
+          gradle wrapper
+          chmod +x gradlew
+          ./gradlew signingReport
 
       - name: Build Code Artifact (APK)
         run: flutter build apk --release --split-per-abi
