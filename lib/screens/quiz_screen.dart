@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import '../models/question_model.dart';
 import '../services/quiz_service.dart';
+import '../services/offline_manager.dart';
 
 class QuizScreen extends StatefulWidget {
   final int grade;
   final String? subject;
   final int? unit;
+  final bool isOffline;
+  final String? offlineUnitId;
 
   const QuizScreen({
     super.key,
     required this.grade,
     this.subject,
     this.unit,
+    this.isOffline = false,
+    this.offlineUnitId,
   });
 
   @override
@@ -44,11 +49,16 @@ class _QuizScreenState extends State<QuizScreen> {
     });
 
     try {
-      final fetched = await QuizService.fetchQuestions(
-        grade: widget.grade,
-        subject: widget.subject,
-        unit: widget.unit,
-      );
+      final List<QuestionModel> fetched;
+      if (widget.isOffline && widget.offlineUnitId != null) {
+        fetched = await OfflineManager.getOfflineQuestions(widget.offlineUnitId!);
+      } else {
+        fetched = await QuizService.fetchQuestions(
+          grade: widget.grade,
+          subject: widget.subject,
+          unit: widget.unit,
+        );
+      }
 
       if (fetched.isEmpty) {
         setState(() {

@@ -10,6 +10,8 @@ import 'subject_selection_screen.dart';
 import '../services/auth_service.dart';
 import 'unit_selection_screen.dart';
 import 'notification_list_screen.dart';
+import '../services/offline_manager.dart';
+import 'quiz_screen.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../main.dart';
 
@@ -456,6 +458,58 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         actions: isCustomDarkHeader
             ? null
             : [
+                // Elegant Notification Badge on AppBar
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.notifications_none_rounded,
+                        color: isLight ? const Color(0xFF0D2353) : Colors.white,
+                        size: 25,
+                      ),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NotificationListScreen(
+                              isDarkMode: widget.isDarkMode,
+                              languageCode: widget.languageCode,
+                            ),
+                          ),
+                        );
+                        _loadUnreadNotifications();
+                      },
+                    ),
+                    if (_unreadNotificationsCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444), // Crimson Red
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$_unreadNotificationsCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+
                 // Light/Dark Theme Switcher (Represents custom dark mode icon)
                 IconButton(
                   icon: Icon(
@@ -1874,7 +1928,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildOfflineScreen(bool isLight) {
     return FutureBuilder<Set<String>>(
-      future: Future.value(<String>{}),
+      future: OfflineManager.getDownloadedUnitIds(),
       builder: (context, snapshot) {
         final downloadedIds = snapshot.data ?? {};
         
@@ -2064,18 +2118,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           children: [
                             Expanded(
                               child: TextButton.icon(
-                                onPressed: () {
-                                  debugPrint("Clicked");
+                                onPressed: () async {
+                                  // Determine unit and grade dynamically
+                                  final int unitNum = int.tryParse(RegExp(r'u(\d+)').firstMatch(id)?.group(1) ?? '1') ?? 1;
+                                  final questions = await OfflineManager.getOfflineQuestions(id);
+                                  int actualGrade = 9;
+                                  if (questions.isNotEmpty) {
+                                    actualGrade = questions.first.grade;
+                                  }
+                                  
+                                  if (context.mounted) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => QuizScreen(
+                                          grade: actualGrade,
+                                          subject: subject,
+                                          unit: unitNum,
+                                          isOffline: true,
+                                          offlineUnitId: id,
+                                        ),
+                                      ),
+                                    );
+                                  }
                                 },
-                                icon: const Icon(Icons.help_rounded, size: 14),
+                                icon: const Icon(Icons.play_arrow_rounded, size: 16),
                                 label: Text(
-                                  widget.languageCode == 'en' ? 'Take Quiz' : 'ፈተና',
+                                  widget.languageCode == 'en' ? 'Take Quiz' : 'ፈተና ጀምር',
                                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
                                 ),
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.white,
                                   backgroundColor: color,
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                               ),
@@ -2130,21 +2205,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ),
             TextButton(
-              onPressed: () {
-                debugPrint("Removed offline download");
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      widget.languageCode == 'en'
-                          ? 'Offline package removed'
-                          : 'ከመስመር ውጭ የነበረው ማህደር ተሰርዟል',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+              onPressed: () async {
+                await OfflineManager.removeDownload(id);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  setState(() {}); // refresh list
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        widget.languageCode == 'en'
+                            ? 'Offline package removed'
+                            : 'ከመስመር ውጭ የነበረው ማህደር ተሰርዟል',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      backgroundColor: const Color(0xFFEF4444),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                    backgroundColor: const Color(0xFFEF4444),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                  );
+                }
               },
               child: Text(
                 widget.languageCode == 'en' ? 'Delete' : 'አጥፋ',
@@ -2390,7 +2468,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 crossAxisCount: 2,
                 crossAxisSpacing: 16.0,
                 mainAxisSpacing: 16.0,
-                childAspectRatio: 1.10,
+                childAspectRatio: 0.85,
               ),
               itemCount: subjects.length,
               itemBuilder: (context, index) {

@@ -260,7 +260,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 1.10, // Much shorter aspect ratio, 50% decrease in height
+                    childAspectRatio: 0.85,
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (context, index) {

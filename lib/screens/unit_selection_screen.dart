@@ -403,6 +403,24 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                     }
                                     await prefs.setBool('is_authenticated', true);
 
+                                    // Sync registration details to Supabase student_profiles
+                                    try {
+                                      final supabase = Supabase.instance.client;
+                                      final authUser = supabase.auth.currentUser;
+                                      final String profileId = authUser?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
+                                      
+                                      await supabase.from('student_profiles').upsert({
+                                        'id': profileId,
+                                        'full_name': fullName,
+                                        'phone_number': fullPhone,
+                                        'grade': _dialogSelectedGrade,
+                                        'email': email.isNotEmpty ? email : '$profileId@smartx-offline.com',
+                                      });
+                                      debugPrint("Successfully synced registration to Supabase student_profiles.");
+                                    } catch (e) {
+                                      debugPrint("Failed to sync registration to Supabase: $e");
+                                    }
+
                                     // Update state
                                     if (this.mounted) {
                                       this.setState(() {
