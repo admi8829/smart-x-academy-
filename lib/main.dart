@@ -9,6 +9,13 @@ import 'services/push_notification_service.dart';
 void main() async {
   // Ensure widget bindings are safely initialized before calling native platforms/plugins
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the Mobile Ads SDK right after binding initialization to prevent any race conditions with ad loading
+  try {
+    await MobileAds.instance.initialize();
+  } catch (e) {
+    debugPrint("Failed to initialize Google Mobile Ads SDK: $e");
+  }
   
   GoogleFonts.config.allowRuntimeFetching = false;
   
@@ -24,13 +31,6 @@ void main() async {
   
   // Initialize Push Notifications via Firebase
   await PushNotificationService.initialize();
-
-  // Initialize the Mobile Ads SDK asynchronously
-  try {
-    await MobileAds.instance.initialize();
-  } catch (e) {
-    debugPrint("Failed to initialize Google Mobile Ads SDK: $e");
-  }
 
   // Retrieve shared preferences for persistent theme & language choices
   final prefs = await SharedPreferences.getInstance();
