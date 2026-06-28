@@ -7,6 +7,7 @@ import '../services/offline_manager.dart';
 import '../services/quiz_service.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
+import 'registration_overlay.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
   final int grade;
@@ -64,8 +65,45 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _isRegistered = prefs.getBool('is_authenticated') ?? false;
+        _isRegistered = (prefs.getBool('has_registered') ?? false) ||
+                        (prefs.getBool('is_authenticated') ?? false);
       });
+    }
+  }
+
+  Future<void> _checkRegistrationAndProceed(int index, int activeUnitNum, {required VoidCallback onSuccess}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hasRegistered = (prefs.getBool('has_registered') ?? false) ||
+                               (prefs.getBool('is_authenticated') ?? false);
+
+    if (activeUnitNum > 1 && !hasRegistered) {
+      if (!mounted) return;
+      final result = await Navigator.of(context).push<String>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => RegistrationOverlay(
+            isDarkMode: widget.isDarkMode,
+            languageCode: widget.languageCode,
+            primaryColor: widget.color,
+          ),
+        ),
+      );
+
+      // Reload SharedPreferences state after overlay closes
+      final updatedPrefs = await SharedPreferences.getInstance();
+      final bool nowRegistered = (updatedPrefs.getBool('has_registered') ?? false) ||
+                                 (updatedPrefs.getBool('is_authenticated') ?? false);
+      setState(() {
+        _isRegistered = nowRegistered;
+      });
+
+      if (nowRegistered) {
+        onSuccess();
+      } else {
+        debugPrint("Registration is required for Unit $activeUnitNum. Navigation aborted.");
+      }
+    } else {
+      onSuccess();
     }
   }
 
@@ -1741,16 +1779,14 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: () {
-                                  if (index > 0 && !_isRegistered) {
-                                    _showRegistrationDialog();
-                                    return;
-                                  }
-                                  setState(() {
-                                    _selectedUnitIndex = index;
+                                  _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                    setState(() {
+                                      _selectedUnitIndex = index;
+                                    });
+                                    final selectedUnit = filteredUnits[index];
+                                    final originalIndex = allUnits.indexOf(selectedUnit);
+                                    _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                   });
-                                  final selectedUnit = filteredUnits[index];
-                                  final originalIndex = allUnits.indexOf(selectedUnit);
-                                  _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -1761,13 +1797,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         width: 44,
                                         height: 44,
                                         decoration: BoxDecoration(
-                                          color: (index > 0 && !_isRegistered)
+                                          color: (activeUnitNum > 1 && !_isRegistered)
                                               ? Colors.grey.withValues(alpha: 0.08)
                                               : widget.color.withValues(alpha: 0.08),
                                           shape: BoxShape.circle,
                                         ),
                                         child: Center(
-                                          child: (index > 0 && !_isRegistered)
+                                          child: (activeUnitNum > 1 && !_isRegistered)
                                               ? Icon(
                                                   Icons.lock_outline_rounded,
                                                   color: const Color(0xFF94A3B8),
@@ -1795,7 +1831,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               style: TextStyle(
                                                 fontSize: 15.0,
                                                 fontWeight: FontWeight.w900,
-                                                color: (index > 0 && !_isRegistered)
+                                                color: (activeUnitNum > 1 && !_isRegistered)
                                                     ? headerTextColor.withValues(alpha: 0.7)
                                                     : headerTextColor,
                                                 height: 1.25,
@@ -1809,7 +1845,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               style: TextStyle(
                                                 fontSize: 12.0,
                                                 fontWeight: FontWeight.w500,
-                                                color: (index > 0 && !_isRegistered)
+                                                color: (activeUnitNum > 1 && !_isRegistered)
                                                     ? descColor.withValues(alpha: 0.7)
                                                     : descColor,
                                               ),
@@ -1848,17 +1884,15 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                             : Icons.file_download_rounded,
                                                         color: isDownloaded
                                                             ? const Color(0xFF10B981)
-                                                            : (index > 0 && !_isRegistered
+                                                            : (activeUnitNum > 1 && !_isRegistered
                                                                 ? const Color(0xFF94A3B8)
                                                                 : widget.color),
                                                         size: 22,
                                                       ),
                                                       onPressed: () {
-                                                        if (index > 0 && !_isRegistered) {
-                                                          _showRegistrationDialog();
-                                                          return;
-                                                        }
-                                                        _downloadUnitWithAd(unitId);
+                                                        _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                                          _downloadUnitWithAd(unitId);
+                                                        });
                                                       },
                                                     ),
                                             ),
@@ -1871,25 +1905,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                             child: IconButton(
                                               padding: EdgeInsets.zero,
                                               icon: Icon(
-                                                (index > 0 && !_isRegistered)
+                                                (activeUnitNum > 1 && !_isRegistered)
                                                     ? Icons.lock_outline_rounded
                                                     : Icons.play_circle_fill_rounded,
-                                                color: (index > 0 && !_isRegistered)
+                                                color: (activeUnitNum > 1 && !_isRegistered)
                                                     ? const Color(0xFF94A3B8)
                                                     : widget.color,
                                                 size: 28,
                                               ),
                                               onPressed: () {
-                                                if (index > 0 && !_isRegistered) {
-                                                  _showRegistrationDialog();
-                                                  return;
-                                                }
-                                                setState(() {
-                                                  _selectedUnitIndex = index;
+                                                _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                                  setState(() {
+                                                    _selectedUnitIndex = index;
+                                                  });
+                                                  final selectedUnit = filteredUnits[index];
+                                                  final originalIndex = allUnits.indexOf(selectedUnit);
+                                                  _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                                 });
-                                                final selectedUnit = filteredUnits[index];
-                                                final originalIndex = allUnits.indexOf(selectedUnit);
-                                                _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                               },
                                             ),
                                           ),
