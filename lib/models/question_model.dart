@@ -59,7 +59,7 @@ class QuestionModel {
         ? (json['grade'] as num).toInt() 
         : (json['grade'] != null ? (int.tryParse(json['grade'].toString()) ?? parsedGrade) : parsedGrade);
 
-    final String finalSubject = json['subject'] as String? ?? parsedSubject;
+    final String finalSubject = json['subject'] != null ? json['subject'].toString() : parsedSubject;
 
     final int finalUnit = json['unit'] is num 
         ? (json['unit'] as num).toInt() 
@@ -70,11 +70,11 @@ class QuestionModel {
       grade: finalGrade,
       subject: finalSubject,
       unit: finalUnit,
-      questionText: json['question'] as String? ?? json['question_text'] as String? ?? json['questionText'] as String? ?? '',
+      questionText: json['question']?.toString() ?? json['question_text']?.toString() ?? json['questionText']?.toString() ?? '',
       options: parsedOptions,
-      correctAnswer: json['correct_answer'] as String? ?? json['correctAnswer'] as String? ?? '',
-      explanation: json['explanation'] as String?,
-      createdAt: json['created_at'] as String?,
+      correctAnswer: json['correct_answer']?.toString() ?? json['correctAnswer']?.toString() ?? '',
+      explanation: json['explanation']?.toString(),
+      createdAt: json['created_at']?.toString(),
     );
   }
 
