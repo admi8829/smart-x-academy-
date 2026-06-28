@@ -9,14 +9,14 @@ import 'services/push_notification_service.dart';
 void main() async {
   // Ensure widget bindings are safely initialized before calling native platforms/plugins
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the Mobile Ads SDK right after binding initialization to prevent any race conditions with ad loading
+  
+  // Initialize the Mobile Ads SDK immediately after widget binding
   try {
     await MobileAds.instance.initialize();
   } catch (e) {
     debugPrint("Failed to initialize Google Mobile Ads SDK: $e");
   }
-  
+
   GoogleFonts.config.allowRuntimeFetching = false;
   
   // Initialize Supabase
