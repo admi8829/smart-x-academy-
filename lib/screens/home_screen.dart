@@ -1328,7 +1328,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(borderColor: borderColor, width: 1.5),
+          border: Border.all(color: borderColor, width: 1.5),
         ),
         child: const Center(
           child: CircularProgressIndicator(strokeWidth: 3.0),
@@ -1343,7 +1343,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(borderColor: borderColor, width: 1.5),
+          border: Border.all(color: borderColor, width: 1.5),
         ),
         child: Column(
           children: [
@@ -1389,7 +1389,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(borderColor: borderColor, width: 1.5),
+          border: Border.all(color: borderColor, width: 1.5),
         ),
         child: Center(
           child: Text(
