@@ -15,6 +15,22 @@ import 'quiz_screen.dart';
 import '../widgets/image_slider_carousel.dart';
 import '../main.dart';
 
+class LeaderboardEntry {
+  final String userId;
+  final String fullName;
+  final String phoneNumber;
+  final int grade;
+  final int totalScore;
+
+  LeaderboardEntry({
+    required this.userId,
+    required this.fullName,
+    required this.phoneNumber,
+    required this.grade,
+    required this.totalScore,
+  });
+}
+
 class HomeScreen extends StatefulWidget {
   final bool isDarkMode;
   final String languageCode;
@@ -130,6 +146,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+
+  // --- Leaderboard State ---
+  bool _isLeaderboardLoading = true;
+  String? _leaderboardError;
+  List<LeaderboardEntry> _allLeaderboardEntries = [];
+  List<LeaderboardEntry> _filteredLeaderboardEntries = [];
+  LeaderboardEntry? _myLeaderboardEntry;
+  int _myRank = -1;
+  int _leaderboardSelectedGrade = 0; // 0 means All Grades
 
   // Dictionary for dynamic translation matching 'EN/አማርኛ'
   final Map<String, Map<String, String>> _localizedValues = {
@@ -268,6 +293,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _loadBannerAd();
     _startCarouselTimer();
     _fadeController.forward();
+    _fetchLeaderboardData();
   }
 
   Future<void> _loadProfileData() async {
@@ -975,68 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. MODERN SEARCH BAR
-          _animateItem(
-            index: 0,
-            child: Container(
-              height: 52,
-              decoration: BoxDecoration(
-                color: isLight ? Colors.white : const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(
-                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isLight ? 0.03 : 0.12),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextField(
-                style: TextStyle(
-                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.bold,
-                ),
-                decoration: InputDecoration(
-                  hintText: widget.languageCode == 'en' 
-                      ? 'Search subjects, units, or topic exams...' 
-                      : 'የትምህርት ዓይነቶችን፣ ክፍሎችን ወይም ፈተናዎችን ፈልግ...',
-                  hintStyle: TextStyle(
-                    color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.search_rounded,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
-                  suffixIcon: Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isLight ? const Color(0xFF3B82F6).withOpacity(0.08) : const Color(0xFF3B82F6).withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.tune_rounded,
-                      size: 16,
-                      color: Color(0xFF3B82F6),
-                    ),
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20.0),
-
-          // 2. EXISTING: Image Carousel Slider
+          // 1. EXISTING: Image Carousel Slider
           _animateItem(
             index: 1,
             child: ImageSliderCarousel(
@@ -1134,7 +1099,537 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ],
           ),
           
+          const SizedBox(height: 24.0),
+
+          // Leaderboard Title and Dropdown
+          _animateItem(
+            index: 7,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.languageCode == 'en' ? 'Top 10 Leaderboard' : 'ምርጥ 10 የመሪዎች ሰሌዳ',
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                  ),
+                ),
+                // Dropdown for filtering leaderboard by grade
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(12.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: _leaderboardSelectedGrade,
+                      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF3B82F6), size: 20),
+                      dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                      style: TextStyle(
+                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      onChanged: (int? newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _leaderboardSelectedGrade = newValue;
+                            _applyLeaderboardFilter();
+                          });
+                        }
+                      },
+                      items: [
+                        DropdownMenuItem<int>(
+                          value: 0,
+                          child: Text(widget.languageCode == 'en' ? 'All Grades' : 'ሁሉም ክፍሎች'),
+                        ),
+                        DropdownMenuItem<int>(
+                          value: 9,
+                          child: Text(widget.languageCode == 'en' ? 'Grade 9' : 'ክፍል 9'),
+                        ),
+                        DropdownMenuItem<int>(
+                          value: 10,
+                          child: Text(widget.languageCode == 'en' ? 'Grade 10' : 'ክፍል 10'),
+                        ),
+                        DropdownMenuItem<int>(
+                          value: 11,
+                          child: Text(widget.languageCode == 'en' ? 'Grade 11' : 'ክፍል 11'),
+                        ),
+                        DropdownMenuItem<int>(
+                          value: 12,
+                          child: Text(widget.languageCode == 'en' ? 'Grade 12' : 'ክፍል 12'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 12.0),
+
+          // Leaderboard list card
+          _animateItem(
+            index: 8,
+            child: _buildLeaderboardCard(isLight),
+          ),
+
+          const SizedBox(height: 12.0),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _fetchLeaderboardData() async {
+    setState(() {
+      _isLeaderboardLoading = true;
+      _leaderboardError = null;
+    });
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      // 1. Fetch user_progress
+      final progressResponse = await supabase.from('user_progress').select();
+      final List<dynamic> progressData = progressResponse as List<dynamic>;
+
+      // 2. Fetch student_profiles
+      final profilesResponse = await supabase
+          .from('student_profiles')
+          .select('id, full_name, phone_number, grade');
+      final List<dynamic> profilesData = profilesResponse as List<dynamic>;
+
+      // 3. Map profile IDs to profile details
+      final Map<String, Map<String, dynamic>> profileMap = {};
+      for (var p in profilesData) {
+        if (p is Map<String, dynamic> && p['id'] != null) {
+          profileMap[p['id'].toString()] = p;
+        }
+      }
+
+      // 4. Calculate total score per user
+      final Map<String, int> userScores = {};
+      for (var row in progressData) {
+        if (row is Map<String, dynamic>) {
+          final String? uid = (row['user_id'] ?? row['student_id'] ?? row['id'])?.toString();
+          if (uid == null) continue;
+          final int score = int.tryParse(row['score']?.toString() ?? '') ?? 
+                            int.tryParse(row['points']?.toString() ?? '') ?? 
+                            int.tryParse(row['total_score']?.toString() ?? '') ?? 
+                            0;
+          userScores[uid] = (userScores[uid] ?? 0) + score;
+        }
+      }
+
+      // 5. Construct full leaderboard list
+      final List<LeaderboardEntry> entries = [];
+      userScores.forEach((uid, totalScore) {
+        final profile = profileMap[uid];
+        final fullName = profile != null ? (profile['full_name'] ?? "Unknown Student") : "Unknown Student";
+        final phoneNumber = profile != null ? (profile['phone_number'] ?? "") : "";
+        final int userGrade = profile != null ? (int.tryParse(profile['grade']?.toString() ?? '') ?? 0) : 0;
+        
+        entries.add(LeaderboardEntry(
+          userId: uid,
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+          grade: userGrade,
+          totalScore: totalScore,
+        ));
+      });
+
+      // 6. Sort by score descending
+      entries.sort((a, b) => b.totalScore.compareTo(a.totalScore));
+
+      setState(() {
+        _allLeaderboardEntries = entries;
+        _isLeaderboardLoading = false;
+        _applyLeaderboardFilter();
+      });
+    } catch (e) {
+      debugPrint("Error fetching leaderboard data: $e");
+      setState(() {
+        _isLeaderboardLoading = false;
+        _leaderboardError = e.toString();
+      });
+    }
+  }
+
+  void _applyLeaderboardFilter() {
+    List<LeaderboardEntry> filtered = _allLeaderboardEntries;
+    if (_leaderboardSelectedGrade != 0) {
+      filtered = _allLeaderboardEntries.where((e) => e.grade == _leaderboardSelectedGrade).toList();
+    }
+
+    // Determine top 10 from filtered list
+    _filteredLeaderboardEntries = filtered.take(10).toList();
+
+    // Determine my rank from the FULL sorted list of the selected grade
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    _myLeaderboardEntry = null;
+    _myRank = -1;
+
+    if (currentUserId != null) {
+      // Find my entry in the full list for this grade
+      for (int i = 0; i < filtered.length; i++) {
+        if (filtered[i].userId == currentUserId) {
+          _myRank = i + 1;
+          _myLeaderboardEntry = filtered[i];
+          break;
+        }
+      }
+      
+      // If we are not in the list but we are logged in, we can display our name and 0 score
+      if (_myRank == -1) {
+        _myLeaderboardEntry = LeaderboardEntry(
+          userId: currentUserId,
+          fullName: _userName,
+          phoneNumber: _userPhoneNumber,
+          grade: _selectedGrade,
+          totalScore: 0,
+        );
+      }
+    }
+  }
+
+  String formatName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2) {
+      return "${parts[0]} ${parts[1]}";
+    }
+    return fullName;
+  }
+
+  String maskPhoneNumber(String phone) {
+    final clean = phone.trim().replaceAll(RegExp(r'\s+'), '');
+    if (clean.length < 4) {
+      return clean; // Too short to mask
+    }
+    final firstTwo = clean.substring(0, 2);
+    final lastTwo = clean.substring(clean.length - 2);
+    return "$firstTwo****$lastTwo";
+  }
+
+  Widget _buildLeaderboardCard(bool isLight) {
+    final cardBg = isLight ? Colors.white : const Color(0xFF1E293B);
+    final borderColor = isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155);
+
+    if (_isLeaderboardLoading) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40.0),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(borderColor: borderColor, width: 1.5),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(strokeWidth: 3.0),
+        ),
+      );
+    }
+
+    if (_leaderboardError != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(borderColor: borderColor, width: 1.5),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline_rounded, color: Colors.amber, size: 40.0),
+            const SizedBox(height: 12.0),
+            Text(
+              widget.languageCode == 'en' 
+                  ? "Failed to load leaderboard" 
+                  : "የመሪዎች ሰሌዳ መጫን አልተቻለም",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14.0,
+                color: isLight ? const Color(0xFF0F172A) : Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              _leaderboardError!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+            ),
+            const SizedBox(height: 12.0),
+            ElevatedButton.icon(
+              onPressed: _fetchLeaderboardData,
+              icon: const Icon(Icons.refresh_rounded, size: 16.0),
+              label: Text(widget.languageCode == 'en' ? "Retry" : "እንደገና ሞክር"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filteredLeaderboardEntries.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32.0),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20.0),
+          border: Border.all(borderColor: borderColor, width: 1.5),
+        ),
+        child: Center(
+          child: Text(
+            widget.languageCode == 'en' 
+                ? "No scores found yet." 
+                : "ምንም ውጤቶች አልተመዘገቡም።",
+            style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey, fontSize: 13.5),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top 10 List Card
+        Container(
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: borderColor, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isLight ? 0.02 : 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                itemCount: _filteredLeaderboardEntries.length,
+                separatorBuilder: (context, index) => Divider(
+                  height: 1.0,
+                  thickness: 1.0,
+                  color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                ),
+                itemBuilder: (context, index) {
+                  final entry = _filteredLeaderboardEntries[index];
+                  final int rank = index + 1;
+                  return _buildLeaderboardRow(entry, rank, isLight, false);
+                },
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12.0),
+
+        // My Rank Card
+        if (_myLeaderboardEntry != null)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isLight 
+                    ? [const Color(0xFFEFF6FF), const Color(0xFFDBEAFE)] 
+                    : [const Color(0xFF1E3A8A).withOpacity(0.4), const Color(0xFF1D4ED8).withOpacity(0.3)],
+              ),
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: isLight ? const Color(0xFFBFDBFE) : const Color(0xFF2563EB).withOpacity(0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withOpacity(0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: _buildLeaderboardRow(_myLeaderboardEntry!, _myRank, isLight, true),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLeaderboardRow(LeaderboardEntry entry, int rank, bool isLight, bool isMyRankCard) {
+    final titleColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final subtitleColor = isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+
+    // Styling for rank badge
+    Widget rankWidget;
+    if (rank == 1) {
+      rankWidget = Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(
+          color: Color(0xFFFBBF24), // Gold
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(Icons.emoji_events_rounded, color: Colors.white, size: 16),
+        ),
+      );
+    } else if (rank == 2) {
+      rankWidget = Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(
+          color: Color(0xFF94A3B8), // Silver
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Text(
+            "2",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+          ),
+        ),
+      );
+    } else if (rank == 3) {
+      rankWidget = Container(
+        width: 32,
+        height: 32,
+        decoration: const BoxDecoration(
+          color: Color(0xFFD97706), // Bronze
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Text(
+            "3",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+          ),
+        ),
+      );
+    } else {
+      rankWidget = Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            rank > 0 ? rank.toString() : "-",
+            style: TextStyle(
+              color: rank > 0 ? titleColor : subtitleColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 12.5,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final String cleanName = formatName(entry.fullName);
+    final String cleanPhone = maskPhoneNumber(entry.phoneNumber);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        children: [
+          // Rank Badge
+          rankWidget,
+          const SizedBox(width: 16.0),
+
+          // Student Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      cleanName,
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: isMyRankCard ? FontWeight.w900 : FontWeight.bold,
+                        color: titleColor,
+                      ),
+                    ),
+                    if (isMyRankCard) ...[
+                      const SizedBox(width: 6.0),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3B82F6),
+                          borderRadius: BorderRadius.circular(6.0),
+                        ),
+                        child: Text(
+                          widget.languageCode == 'en' ? 'YOU' : 'እርስዎ',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3.0),
+                Text(
+                  cleanPhone.isNotEmpty ? cleanPhone : (widget.languageCode == 'en' ? "No phone" : "ስልክ የለም"),
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    fontWeight: FontWeight.w600,
+                    color: subtitleColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Score display
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            decoration: BoxDecoration(
+              color: isMyRankCard
+                  ? const Color(0xFF3B82F6).withOpacity(0.12)
+                  : (isLight ? const Color(0xFFF8FAFC) : const Color(0xFF334155).withOpacity(0.5)),
+              borderRadius: BorderRadius.circular(10.0),
+              border: Border.all(
+                color: isMyRankCard
+                    ? const Color(0xFF3B82F6).withOpacity(0.3)
+                    : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569)),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 14.0),
+                const SizedBox(width: 4.0),
+                Text(
+                  "${entry.totalScore}",
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                    color: isMyRankCard ? const Color(0xFF2563EB) : titleColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
