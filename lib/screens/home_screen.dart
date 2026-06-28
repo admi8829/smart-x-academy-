@@ -1419,25 +1419,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ),
             ],
           ),
-          child: Column(
-            children: [
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: _filteredLeaderboardEntries.length,
-                separatorBuilder: (context, index) => Divider(
-                  height: 1.0,
-                  thickness: 1.0,
-                  color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-                ),
-                itemBuilder: (context, index) {
-                  final entry = _filteredLeaderboardEntries[index];
-                  final int rank = index + 1;
-                  return _buildLeaderboardRow(entry, rank, isLight, false);
-                },
-              ),
-            ],
+          child: ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: _filteredLeaderboardEntries.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1.0,
+              thickness: 1.0,
+              color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+            ),
+            itemBuilder: (context, index) {
+              final entry = _filteredLeaderboardEntries[index];
+              final int rank = index + 1;
+              return _buildLeaderboardRow(entry, rank, isLight, false);
+            },
           ),
         ),
 
