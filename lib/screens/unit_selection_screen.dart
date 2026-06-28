@@ -326,7 +326,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 child: DropdownButton<int>(
                                   value: _dialogSelectedGrade,
                                   isExpanded: true,
-                                  enabled: !_isLoading,
                                   icon: Icon(Icons.arrow_drop_down, color: widget.color, size: 24),
                                   dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
                                   style: TextStyle(
