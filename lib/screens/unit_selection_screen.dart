@@ -91,391 +91,470 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
 
     showDialog(
       context: context,
-      barrierDismissible: true,
+      barrierDismissible: false, // Prevent dismissing while potentially registering
       builder: (BuildContext context) {
+        bool _isLoading = false;
+
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0)),
-              backgroundColor: isLight ? Colors.white : const Color(0xFF1E293B),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header
-                        Row(
+              elevation: 8,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.0)),
+              backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A), // Premium deeper dark
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isLight ? Colors.transparent : const Color(0xFF1E293B),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(10.0),
-                              decoration: BoxDecoration(
-                                color: widget.color.withOpacity(0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.lock_person_rounded,
-                                color: widget.color,
-                                size: 24,
+                            // Header Section
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12.0),
+                                  decoration: BoxDecoration(
+                                    color: widget.color.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    Icons.verified_user_rounded, // Premium lock/security icon
+                                    color: widget.color,
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.languageCode == 'en' ? 'Unlock All Units' : 'ሁሉንም ክፍሎች ይክፈቱ',
+                                        style: TextStyle(
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w900,
+                                          color: headerTextColor,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        widget.languageCode == 'en' 
+                                            ? 'Register to unlock premium prep content' 
+                                            : 'ይዘቶችን ለማግኘት ይመዝገቡ',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: descColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!_isLoading)
+                                  IconButton(
+                                    icon: Icon(Icons.close_rounded, color: descColor, size: 22),
+                                    onPressed: () => Navigator.of(context).pop(),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            Divider(height: 1, color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B), thickness: 1.5),
+                            const SizedBox(height: 20),
+
+                            // Full Name Field
+                            _buildDialogLabel(
+                              widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *',
+                              isLight,
+                            ),
+                            _buildDialogFieldContainer(
+                              isLight: isLight,
+                              child: TextFormField(
+                                controller: _fullNameController,
+                                enabled: !_isLoading,
+                                style: TextStyle(
+                                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
+                                  hintStyle: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline_rounded,
+                                    color: widget.color,
+                                    size: 18,
+                                  ),
+                                ),
+                                validator: (val) {
+                                  if (val == null || val.trim().isEmpty) {
+                                    return widget.languageCode == 'en' 
+                                        ? 'Please enter your name' 
+                                        : 'እባክዎን ስምዎን ያስገቡ';
+                                  }
+                                  return null;
+                                },
                               ),
                             ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            const SizedBox(height: 14),
+
+                            // Phone Number Field with Country Code
+                            _buildDialogLabel(
+                              widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *',
+                              isLight,
+                            ),
+                            _buildDialogFieldContainer(
+                              isLight: isLight,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    widget.languageCode == 'en' ? 'Unlock All Units' : 'ሁሉንም ክፍሎች ይክፈቱ',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w900,
-                                      color: headerTextColor,
-                                      letterSpacing: -0.4,
+                                  // Country code selector dropdown with cohesive modern field wrapper
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _dialogSelectedCountryCode,
+                                        dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
+                                        icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey),
+                                        style: TextStyle(
+                                          color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        items: countryCodes.map((country) {
+                                          return DropdownMenuItem<String>(
+                                            value: country['code'],
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  country['flag']!,
+                                                  style: const TextStyle(fontSize: 16),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  country['code']!,
+                                                  style: const TextStyle(fontSize: 13),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: _isLoading ? null : (val) {
+                                          if (val != null) {
+                                            setDialogState(() {
+                                              _dialogSelectedCountryCode = val;
+                                            });
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.languageCode == 'en' 
-                                        ? 'Register to unlock prep content' 
-                                        : 'ይዘቶችን ለማግኘት ይመዝገቡ',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: descColor,
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    width: 1.2,
+                                    height: 24,
+                                    color: isLight ? Colors.grey[300] : Colors.grey[700],
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _phoneController,
+                                      enabled: !_isLoading,
+                                      keyboardType: TextInputType.phone,
+                                      style: TextStyle(
+                                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: '911234567',
+                                        hintStyle: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return widget.languageCode == 'en' 
+                                              ? 'Please enter phone' 
+                                              : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            IconButton(
-                              icon: Icon(Icons.close, color: descColor, size: 20),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        const Divider(height: 1, color: Colors.grey, thickness: 0.1),
-                        const SizedBox(height: 18),
+                            const SizedBox(height: 14),
 
-                        // Full Name Field
-                        _buildDialogLabel(
-                          widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *',
-                          isLight,
-                        ),
-                        _buildDialogFieldContainer(
-                          isLight: isLight,
-                          child: TextFormField(
-                            controller: _fullNameController,
-                            style: TextStyle(
-                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.bold,
+                            // Grade Level Dropdown
+                            _buildDialogLabel(
+                              widget.languageCode == 'en' ? 'Grade Level *' : 'የክፍል ደረጃ *',
+                              isLight,
                             ),
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
-                              hintStyle: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.person_outline_rounded,
-                                color: widget.color,
-                                size: 18,
-                              ),
-                            ),
-                            validator: (val) {
-                              if (val == null || val.trim().isEmpty) {
-                                    return widget.languageCode == 'en' 
-                                        ? 'Please enter your name' 
-                                        : 'እባክዎን ስምዎን ያስገቡ';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Phone Number Field with Country Code
-                        _buildDialogLabel(
-                          widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *',
-                          isLight,
-                        ),
-                        _buildDialogFieldContainer(
-                          isLight: isLight,
-                          child: Row(
-                            children: [
-                              // Country code selector dropdown
-                              DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _dialogSelectedCountryCode,
+                            _buildDialogFieldContainer(
+                              isLight: isLight,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<int>(
+                                  value: _dialogSelectedGrade,
+                                  isExpanded: true,
+                                  enabled: !_isLoading,
+                                  icon: Icon(Icons.arrow_drop_down, color: widget.color, size: 24),
                                   dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
-                                  icon: const Icon(Icons.arrow_drop_down, size: 18, color: Colors.grey),
-                                  style: TextStyle(
-                                    color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  items: countryCodes.map((country) {
-                                    return DropdownMenuItem<String>(
-                                      value: country['code'],
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            country['flag']!,
-                                            style: const TextStyle(fontSize: 16),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            country['code']!,
-                                            style: const TextStyle(fontSize: 13),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setDialogState(() {
-                                        _dialogSelectedCountryCode = val;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 1,
-                                height: 20,
-                                color: isLight ? Colors.grey[300] : Colors.grey[700],
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
                                   style: TextStyle(
                                     color: isLight ? const Color(0xFF0F172A) : Colors.white,
                                     fontSize: 14.0,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: '911234567',
-                                    hintStyle: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                  validator: (val) {
-                                    if (val == null || val.trim().isEmpty) {
-                                      return widget.languageCode == 'en' 
-                                          ? 'Please enter phone' 
-                                          : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                  items: [9, 10, 11, 12].map((int val) {
+                                    return DropdownMenuItem<int>(
+                                      value: val,
+                                      child: Text(
+                                        widget.languageCode == 'en' ? 'Grade $val' : 'ክፍል $val',
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: _isLoading ? null : (val) {
+                                    if (val != null) {
+                                      setDialogState(() {
+                                        _dialogSelectedGrade = val;
+                                      });
                                     }
-                                    return null;
                                   },
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Grade Level Dropdown
-                        _buildDialogLabel(
-                          widget.languageCode == 'en' ? 'Grade Level *' : 'የክፍል ደረጃ *',
-                          isLight,
-                        ),
-                        _buildDialogFieldContainer(
-                          isLight: isLight,
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: _dialogSelectedGrade,
-                              isExpanded: true,
-                              icon: Icon(Icons.arrow_drop_down, color: widget.color, size: 24),
-                              dropdownColor: isLight ? Colors.white : const Color(0xFF1E293B),
-                              style: TextStyle(
-                                color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                                fontSize: 14.0,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              items: [9, 10, 11, 12].map((int val) {
-                                return DropdownMenuItem<int>(
-                                  value: val,
-                                  child: Text(
-                                    widget.languageCode == 'en' ? 'Grade $val' : 'ክፍል $val',
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setDialogState(() {
-                                    _dialogSelectedGrade = val;
-                                  });
-                                }
-                              },
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                            const SizedBox(height: 14),
 
-                        // Optional Email Address
-                        _buildDialogLabel(
-                          widget.languageCode == 'en' ? 'Email Address (Optional)' : 'የኢሜል አድራሻ (አማራጭ)',
-                          isLight,
-                        ),
-                        _buildDialogFieldContainer(
-                          isLight: isLight,
-                          child: TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            style: TextStyle(
-                              color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.bold,
+                            // Optional Email Address
+                            _buildDialogLabel(
+                              widget.languageCode == 'en' ? 'Email Address (Optional)' : 'የኢሜል አድራሻ (አማራጭ)',
+                              isLight,
                             ),
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: widget.languageCode == 'en' ? 'e.g. abebe@smartx.com' : 'ምሳሌ: abebe@smartx.com',
-                              hintStyle: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.normal,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: widget.color,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Action Buttons: Cancel & Register
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  side: BorderSide(
-                                    color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF475569),
-                                    width: 1.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            _buildDialogFieldContainer(
+                              isLight: isLight,
+                              child: TextFormField(
+                                controller: _emailController,
+                                enabled: !_isLoading,
+                                keyboardType: TextInputType.emailAddress,
+                                style: TextStyle(
+                                  color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                child: Text(
-                                  widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
-                                  style: TextStyle(
-                                    color: isLight ? const Color(0xFF475569) : const Color(0xFFCBD5E1),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: widget.languageCode == 'en' ? 'e.g. abebe@smartx.com' : 'ምሳሌ: abebe@smartx.com',
+                                  hintStyle: const TextStyle(
+                                    color: Colors.grey,
                                     fontSize: 13.5,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.normal,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.email_outlined,
+                                    color: widget.color,
+                                    size: 18,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    final String fullName = _fullNameController.text.trim();
-                                    final String phone = _phoneController.text.trim();
-                                    final String email = _emailController.text.trim();
-                                    final String fullPhone = '$_dialogSelectedCountryCode $phone';
+                            const SizedBox(height: 28),
 
-                                    // Save locally to SharedPreferences
-                                    final prefs = await SharedPreferences.getInstance();
-                                    await prefs.setString('user_fullName', fullName);
-                                    await prefs.setString('user_phoneNumber', fullPhone);
-                                    await prefs.setString('user_grade', 'Grade $_dialogSelectedGrade');
-                                    if (email.isNotEmpty) {
-                                      await prefs.setString('user_email', email);
-                                    }
-                                    await prefs.setBool('is_authenticated', true);
-
-                                    // Sync registration details to Supabase student_profiles
-                                    try {
-                                      final supabase = Supabase.instance.client;
-                                      final authUser = supabase.auth.currentUser;
-                                      final String profileId = authUser?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
-                                      
-                                      await supabase.from('student_profiles').upsert({
-                                        'id': profileId,
-                                        'full_name': fullName,
-                                        'phone_number': fullPhone,
-                                        'grade': _dialogSelectedGrade,
-                                        'email': email.isNotEmpty ? email : '$profileId@smartx-offline.com',
-                                      });
-                                      debugPrint("Successfully synced registration to Supabase student_profiles.");
-                                    } catch (e) {
-                                      debugPrint("Failed to sync registration to Supabase: $e");
-                                    }
-
-                                    // Update state
-                                    if (this.mounted) {
-                                      this.setState(() {
-                                        _isRegistered = true;
-                                      });
-                                    }
-
-                                    // Close dialog
-                                    Navigator.of(context).pop();
-
-                                    // Show success snackbar
-                                    ScaffoldMessenger.of(this.context).clearSnackBars();
-                                    ScaffoldMessenger.of(this.context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                widget.languageCode == 'en' 
-                                                    ? 'Successfully registered! Premium content unlocked.' 
-                                                    : 'በስኬት ተመዝግበዋል! ሁሉም የትምህርት ክፍሎች ተከፍተዋል::',
-                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: const Color(0xFF10B981),
-                                        behavior: SnackBarBehavior.floating,
-                                        duration: const Duration(seconds: 3),
+                            // Action Buttons: Cancel & Register
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      side: BorderSide(
+                                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                                        width: 1.5,
                                       ),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: widget.color,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                  elevation: 2,
-                                ),
-                                child: Text(
-                                  widget.languageCode == 'en' ? 'Register' : 'ተመዝገብ',
-                                  style: const TextStyle(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.bold,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    child: Text(
+                                      widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
+                                      style: TextStyle(
+                                        color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                        fontSize: 14.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () async {
+                                            if (_formKey.currentState!.validate()) {
+                                              setDialogState(() {
+                                                _isLoading = true;
+                                              });
+
+                                              final String fullName = _fullNameController.text.trim();
+                                              final String phone = _phoneController.text.trim();
+                                              final String email = _emailController.text.trim();
+                                              final String fullPhone = '$_dialogSelectedCountryCode $phone';
+
+                                              try {
+                                                final supabase = Supabase.instance.client;
+                                                final authUser = supabase.auth.currentUser;
+                                                final String profileId = authUser?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
+
+                                                await supabase.from('student_profiles').upsert({
+                                                  'id': profileId,
+                                                  'full_name': fullName,
+                                                  'phone_number': fullPhone,
+                                                  'grade': _dialogSelectedGrade,
+                                                  'email': email.isNotEmpty ? email : '$profileId@smartx-offline.com',
+                                                });
+                                                debugPrint("Successfully synced registration to Supabase student_profiles.");
+
+                                                // Save locally to SharedPreferences inside the try block
+                                                final prefs = await SharedPreferences.getInstance();
+                                                await prefs.setString('user_fullName', fullName);
+                                                await prefs.setString('user_phoneNumber', fullPhone);
+                                                await prefs.setString('user_grade', 'Grade $_dialogSelectedGrade');
+                                                if (email.isNotEmpty) {
+                                                  await prefs.setString('user_email', email);
+                                                }
+                                                await prefs.setBool('is_authenticated', true);
+
+                                                // Update state
+                                                if (this.mounted) {
+                                                  this.setState(() {
+                                                    _isRegistered = true;
+                                                  });
+                                                }
+
+                                                // Close dialog
+                                                if (context.mounted) {
+                                                  Navigator.of(context).pop();
+                                                }
+
+                                                // Show success snackbar
+                                                if (this.context.mounted) {
+                                                  ScaffoldMessenger.of(this.context).clearSnackBars();
+                                                  ScaffoldMessenger.of(this.context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Row(
+                                                        children: [
+                                                          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                                                          const SizedBox(width: 8),
+                                                          Expanded(
+                                                            child: Text(
+                                                              widget.languageCode == 'en' 
+                                                                  ? 'Successfully registered! Premium content unlocked.' 
+                                                                  : 'በስኬት ተመዝግበዋል! ሁሉም የትምህርት ክፍሎች ተከፍተዋል::',
+                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      backgroundColor: const Color(0xFF10B981),
+                                                      behavior: SnackBarBehavior.floating,
+                                                      duration: const Duration(seconds: 3),
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                debugPrint("Failed to sync registration to Supabase: $e");
+                                                
+                                                setDialogState(() {
+                                                  _isLoading = false;
+                                                });
+
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).clearSnackBars();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Row(
+                                                        children: [
+                                                          const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
+                                                          const SizedBox(width: 8),
+                                                          Expanded(
+                                                            child: Text(
+                                                              widget.languageCode == 'en'
+                                                                  ? 'Registration failed. Please check your internet connection and try again.'
+                                                                  : 'ምዝገባው አልተሳካም። እባክዎ የኢንተርኔት ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።',
+                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      backgroundColor: const Color(0xFFEF4444),
+                                                      behavior: SnackBarBehavior.floating,
+                                                      duration: const Duration(seconds: 4),
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: widget.color,
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor: widget.color.withOpacity(0.5),
+                                      disabledForegroundColor: Colors.white.withOpacity(0.8),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                      elevation: 2,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          )
+                                        : Text(
+                                            widget.languageCode == 'en' ? 'Register' : 'ተመዝገብ',
+                                            style: const TextStyle(
+                                              fontSize: 14.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
