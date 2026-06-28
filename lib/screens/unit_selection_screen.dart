@@ -69,6 +69,191 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
+  void _showQuizModeSelectionSheet(BuildContext context, int unitNumber) {
+    final bool isLight = !widget.isDarkMode;
+    final Color sheetBg = isLight ? Colors.white : const Color(0xFF0F172A);
+    final Color headerColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final Color descColor = isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: sheetBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 38,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  widget.languageCode == 'en' ? "Select Quiz Mode" : "የፈተና ዓይነት ይምረጡ",
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    color: headerColor,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.languageCode == 'en' 
+                      ? "Choose how you want to practice for Unit $unitNumber" 
+                      : "ለክፍል $unitNumber እንዴት መለማመድ እንደሚፈልጉ ይምረጡ",
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: descColor,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Practice Mode Card
+                InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _executeWithRewardedAd(() {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => QuizScreen(
+                            grade: widget.grade,
+                            subject: widget.subjectId,
+                            unit: unitNumber,
+                            mode: QuizMode.practice,
+                          ),
+                        ),
+                      );
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3B82F6).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.school_rounded, color: Color(0xFF3B82F6), size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.languageCode == 'en' ? "Practice Mode" : "የልምምድ ዓይነት",
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: headerColor),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.languageCode == 'en' 
+                                    ? "Get instant answers, complete details & explanations" 
+                                    : "ፈጣን መልሶችን እና ማብራሪያዎችን ያግኙ",
+                                style: TextStyle(fontSize: 11.5, color: descColor, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, color: descColor, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // Exam Mode Card
+                InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _executeWithRewardedAd(() {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => QuizScreen(
+                            grade: widget.grade,
+                            subject: widget.subjectId,
+                            unit: unitNumber,
+                            mode: QuizMode.exam,
+                          ),
+                        ),
+                      );
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.timer_rounded, color: Color(0xFFEF4444), size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.languageCode == 'en' ? "Exam Mode" : "የፈተና ዓይነት",
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: headerColor),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.languageCode == 'en' 
+                                    ? "Timed, scoreboard tracking, strict review on completion" 
+                                    : "የውጤት ሰሌዳ እና ጥብቅ የልምምድ ክትትል",
+                                style: TextStyle(fontSize: 11.5, color: descColor, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, color: descColor, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showRegistrationDialog() {
     final bool isLight = !widget.isDarkMode;
     final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
@@ -1565,17 +1750,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   });
                                   final selectedUnit = filteredUnits[index];
                                   final originalIndex = allUnits.indexOf(selectedUnit);
-                                  _executeWithRewardedAd(() {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) => QuizScreen(
-                                          grade: widget.grade,
-                                          subject: widget.subjectId,
-                                          unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                        ),
-                                      ),
-                                    );
-                                  });
+                                  _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -1714,17 +1889,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                 });
                                                 final selectedUnit = filteredUnits[index];
                                                 final originalIndex = allUnits.indexOf(selectedUnit);
-                                                _executeWithRewardedAd(() {
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (context) => QuizScreen(
-                                                        grade: widget.grade,
-                                                        subject: widget.subjectId,
-                                                        unit: originalIndex >= 0 ? originalIndex + 1 : 1,
-                                                      ),
-                                                    ),
-                                                  );
-                                                });
+                                                _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
                                               },
                                             ),
                                           ),
