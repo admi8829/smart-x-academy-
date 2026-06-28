@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../models/question_model.dart';
 import '../services/quiz_service.dart';
 import '../services/offline_manager.dart';
+import '../services/ad_helper.dart';
 
 enum QuizMode {
   practice,
@@ -43,12 +45,69 @@ class _QuizScreenState extends State<QuizScreen> {
   final Set<int> _submittedQuestions = {}; // Only for practice mode
   bool _showAnswersAndExplanations = false; // Set to true after exam is finished and submitted
 
+  RewardedAd? _rewardedAd;
+  bool _isRewardedAdLoaded = false;
+
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _itemKeys = {};
 
   @override
   void initState() {
     super.initState();
+    _loadRewardedAd();
+    _loadQuestions();
+  }
+
+  @override
+  void dispose() {
+    _rewardedAd?.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: AdHelper.rewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          _isRewardedAdLoaded = true;
+        },
+        onAdFailedToLoad: (err) {
+          debugPrint('Failed to load a rewarded ad: ${err.message}');
+          _isRewardedAdLoaded = false;
+          _rewardedAd = null;
+        },
+      ),
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _loadRewardedAd();
+          _fetchQuestions();
+        },
+        onAdFailedToShowFullScreenContent: (ad, err) {
+          ad.dispose();
+          _loadRewardedAd();
+          _fetchQuestions();
+        },
+      );
+      _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        // User earned reward
+      });
+      _rewardedAd = null;
+      _isRewardedAdLoaded = false;
+    } else {
+      _fetchQuestions();
+    }
+  }
+
+  void _fetchQuestions() {
     _loadQuestions();
   }
 
@@ -164,11 +223,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+
 
   bool _isOptionCorrect(QuestionModel q, String option, int index) {
     if (option.trim().toLowerCase() == q.correctAnswer.trim().toLowerCase()) {
