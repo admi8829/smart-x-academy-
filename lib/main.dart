@@ -108,6 +108,7 @@ class _SmartXAcademyAppState extends State<SmartXAcademyApp> {
       child: MaterialApp(
         title: 'Smart X Academy',
         debugShowCheckedModeBanner: false,
+        navigatorKey: PushNotificationService.navigatorKey,
         
         // Sophisticated Light & Dark Themes matching the user's sleek palette
         theme: ThemeData(

@@ -35,42 +35,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     setState(() => _isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      List<String>? list = prefs.getStringList('local_notifications');
-      
-      // Seed curated notifications for testing if none exist
-      if (list == null) {
-        final List<Map<String, dynamic>> defaultNotifications = [
-          {
-            'id': 'social_yt_1',
-            'title': widget.languageCode == 'en' ? 'New Trigonometry Video Lesson!' : 'አዲስ የትሪጎኖሜትሪ ቪዲዮ ትምህርት!',
-            'message': widget.languageCode == 'en' 
-                ? 'Watch our premium, step-by-step masterclass on Grade 12 Advanced Trigonometry. We solve challenging entrance exam questions! Join us on YouTube: https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-                : 'የ12ኛ ክፍል የላቀ ትሪጎኖሜትሪ ፕሪሚየም የቪዲዮ ትምህርታችንን ይመልከቱ። አስቸጋሪ የመግቢያ ፈተና ጥያቄዎችን ደረጃ በደረጃ እንፈታለን! ዩቲዩብ ላይ ይከታተሉን፡ https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            'time': widget.languageCode == 'en' ? '1 hour ago' : 'ከ1 ሰዓት በፊት',
-            'is_read': false,
-          },
-          {
-            'id': 'social_tg_1',
-            'title': widget.languageCode == 'en' ? 'Official Telegram Channel' : 'ይፋዊ የቴሌግራም ቻናል',
-            'message': widget.languageCode == 'en' 
-                ? 'Get access to daily exam preparation worksheets, PDF study notes, and direct teacher consultations. Join the Smart X student community: https://t.me/smartxacademy'
-                : 'ዕለታዊ የፈተና ማዘጋጃ ወረቀቶችን፣ የፒዲኤፍ የጥናት ማስታወሻዎችን እና የቀጥታ የመምህራን ምክክር ያግኙ። የስማርት ኤክስ ማህበረሰብን ይቀላቀሉ፡ https://t.me/smartxacademy',
-            'time': widget.languageCode == 'en' ? '5 hours ago' : 'ከ5 ሰዓት በፊት',
-            'is_read': false,
-          },
-          {
-            'id': 'registration_info_1',
-            'title': widget.languageCode == 'en' ? 'National Entrance Exam Registration Guidelines' : 'ብሔራዊ የመግቢያ ፈተና ምዝገባ መመሪያዎች',
-            'message': widget.languageCode == 'en' 
-                ? 'Attention candidates: The Ministry of Education has officially announced that the registration portal is open. To complete registration, ensure you have your school transcripts, valid school identification cards, and two clear digital photographs. Verification must be approved by high school administrators before the absolute cutoff on July 15th. Late registration requests will be rejected by the system under any circumstances.'
-                : 'ለተማሪዎች በሙሉ፡ የዚህ አመት የመግቢያ ፈተና ምዝገባ በይፋ ተከፍቷል። የክፍል ማስረጃዎችዎን፣ የሁለተኛ ደረጃ ትምህርት ምስክር ወረቀትን እና ፎቶዎን ማቅረብዎን ያረጋግጡ። ጊዜ ካለፈ በኋላ የሚመጣ ምዝገባ በሚኒስቴሩ ተቀባይነት አይኖረውም። ሁሉንም ምዝገባዎች እስከ ሐምሌ 15 ድረስ ያጠናቅቁ።',
-            'time': widget.languageCode == 'en' ? '1 day ago' : 'ከትናንት በፊት',
-            'is_read': false,
-          },
-        ];
-        list = defaultNotifications.map((n) => jsonEncode(n)).toList();
-        await prefs.setStringList('local_notifications', list);
-      }
+      final List<String> list = prefs.getStringList('local_notifications') ?? [];
       
       final List<Map<String, dynamic>> parsedList = [];
       _userFeedbacks.clear();
@@ -101,54 +66,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> _sendTestNotification() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final List<String> list = prefs.getStringList('local_notifications') ?? [];
-      
-      final bool useYoutube = DateTime.now().second % 2 == 0;
-      final Map<String, dynamic> testNotification;
-      
-      if (useYoutube) {
-        testNotification = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'title': widget.languageCode == 'en' ? 'New Chemistry Lab Video!' : 'አዲስ የኬሚስትሪ የላብራቶሪ ቪዲዮ!',
-          'message': widget.languageCode == 'en' 
-              ? 'Learn complete acid-base reactions under 5 minutes with vivid experiments. Watch now: https://www.youtube.com/watch?v=dQw4w9WgXcQ' 
-              : 'ከአሲድ-ቤዝ ምላሾች ጋር የተያያዙ ሙከራዎችን ከ 5 ደቂቃ በታች ይመልከቱ። አሁን ይመልከቱ፡ https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-          'time': widget.languageCode == 'en' ? 'Just now' : 'አሁን',
-          'is_read': false,
-        };
-      } else {
-        testNotification = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'title': widget.languageCode == 'en' ? 'Join Physics Chat Group' : 'የፊዚክስ ውይይት ቡድንን ይቀላቀሉ',
-          'message': widget.languageCode == 'en' 
-              ? 'Join our community group to ask questions and study together with friends. Click here: https://t.me/smartxacademy' 
-              : 'አብረው ለማጥናት እና ጥያቄዎችን ለመጠየቅ የማህበረሰባችንን ውይይት ይቀላቀሉ። እዚህ ይጫኑ፡ https://t.me/smartxacademy',
-          'time': widget.languageCode == 'en' ? 'Just now' : 'አሁን',
-          'is_read': false,
-        };
-      }
-      
-      list.insert(0, jsonEncode(testNotification));
-      await prefs.setStringList('local_notifications', list);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(widget.languageCode == 'en' ? 'Test notification added!' : 'የሙከራ ማሳወቂያ ታክሏል!'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      
-      await _loadNotifications();
-    } catch (e) {
-      debugPrint('Error sending test notification: $e');
     }
   }
 
@@ -424,11 +341,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             onPressed: _loadNotifications,
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendTestNotification,
-        backgroundColor: const Color(0xFF3B82F6),
-        child: const Icon(Icons.add_alert_rounded, color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

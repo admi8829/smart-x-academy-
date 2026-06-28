@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'notification_service.dart';
+import '../screens/notification_list_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -19,6 +20,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class PushNotificationService {
   static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   // Initialize Firebase and set up handlers
   static Future<void> initialize() async {
@@ -54,8 +56,25 @@ class PushNotificationService {
               await NotificationService.saveFeedback(notificationId, 'Not Interested');
             }
           }
+
+          // Ensure tapping the notification opens the application and routes to NotificationListScreen properly
+          await _navigateToNotificationScreen();
         },
       );
+
+      // Handle notification when app is opened from a background state via tapping a notification
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        debugPrint('App opened via FCM notification tap: ${message.messageId}');
+        _navigateToNotificationScreen();
+      });
+
+      // Handle notification when app is opened from a terminated state via tapping a notification
+      _fcm.getInitialMessage().then((RemoteMessage? message) {
+        if (message != null) {
+          debugPrint('App opened from terminated state via FCM notification tap: ${message.messageId}');
+          _navigateToNotificationScreen();
+        }
+      });
 
       // Register background handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -68,16 +87,21 @@ class PushNotificationService {
         if (message.notification != null) {
           final title = message.notification!.title ?? 'New Notification';
           final body = message.notification!.body ?? '';
-          debugPrint('Message also contained a notification: $title - $body');
           
-          await saveLocalNotification(title, body, data: message.data);
+          final prefs = await SharedPreferences.getInstance();
+          final userName = prefs.getString('user_name') ?? prefs.getString('user_fullName') ?? 'ተማሪ';
+          final personalizedBody = body.replaceAll('[name]', userName);
+          
+          debugPrint('Message also contained a notification: $title - $personalizedBody');
+          
+          await saveLocalNotification(title, personalizedBody, data: message.data);
 
           // Show local notification with action buttons
           final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
           await showLocalNotificationWithActions(
             id: DateTime.now().millisecondsSinceEpoch % 100000,
             title: title,
-            body: body,
+            body: personalizedBody,
             payload: jsonEncode({
               'id': notificationId,
               ...message.data,
@@ -140,18 +164,22 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       final List<String> list = prefs.getStringList('local_notifications') ?? [];
       
+      // Personalization: Extract 'user_name' from SharedPreferences and replace [name] placeholder (fallback to 'ተማሪ')
+      final String userName = prefs.getString('user_name') ?? prefs.getString('user_fullName') ?? 'ተማሪ';
+      final String personalizedBody = body.replaceAll('[name]', userName);
+
       // Extract URL if any exists in message body or data
       String? url;
       if (data != null && data['url'] != null) {
         url = data['url'].toString();
       } else {
-        url = _extractUrl(body);
+        url = _extractUrl(personalizedBody);
       }
 
       final newNotification = {
         'id': data?['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
         'title': title,
-        'message': body,
+        'message': personalizedBody,
         'time': _getFormattedTime(DateTime.now()),
         'is_read': false,
         'url': url,
@@ -176,6 +204,24 @@ class PushNotificationService {
     final hour = dt.hour.toString().padLeft(2, '0');
     final minute = dt.minute.toString().padLeft(2, '0');
     return "$hour:$minute - ${dt.day}/${dt.month}/${dt.year}";
+  }
+
+  static Future<void> _navigateToNotificationScreen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      final languageCode = prefs.getString('languageCode') ?? 'en';
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => NotificationListScreen(
+            isDarkMode: isDarkMode,
+            languageCode: languageCode,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error navigating to NotificationListScreen: $e');
+    }
   }
 
   // Request permission for iOS/Web and devices on Android 13+ after Splash Screen completes
