@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/question_model.dart';
 import '../services/quiz_service.dart';
 import '../services/offline_manager.dart';
@@ -408,6 +410,56 @@ class _QuizScreenState extends State<QuizScreen> {
     return false;
   }
 
+  Future<void> _submitScoreToLeaderboard(int score) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String fullName = prefs.getString('user_fullName') ?? 'Student';
+      final String phoneNumber = prefs.getString('user_phoneNumber') ?? 'N/A';
+
+      final String subjectId = widget.subject ?? 'unknown';
+      final int unitId = widget.unit ?? 1;
+
+      await QuizService.submitLeaderboardScore(
+        fullName: fullName,
+        phoneNumber: phoneNumber,
+        subjectId: subjectId,
+        unitId: unitId,
+        score: score,
+        totalQuestions: _questions.length,
+      );
+    } on PostgrestException catch (e) {
+      debugPrint("PostgrestException submitting score: $e");
+      _showDescriptiveSnackBar();
+    } catch (e) {
+      debugPrint("Failed to submit score to leaderboard: $e");
+      _showDescriptiveSnackBar();
+    }
+  }
+
+  void _showDescriptiveSnackBar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.cloud_off_rounded, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                "Could not sync your score to the leaderboard. Please check your internet connection.",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFEF4444),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   void _showResults() {
     if (_questions.isEmpty) return;
     int score = 0;
@@ -422,6 +474,8 @@ class _QuizScreenState extends State<QuizScreen> {
             }
         }
     }
+
+    _submitScoreToLeaderboard(score);
 
     showDialog(
       context: context,
