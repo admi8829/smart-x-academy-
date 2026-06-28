@@ -578,7 +578,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Widget _buildQuestionCard(int index, QuestionModel q) {
     final isActive = index == _currentIndex;
-    final opacity = isActive ? 1.0 : 0.4;
+    final opacity = (isActive || _showAnswersAndExplanations) ? 1.0 : 0.4;
     
     final optionsData = q.options;
     final qText = q.questionText;
@@ -754,7 +754,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         : null,
                     icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
                     label: const Text(
-                      "Submit Answer",
+                      "Check Answer",
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -774,39 +774,54 @@ class _QuizScreenState extends State<QuizScreen> {
                 const SizedBox(height: 20),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                      width: 1,
+                    color: isLight ? const Color(0xFFF0F7FF) : const Color(0xFF1E293B).withOpacity(0.8),
+                    borderRadius: const BorderRadius.only(
+                      topRight: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
                     ),
+                    border: Border(
+                      left: const BorderSide(color: Color(0xFF3B82F6), width: 4.0),
+                      top: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                      right: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                      bottom: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isLight ? 0.02 : 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline_rounded, size: 16, color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                          const Icon(Icons.lightbulb_outline_rounded, size: 18, color: Color(0xFF3B82F6)),
                           const SizedBox(width: 8),
                           Text(
                             "Explanation",
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                              fontWeight: FontWeight.w900,
+                              color: isLight ? const Color(0xFF2563EB) : const Color(0xFF60A5FA),
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
                       Text(
                         q.explanation!.trim(),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          height: 1.4,
+                          height: 1.5,
                           color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
                         ),
                       ),
