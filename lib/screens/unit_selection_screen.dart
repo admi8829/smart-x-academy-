@@ -53,6 +53,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   bool _isRewardedAdLoaded = false;
 
   bool _isRegistered = false;
+  bool _notificationPermissionDenied = false;
 
   @override
   void initState() {
@@ -61,6 +62,20 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     _loadRewardedAd();
     _loadOfflineDownloads();
     _checkRegistrationStatus();
+    _checkNotificationStatus();
+  }
+
+  void _checkNotificationStatus() async {
+    try {
+      final status = await Permission.notification.status;
+      if (mounted) {
+        setState(() {
+          _notificationPermissionDenied = !status.isGranted;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking notification status on load: $e");
+    }
   }
 
   void _checkRegistrationStatus() async {
@@ -100,164 +115,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
       });
 
       if (nowRegistered) {
-        _checkNotificationPermissionAndProceed(onSuccess);
+        onSuccess();
       } else {
         debugPrint("Registration is required for Unit $activeUnitNum. Navigation aborted.");
       }
     } else {
-      _checkNotificationPermissionAndProceed(onSuccess);
-    }
-  }
-
-  Future<void> _checkNotificationPermissionAndProceed(VoidCallback onSuccess) async {
-    try {
-      final status = await Permission.notification.status;
-      if (status.isGranted) {
-        onSuccess();
-      } else {
-        if (!mounted) return;
-        _showEnableNotificationsDialog(onSuccess);
-      }
-    } catch (e) {
-      debugPrint("Error checking notification settings via permission_handler: $e");
       onSuccess();
     }
-  }
-
-  void _showEnableNotificationsDialog(VoidCallback onSuccess) {
-    final isLight = !widget.isDarkMode;
-    final backgroundColor = isLight ? Colors.white : const Color(0xFF1E293B);
-    final headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-    final descColor = isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext dialogContext) {
-        return PopScope(
-          canPop: false,
-          child: Dialog(
-            backgroundColor: backgroundColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.notifications_active_rounded,
-                      color: widget.color,
-                      size: 40,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    widget.languageCode == 'en' ? 'Enable Notifications' : 'ማሳወቂያዎችን ፍቀድ',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: headerTextColor,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    widget.languageCode == 'en'
-                        ? 'To get exam reminders, daily preparation tips, and active notifications, you must enable notifications. This is required to access unit materials.'
-                        : 'የፈተና ማሳሰቢያዎችን፣ ዕለታዊ የዝግጅት ምክሮችን እና ንቁ ማሳወቂያዎችን ለማግኘት ማሳወቂያዎችን መፍቀድ አለብዎት። ይህ የትምህርት ክፍሎችን ለመድረስ ግዴታ ነው።',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: descColor,
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () async {
-                      Navigator.of(dialogContext).pop();
-                      try {
-                        final status = await Permission.notification.request();
-                        
-                        if (status.isGranted) {
-                          onSuccess();
-                        } else {
-                          if (status.isPermanentlyDenied) {
-                            await openAppSettings();
-                          }
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  widget.languageCode == 'en'
-                                      ? 'Notification permission is mandatory to proceed!'
-                                      : 'ለመቀጠል የማሳወቂያ ፈቃድ መስጠት ግዴታ ነው!',
-                                ),
-                                backgroundColor: const Color(0xFFEF4444),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        debugPrint("Error requesting notification permission: $e");
-                        onSuccess();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.color,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      widget.languageCode == 'en' ? 'Enable Now' : 'አሁን ፍቀድ',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              widget.languageCode == 'en'
-                                  ? 'Navigation blocked. Notification permission is required.'
-                                  : 'ማሳወቂያ ስላልተፈቀደ ትምህርቱን መክፈት አይቻልም።',
-                            ),
-                            backgroundColor: const Color(0xFFEF4444),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(
-                      widget.languageCode == 'en' ? 'Maybe Later' : 'ቆይቶ',
-                      style: TextStyle(
-                        color: descColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   void _showQuizModeSelectionSheet(BuildContext context, int unitNumber) {
@@ -1853,6 +1717,102 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                   ],
                 ),
               ),
+
+              if (_notificationPermissionDenied)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isLight ? const Color(0xFFFEF3C7) : const Color(0xFF78350F).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFFDE68A) : const Color(0xFF78350F).withValues(alpha: 0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isLight ? const Color(0xFFF59E0B).withValues(alpha: 0.15) : const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.notifications_active_rounded,
+                          color: Color(0xFFD97706),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              languageCode == 'en' ? 'Stay Updated!' : 'ወቅታዊ መረጃ ያግኙ!',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                color: isLight ? const Color(0xFF92400E) : const Color(0xFFFDE68A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              languageCode == 'en'
+                                  ? 'Enable notifications to get exam tips and reminders.'
+                                  : 'የፈተና ምክሮችን እና ማሳሰቢያዎችን ለማግኘት ማሳወቂያዎችን ይፍቀዱ።',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: isLight ? const Color(0xFFB45309) : const Color(0xFFFDE68A).withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () async {
+                          final status = await Permission.notification.request();
+                          if (status.isGranted) {
+                            if (mounted) {
+                              setState(() {
+                                _notificationPermissionDenied = false;
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    languageCode == 'en'
+                                        ? 'Notifications successfully enabled!'
+                                        : 'ማሳወቂያዎች በተሳካ ሁኔታ ተፈቅደዋል!',
+                                  ),
+                                  backgroundColor: const Color(0xFF10B981),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } else {
+                            if (status.isPermanentlyDenied) {
+                              await openAppSettings();
+                            }
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFD97706),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          languageCode == 'en' ? 'Enable' : 'ፍቀድ',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               const SizedBox(height: 8.0),
 

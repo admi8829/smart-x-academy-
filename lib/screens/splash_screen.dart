@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/push_notification_service.dart';
 import 'home_screen.dart';
 import '../main.dart';
@@ -118,6 +119,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       final prefs = await SharedPreferences.getInstance();
       final accepted = prefs.getBool('terms_accepted') ?? false;
       if (accepted) {
+        try {
+          await Permission.notification.request();
+        } catch (e) {
+          debugPrint("Error requesting notification permission at startup: $e");
+        }
         _navigateToDashboard();
       } else {
         setState(() {
