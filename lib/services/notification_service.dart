@@ -1,8 +1,34 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   static final _supabase = Supabase.instance.client;
+
+  /// Saves the user's feedback ('Interested' or 'Not Interested') for a notification.
+  /// First updates the local preferences, then persists to Supabase 'notification_feedback' table.
+  static Future<void> saveFeedback(String notificationId, String feedback) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('feedback_$notificationId', feedback);
+      debugPrint('Saved feedback "$feedback" locally for notification $notificationId');
+    } catch (e) {
+      debugPrint('Error saving feedback locally: $e');
+    }
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      await _supabase.from('notification_feedback').upsert({
+        'notification_id': notificationId,
+        'feedback': feedback,
+        'user_id': userId,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      debugPrint('Successfully synced feedback "$feedback" to Supabase');
+    } catch (e) {
+      debugPrint('Failed to sync feedback to Supabase: $e');
+    }
+  }
 
   /// Fetches in-app notifications from Supabase 'notifications' table.
   /// If the table doesn't exist, it returns a mock list to prevent errors.
