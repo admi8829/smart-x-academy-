@@ -8,10 +8,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
 import 'unit_selection_screen.dart';
+import 'notes_screen.dart';
 import 'notification_list_screen.dart';
 import '../services/offline_manager.dart';
 import 'quiz_screen.dart';
 import '../widgets/image_slider_carousel.dart';
+import '../widgets/subject_vector_widgets.dart';
+import '../widgets/interactive_subject_card.dart';
+import '../widgets/compact_grade_selector.dart';
 import '../main.dart';
 
 class LeaderboardEntry {
@@ -140,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _unreadNotificationsCount = 2;
 
   int _selectedGradeForQuizTab = 9;
+  int _selectedGradeForNotesTab = 9;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -850,7 +855,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       case 2:
         return _buildQuizScreenTab(isLight); // Quiz
       case 3:
-        return _buildNotesScreenPlaceholder(isLight); // Notes
+        return _buildNotesScreenTab(isLight); // Notes
       default:
         return _buildHomeScreenContent(isLight);
     }
@@ -872,75 +877,168 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildNotesScreenPlaceholder(bool isLight) {
-    final Color headerColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-    final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+  Widget _buildNotesScreenTab(bool isLight) {
+    final List<Map<String, dynamic>> subjects = [
+      {
+        'id': 'Mathematics',
+        'amTitle': 'ሂሳብ',
+        'enTitle': 'Mathematics',
+        'color': const Color(0xFF0084FF),
+        'illustration': const DraftingGeometryWidget(),
+      },
+      {
+        'id': 'Biology',
+        'amTitle': 'ስነ-ህይወት',
+        'enTitle': 'Biology',
+        'color': const Color(0xFF2E7D32),
+        'illustration': const CellBiologyWidget(),
+      },
+      {
+        'id': 'Physics',
+        'amTitle': 'ፊዚክስ',
+        'enTitle': 'Physics',
+        'color': const Color(0xFFE53935),
+        'illustration': const AtomPhysicsWidget(),
+      },
+      {
+        'id': 'Chemistry',
+        'amTitle': 'ኬሚስትሪ',
+        'enTitle': 'Chemistry',
+        'color': const Color(0xFFEF6C00),
+        'illustration': const ChemistryFlaskWidget(),
+      },
+      {
+        'id': 'Geography',
+        'amTitle': 'ጂኦግራፊ',
+        'enTitle': 'Geography',
+        'color': const Color(0xFF8E24AA),
+        'illustration': const WorldMapGeographyWidget(),
+      },
+      {
+        'id': 'History',
+        'amTitle': 'ታሪክ',
+        'enTitle': 'History',
+        'color': const Color(0xFFF5B041),
+        'illustration': const AksumObeliskWidget(),
+      },
+      {
+        'id': 'Civics',
+        'amTitle': 'ዜግነት',
+        'enTitle': 'Civics',
+        'color': const Color(0xFF1E88E5),
+        'illustration': const CivicsGavelWidget(),
+      },
+      {
+        'id': 'Agriculture',
+        'amTitle': 'ግብርና',
+        'enTitle': 'Agriculture',
+        'color': const Color(0xFF8D6E63),
+        'illustration': const AgricultureSproutWidget(),
+      },
+    ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28.0),
-      child: Center(
+    final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A),
+        image: DecorationImage(
+          image: const AssetImage('assets/images/education_bg_pattern.png'),
+          repeat: ImageRepeat.repeat,
+          opacity: isLight ? 0.09 : 0.03,
+          colorFilter: isLight ? null : const ColorFilter.mode(Colors.white54, BlendMode.modulate),
+        ),
+      ),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E293B),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.menu_book_rounded, 
-                size: 64, 
-                color: isLight ? const Color(0xFF1E88E5) : const Color(0xFF60A5FA)
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              widget.languageCode == 'en' ? 'Access Short Notes' : 'ማስታወሻዎችን ያንብቡ',
-              style: TextStyle(
-                fontSize: 20, 
-                fontWeight: FontWeight.w900, 
-                color: headerColor,
-                letterSpacing: -0.4,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.languageCode == 'en' 
-                  ? 'To read short notes, select your Grade and Subject from the Home page, choose a Unit, and select "Read Short Notes".'
-                  : 'ማስታወሻዎችን ለማንበብ ከዋናው ገጽ ክፍል እና የትምህርት አይነት ይምረጡ፣ ከዚያ ምዕራፍ በመጫን "አጫጭር ማስታወሻዎችን አንብብ" ይምረጡ።',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13.5, 
-                height: 1.5,
-                fontWeight: FontWeight.w600,
-                color: descColor,
-              ),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: 180,
-              height: 46,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _currentIndex = 0; // Go to home page
-                  });
-                },
-                icon: const Icon(Icons.home_rounded, size: 18),
-                label: Text(
-                  widget.languageCode == 'en' ? 'Go to Home' : 'ወደ መነሻ ተመለስ',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E88E5),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            // Headings / Subtitle matching subject selection screen look
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: headerTextColor,
+                    letterSpacing: -0.4,
                   ),
-                  elevation: 0,
                 ),
+                Text(
+                  widget.languageCode == 'en' ? 'Short Notes' : 'አጫጭር ማስታወሻዎች',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF52C29F) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Redesigned Compact Slide Grade Selector
+            CompactGradeSelector(
+              selectedGrade: _selectedGradeForNotesTab,
+              onGradeSelected: (int val) {
+                setState(() {
+                  _selectedGradeForNotesTab = val;
+                });
+              },
+              isLight: isLight,
+              languageCode: widget.languageCode,
+            ),
+            const SizedBox(height: 18.0),
+
+            // Subject Cards Grid using the beautiful animated Bento InteractiveSubjectCard
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16.0,
+                mainAxisSpacing: 16.0,
+                childAspectRatio: 1.15,
               ),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                return InteractiveSubjectCard(
+                  amTitle: subject['amTitle'],
+                  enTitle: subject['enTitle'],
+                  color: subject['color'],
+                  illustration: subject['illustration'],
+                  isLight: isLight,
+                  gradeColor: const Color(0xFF1E88E5),
+                  languageCode: widget.languageCode,
+                  grade: _selectedGradeForNotesTab,
+                  btnText: widget.languageCode == 'en' ? 'READ' : 'አንብብ',
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => UnitSelectionScreen(
+                          grade: _selectedGradeForNotesTab,
+                          subjectId: subject['id'],
+                          enTitle: subject['enTitle'],
+                          amTitle: subject['amTitle'],
+                          color: subject['color'],
+                          icon: subject['illustration'],
+                          isDarkMode: widget.isDarkMode,
+                          languageCode: widget.languageCode,
+                          onToggleTheme: widget.onToggleTheme,
+                          onToggleLanguage: widget.onToggleLanguage,
+                          isShortNotesMode: true, // Directly read short notes!
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
@@ -2852,50 +2950,60 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         'amTitle': 'ሂሳብ',
         'enTitle': 'Mathematics',
         'color': const Color(0xFF0084FF),
+        'illustration': const DraftingGeometryWidget(),
       },
       {
         'id': 'Biology',
         'amTitle': 'ስነ-ህይወት',
         'enTitle': 'Biology',
         'color': const Color(0xFF2E7D32),
+        'illustration': const CellBiologyWidget(),
       },
       {
         'id': 'Physics',
         'amTitle': 'ፊዚክስ',
         'enTitle': 'Physics',
         'color': const Color(0xFFE53935),
+        'illustration': const AtomPhysicsWidget(),
       },
       {
         'id': 'Chemistry',
         'amTitle': 'ኬሚስትሪ',
         'enTitle': 'Chemistry',
         'color': const Color(0xFFEF6C00),
+        'illustration': const ChemistryFlaskWidget(),
       },
       {
         'id': 'Geography',
         'amTitle': 'ጂኦግራፊ',
         'enTitle': 'Geography',
         'color': const Color(0xFF8E24AA),
+        'illustration': const WorldMapGeographyWidget(),
       },
       {
         'id': 'History',
         'amTitle': 'ታሪክ',
         'enTitle': 'History',
         'color': const Color(0xFFF5B041),
+        'illustration': const AksumObeliskWidget(),
       },
       {
         'id': 'Civics',
         'amTitle': 'ዜግነት',
         'enTitle': 'Civics',
         'color': const Color(0xFF1E88E5),
+        'illustration': const CivicsGavelWidget(),
       },
       {
         'id': 'Agriculture',
         'amTitle': 'ግብርና',
         'enTitle': 'Agriculture',
         'color': const Color(0xFF8D6E63),
+        'illustration': const AgricultureSproutWidget(),
       },
     ];
+
+    final Color headerTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
 
     return Container(
       width: double.infinity,
@@ -2916,72 +3024,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Headings / Subtitle matching subject selection screen look
-            Text(
-              widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                letterSpacing: -0.4,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: headerTextColor,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                Text(
+                  widget.languageCode == 'en' ? 'Practice Quizzes' : 'የልምምድ ጥያቄዎች',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: isLight ? const Color(0xFF1E88E5) : const Color(0xFF475569),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            
-            // Grade Selector Top Bar (Horizontal Filter)
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [9, 10, 11, 12].map((int gradeNum) {
-                  final bool isSelected = _selectedGradeForQuizTab == gradeNum;
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedGradeForQuizTab = gradeNum;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFF1E88E5)
-                            : (isLight ? Colors.white : const Color(0xFF1E293B)),
-                        borderRadius: BorderRadius.circular(12),
-                        border: isSelected
-                            ? null
-                            : Border.all(
-                                color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
-                                width: 1.2,
-                              ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF1E88E5).withOpacity(0.3),
-                                  blurRadius: 8.0,
-                                  offset: const Offset(0, 3),
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        widget.languageCode == 'en' ? 'Grade $gradeNum' : 'ክፍል $gradeNum',
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isLight ? const Color(0xFF0F172A) : Colors.white),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14.5,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 14.0),
 
-            // Subject Cards Grid
+            // Redesigned Compact Slide Grade Selector
+            CompactGradeSelector(
+              selectedGrade: _selectedGradeForQuizTab,
+              onGradeSelected: (int val) {
+                setState(() {
+                  _selectedGradeForQuizTab = val;
+                });
+              },
+              isLight: isLight,
+              languageCode: widget.languageCode,
+            ),
+            const SizedBox(height: 18.0),
+
+            // Subject Cards Grid using the beautiful animated Bento InteractiveSubjectCard
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -2989,16 +3069,21 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 crossAxisCount: 2,
                 crossAxisSpacing: 16.0,
                 mainAxisSpacing: 16.0,
-                childAspectRatio: 0.85,
+                childAspectRatio: 1.15,
               ),
               itemCount: subjects.length,
               itemBuilder: (context, index) {
                 final subject = subjects[index];
-                return InteractiveQuizSubjectCard(
-                  subject: subject,
+                return InteractiveSubjectCard(
+                  amTitle: subject['amTitle'],
+                  enTitle: subject['enTitle'],
+                  color: subject['color'],
+                  illustration: subject['illustration'],
                   isLight: isLight,
-                  grade: _selectedGradeForQuizTab,
+                  gradeColor: const Color(0xFF1E88E5),
                   languageCode: widget.languageCode,
+                  grade: _selectedGradeForQuizTab,
+                  btnText: widget.languageCode == 'en' ? 'START' : 'ጀምር',
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -3008,11 +3093,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           enTitle: subject['enTitle'],
                           amTitle: subject['amTitle'],
                           color: subject['color'],
-                          icon: SubjectVectors.getIconForSubject(subject['id']),
+                          icon: subject['illustration'],
                           isDarkMode: widget.isDarkMode,
                           languageCode: widget.languageCode,
                           onToggleTheme: widget.onToggleTheme,
                           onToggleLanguage: widget.onToggleLanguage,
+                          isShortNotesMode: false, // Quizzes mode
                         ),
                       ),
                     );

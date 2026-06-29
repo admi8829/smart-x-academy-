@@ -23,6 +23,7 @@ class UnitSelectionScreen extends StatefulWidget {
   final String languageCode;
   final VoidCallback onToggleTheme;
   final VoidCallback onToggleLanguage;
+  final bool isShortNotesMode;
 
   const UnitSelectionScreen({
     super.key,
@@ -36,6 +37,7 @@ class UnitSelectionScreen extends StatefulWidget {
     required this.languageCode,
     required this.onToggleTheme,
     required this.onToggleLanguage,
+    this.isShortNotesMode = false,
   });
 
   @override
@@ -184,69 +186,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
                 const SizedBox(height: 24),
                 
-                // 1. Short Notes Card
-                InkWell(
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => NotesScreen(
-                          grade: widget.grade,
-                          subjectId: widget.subjectId,
-                          unitNumber: unitNumber,
-                          unitTitle: unitTitle,
-                          themeColor: widget.color,
-                          isDarkMode: widget.isDarkMode,
-                          languageCode: widget.languageCode,
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.menu_book_rounded, color: Color(0xFF10B981), size: 24),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.languageCode == 'en' ? "Read Short Notes" : "አጫጭር ማስታወሻዎችን አንብብ",
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: headerColor),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.languageCode == 'en' 
-                                    ? "Study summary, main concepts, formulas, and proofs" 
-                                    : "ዋና ዋና ሃሳቦችን፣ ቀመሮችን እና ማጠቃለያዎችን ያጥኑ",
-                                style: TextStyle(fontSize: 11.5, color: descColor, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.chevron_right_rounded, color: descColor, size: 20),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+
 
                 // 2. Practice Mode Card
                 InkWell(
@@ -2029,7 +1969,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                           setState(() {
                                             _selectedUnitIndex = index;
                                           });
-                                          _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                          if (widget.isShortNotesMode) {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) => NotesScreen(
+                                                  grade: widget.grade,
+                                                  subjectId: widget.subjectId,
+                                                  unitNumber: activeUnitNum,
+                                                  unitTitle: title,
+                                                  themeColor: widget.color,
+                                                  isDarkMode: widget.isDarkMode,
+                                                  languageCode: widget.languageCode,
+                                                ),
+                                              ),
+                                            );
+                                          } else {
+                                            _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                          }
                                         });
                                       },
                                       child: Padding(
@@ -2155,7 +2111,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     setState(() {
                                                       _selectedUnitIndex = index;
                                                     });
-                                                    _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                                    if (widget.isShortNotesMode) {
+                                                      Navigator.of(context).push(
+                                                        MaterialPageRoute(
+                                                          builder: (context) => NotesScreen(
+                                                            grade: widget.grade,
+                                                            subjectId: widget.subjectId,
+                                                            unitNumber: activeUnitNum,
+                                                            unitTitle: title,
+                                                            themeColor: widget.color,
+                                                            isDarkMode: widget.isDarkMode,
+                                                            languageCode: widget.languageCode,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    } else {
+                                                      _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                                    }
                                                   });
                                                 },
                                               ),
