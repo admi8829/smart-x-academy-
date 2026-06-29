@@ -4,7 +4,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'notification_service.dart';
 import '../screens/notification_list_screen.dart';
 
 @pragma('vm:entry-point')
@@ -39,24 +38,6 @@ class PushNotificationService {
       await _localNotifications.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) async {
-          final String? actionId = response.actionId;
-          final String? payload = response.payload;
-          
-          if (actionId != null && payload != null) {
-            debugPrint('Local Notification Action Tapped: $actionId, payload: $payload');
-            String notificationId = 'push_${DateTime.now().millisecondsSinceEpoch}';
-            try {
-              final data = jsonDecode(payload);
-              notificationId = data['id'] ?? notificationId;
-            } catch (_) {}
-            
-            if (actionId == 'interested') {
-              await NotificationService.saveFeedback(notificationId, 'Interested');
-            } else if (actionId == 'not_interested') {
-              await NotificationService.saveFeedback(notificationId, 'Not Interested');
-            }
-          }
-
           // Ensure tapping the notification opens the application and routes to NotificationListScreen properly
           await _navigateToNotificationScreen();
         },
@@ -129,18 +110,6 @@ class PushNotificationService {
         importance: Importance.max,
         priority: Priority.high,
         ticker: 'ticker',
-        actions: <AndroidNotificationAction>[
-          AndroidNotificationAction(
-            'interested',
-            'Interested',
-            showsUserInterface: true,
-          ),
-          AndroidNotificationAction(
-            'not_interested',
-            'Not Interested',
-            showsUserInterface: true,
-          ),
-        ],
       );
 
       const NotificationDetails notificationDetails = NotificationDetails(

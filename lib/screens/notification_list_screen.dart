@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/notification_service.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -111,33 +110,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     }
   }
 
-  Future<void> _updateFeedback(String notificationId, String feedback) async {
-    try {
-      setState(() {
-        _userFeedbacks[notificationId] = feedback;
-      });
-
-      await NotificationService.saveFeedback(notificationId, feedback);
-
-      if (mounted) {
-        final isEn = widget.languageCode == 'en';
-        final message = feedback == 'Interested'
-            ? (isEn ? 'Marked as Interested' : 'ፍላጎት አለኝ ተብሏል')
-            : (isEn ? 'Marked as Not Interested' : 'ፍላጎት የለኝም ተብሏል');
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error updating feedback: $e');
-    }
-  }
-
   String? _parseLink(String message) {
     final RegExp urlRegExp = RegExp(
       r'https?:\/\/[^\s]+',
@@ -194,94 +166,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       return isEn ? 'Visit Facebook' : 'ፌስቡክ ይጎብኙ';
     }
     return isEn ? 'Open Link' : 'ሊንክ ይክፈቱ';
-  }
-
-  Widget _buildFeedbackRow(String notificationId, bool isLight, Color subtitleColor) {
-    final currentFeedback = _userFeedbacks[notificationId];
-    final isEn = widget.languageCode == 'en';
-
-    final bool isInterestedSelected = currentFeedback == 'Interested';
-    final bool isNotInterestedSelected = currentFeedback == 'Not Interested';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 12),
-        Divider(
-          height: 1,
-          thickness: 1,
-          color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _updateFeedback(notificationId, 'Interested'),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: isInterestedSelected
-                        ? const Color(0xFF10B981)
-                        : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-                    width: isInterestedSelected ? 1.5 : 1,
-                  ),
-                  backgroundColor: isInterestedSelected
-                      ? const Color(0xFF10B981).withOpacity(0.1)
-                      : Colors.transparent,
-                  foregroundColor: isInterestedSelected
-                      ? const Color(0xFF10B981)
-                      : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-                icon: Icon(
-                  isInterestedSelected ? Icons.thumb_up_rounded : Icons.thumb_up_alt_outlined,
-                  size: 14,
-                ),
-                label: Text(
-                  isEn ? 'Interested' : 'ፍላጎት አለኝ',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _updateFeedback(notificationId, 'Not Interested'),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: isNotInterestedSelected
-                        ? const Color(0xFFEF4444)
-                        : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-                    width: isNotInterestedSelected ? 1.5 : 1,
-                  ),
-                  backgroundColor: isNotInterestedSelected
-                      ? const Color(0xFFEF4444).withOpacity(0.1)
-                      : Colors.transparent,
-                  foregroundColor: isNotInterestedSelected
-                      ? const Color(0xFFEF4444)
-                      : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                ),
-                icon: Icon(
-                  isNotInterestedSelected ? Icons.thumb_down_rounded : Icons.thumb_down_alt_outlined,
-                  size: 14,
-                ),
-                label: Text(
-                  isEn ? 'Not Interested' : 'ፍላጎት የለኝም',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
   }
 
   @override
@@ -501,69 +385,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                   ),
                                 ),
                               ],
-                              if (youtubeId != null) ...[
-                                const SizedBox(height: 12),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      Image.network(
-                                        'https://img.youtube.com/vi/$youtubeId/hqdefault.jpg',
-                                        height: 150,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            height: 120,
-                                            color: isLight ? Colors.grey.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
-                                            alignment: Alignment.center,
-                                            child: const Icon(Icons.video_library_rounded, size: 40, color: Colors.grey),
-                                          );
-                                        },
-                                      ),
-                                      Positioned.fill(
-                                        child: Container(
-                                          color: Colors.black.withOpacity(0.15),
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: const BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.play_arrow_rounded,
-                                          color: Colors.white,
-                                          size: 26,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              if (detectedUrl != null) ...[
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  onPressed: () => _launchURL(detectedUrl),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _getSocialColor(detectedUrl),
-                                    foregroundColor: Colors.white,
-                                    minimumSize: const Size(double.infinity, 38),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  icon: Icon(_getSocialIcon(detectedUrl), size: 16),
-                                  label: Text(
-                                    _getSocialButtonLabel(detectedUrl),
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5),
-                                  ),
-                                ),
-                              ],
-                              _buildFeedbackRow(id, isLight, subtitleColor),
                             ],
                           ),
                         ),

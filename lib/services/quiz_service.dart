@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/question_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuizService {
   static final SupabaseClient _supabase = Supabase.instance.client;
@@ -38,7 +39,7 @@ class QuizService {
     }
   }
 
-  /// Submits the student's quiz score to the leaderboard table.
+  /// Submits the student's quiz score to the user_progress table.
   static Future<void> submitLeaderboardScore({
     required String fullName,
     required String phoneNumber,
@@ -48,21 +49,20 @@ class QuizService {
     required int totalQuestions,
   }) async {
     try {
-      final user = _supabase.auth.currentUser;
-      final String studentId = user?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
+      final prefs = await SharedPreferences.getInstance();
+      final String studentId = prefs.getString('user_id') ?? 'user_${DateTime.now().millisecondsSinceEpoch}';
 
-      await _supabase.from('leaderboard').insert({
-        'student_id': studentId,
-        'full_name': fullName,
-        'phone_number': phoneNumber,
+      await _supabase.from('user_progress').insert({
+        'user_id': studentId,
         'subject_id': subjectId,
         'unit_id': unitId,
         'score': score,
         'total_questions': totalQuestions,
+        'created_at': DateTime.now().toIso8601String(),
       });
-      debugPrint("QuizService: Leaderboard score submitted successfully.");
+      debugPrint("QuizService: Quiz score submitted successfully to user_progress.");
     } catch (e) {
-      debugPrint('Supabase leaderboard insertion failed: $e');
+      debugPrint('Supabase user_progress insertion failed: $e');
       rethrow;
     }
   }

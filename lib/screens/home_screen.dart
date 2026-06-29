@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/ad_helper.dart';
 import 'subject_selection_screen.dart';
-import '../services/auth_service.dart';
 import 'unit_selection_screen.dart';
 import 'notification_list_screen.dart';
 import '../services/offline_manager.dart';
@@ -104,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   bool _isPremiumUser = true;
   bool _profileImageRemoved = false;
   bool _isLoggedIn = false;
+  String? _userId;
 
   // Contributor Portal Input Fields
   final GlobalKey<FormState> _addQuestionFormKey = GlobalKey<FormState>();
@@ -140,8 +140,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _unreadNotificationsCount = 2;
 
   int _selectedGradeForQuizTab = 9;
-  int _carouselIndex = 0;
-  Timer? _carouselTimer;
 
   // --- AdMob Ads State ---
   BannerAd? _bannerAd;
@@ -254,24 +252,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return _localizedValues[widget.languageCode]?[key] ?? key;
   }
 
-  void _startCarouselTimer() {
-    _carouselTimer?.cancel();
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (mounted) {
-        final quizSlides = _getQuizSlidesForGrade(_selectedGradeForQuizTab);
-        if (quizSlides.isNotEmpty) {
-          setState(() {
-            _carouselIndex = (_carouselIndex + 1) % quizSlides.length;
-          });
-        }
-      }
-    });
-  }
-
-  void _resetCarouselTimer() {
-    _startCarouselTimer();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -291,7 +271,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     // Replicating tutorial video with standard Youtube embedded controller
     _loadBannerAd();
-    _startCarouselTimer();
     _fadeController.forward();
     _fetchLeaderboardData();
   }
@@ -300,6 +279,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _isLoggedIn = prefs.getBool('is_authenticated') ?? false;
+      String? savedUid = prefs.getString('user_id');
+      if (savedUid == null && _isLoggedIn) {
+        savedUid = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
+        prefs.setString('user_id', savedUid);
+      }
+      _userId = savedUid;
       _userName = prefs.getString('user_fullName') ?? "Abebe Bekele";
       final gradeVal = prefs.getString('user_grade') ?? "Grade 12";
       _userGradeStr = gradeVal.endsWith("Student") ? gradeVal : "$gradeVal Student";
@@ -383,7 +368,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
-    _carouselTimer?.cancel();
     _fullNameController.dispose();
     _emailController.dispose();
     _schoolNameController.dispose();
@@ -1332,7 +1316,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _filteredLeaderboardEntries = filtered.take(10).toList();
 
     // Determine my rank from the FULL sorted list of the selected grade
-    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = _userId;
     _myLeaderboardEntry = null;
     _myRank = -1;
 
@@ -3042,67 +3026,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-
-  List<Map<String, dynamic>> _getQuizSlidesForGrade(int grade) {
-    if (grade == 9) {
-      return [
-        {
-          'question': 'What is the capital city of Ethiopia?',
-          'options': ['A) Nairobi', 'B) Addis Ababa', 'C) Asmara'],
-          'correctIndex': 1,
-        },
-        {
-          'question': 'Which branch of Biology studies the feedback cycles of organisms and biosphere?',
-          'options': ['A) Genetics', 'B) Zoology', 'C) Ecology'],
-          'correctIndex': 2,
-        },
-        {
-          'question': 'Calculate the slope value of y = 3x + 12.',
-          'options': ['A) m = 1', 'B) m = 3', 'C) m = 12'],
-          'correctIndex': 1,
-        },
-      ];
-    } else if (grade == 10) {
-      return [
-        {
-          'question': 'Which biological macromolecule builds plant cell walls?',
-          'options': ['A) Cellulose', 'B) Glycogen', 'C) Peptide-glycans'],
-          'correctIndex': 0,
-        },
-        {
-          'question': 'Find the root solution set of x² - 16 = 0.',
-          'options': ['A) {4}', 'B) {-4, 4}', 'C) {16}'],
-          'correctIndex': 1,
-        },
-      ];
-    } else if (grade == 11) {
-      return [
-        {
-          'question': 'What is the magnitude of a vector with components (6, 8)?',
-          'options': ['A) 10 units', 'B) 14 units', 'C) 100 units'],
-          'correctIndex': 0,
-        },
-        {
-          'question': 'Which model proposed electrons travel in stationary quantic orbits?',
-          'options': ['A) Bohr Model', 'B) Dalton Model', 'C) Rutherford Model'],
-          'correctIndex': 0,
-        },
-      ];
-    } else {
-      return [
-        {
-          'question': 'What is the limit of (3x² - 2x) / x as x approaches 0?',
-          'options': ['A) 0', 'B) -2', 'C) ∞'],
-          'correctIndex': 1,
-        },
-        {
-          'question': 'In which historic year did the victory of Battle of Adwa transpire?',
-          'options': ['A) 1889', 'B) 1896', 'C) 1935'],
-          'correctIndex': 1,
-        },
-      ];
-    }
-  }
 
   Widget _buildCoursesScreen(bool isLight) {
     final List<Map<String, dynamic>> courses = _getCoursesData(_selectedGradeForCourses);

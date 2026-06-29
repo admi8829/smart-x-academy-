@@ -747,9 +747,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               final String fullPhone = '$_dialogSelectedCountryCode $phone';
 
                                               try {
+                                                final prefs = await SharedPreferences.getInstance();
+                                                String? profileId = prefs.getString('user_id');
+                                                if (profileId == null) {
+                                                  profileId = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
+                                                  await prefs.setString('user_id', profileId);
+                                                }
                                                 final supabase = Supabase.instance.client;
-                                                final authUser = supabase.auth.currentUser;
-                                                final String profileId = authUser?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
 
                                                 await supabase.from('student_profiles').upsert({
                                                   'id': profileId,
@@ -760,8 +764,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                 });
                                                 debugPrint("Successfully synced registration to Supabase student_profiles.");
 
-                                                // Save locally to SharedPreferences inside the try block
-                                                final prefs = await SharedPreferences.getInstance();
                                                 await prefs.setString('user_fullName', fullName);
                                                 await prefs.setString('user_phoneNumber', fullPhone);
                                                 await prefs.setString('user_grade', 'Grade $_dialogSelectedGrade');

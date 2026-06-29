@@ -58,25 +58,30 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
 
     try {
       final supabase = Supabase.instance.client;
+      final String profileId = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
       
-      // Perform database insertion to the standard 'users' table
-      await supabase.from('users').insert({
+      // Perform database insertion to the 'student_profiles' table
+      await supabase.from('student_profiles').insert({
+        'id': profileId,
         'full_name': fullName,
-        'grade': gradeLabel,
         'phone_number': phoneNumber,
-        'email': email,
-        'created_at': DateTime.now().toIso8601String(),
+        'grade': _selectedGrade,
+        'email': email.isNotEmpty ? email : '$profileId@smartx-offline.com',
       });
 
-      debugPrint("Successfully inserted user registration details into Supabase 'users' table.");
+      debugPrint("Successfully inserted user registration details into Supabase 'student_profiles' table.");
 
       // Save registration state in SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('has_registered', true);
+      await prefs.setBool('is_authenticated', true);
+      await prefs.setString('user_id', profileId);
       await prefs.setString('user_fullName', fullName);
       await prefs.setString('user_phoneNumber', phoneNumber);
       await prefs.setString('user_grade', gradeLabel);
-      await prefs.setString('user_email', email);
+      if (email.isNotEmpty) {
+        await prefs.setString('user_email', email);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,37 +107,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
         Navigator.of(context).pop('registered');
       }
     } catch (e) {
-      debugPrint("Supabase insertion to 'users' failed: $e");
-      
-      // Fallback: If 'users' table fails due to database schema mismatch or missing columns in a testing environment,
-      // try inserting to 'student_profiles' as a fallback, or simply save locally so the user isn't locked out.
-      try {
-        final supabase = Supabase.instance.client;
-        final authUser = supabase.auth.currentUser;
-        final String profileId = authUser?.id ?? 'reg_${DateTime.now().millisecondsSinceEpoch}';
-        
-        await supabase.from('student_profiles').upsert({
-          'id': profileId,
-          'full_name': fullName,
-          'phone_number': phoneNumber,
-          'grade': _selectedGrade,
-          'email': email.isNotEmpty ? email : '$profileId@smartx-offline.com',
-        });
-        debugPrint("Successfully inserted as fallback to student_profiles.");
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('has_registered', true);
-        await prefs.setString('user_fullName', fullName);
-        await prefs.setString('user_phoneNumber', phoneNumber);
-        await prefs.setString('user_grade', gradeLabel);
-        
-        if (mounted) {
-          Navigator.of(context).pop('registered');
-        }
-        return;
-      } catch (fallbackError) {
-        debugPrint("Fallback to student_profiles also failed: $fallbackError");
-      }
+      debugPrint("Supabase insertion to 'student_profiles' failed: $e");
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
