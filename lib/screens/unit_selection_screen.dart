@@ -968,7 +968,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     InterstitialAd.load(
       adUnitId: AdHelper.interstitialAdUnitId,
       request: const AdRequest(),
-      interstitialAdLoadCallback: InterstitialAdLoadCallback(
+      adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
           _isInterstitialAdLoaded = true;
