@@ -889,17 +889,77 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   Widget _buildNotesScreenPlaceholder(bool isLight) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.article_outlined, size: 80, color: isLight ? const Color(0xFF0F4C81).withValues(alpha: 0.3) : Colors.white30),
-          const SizedBox(height: 16),
-          Text(
-            widget.languageCode == 'en' ? 'Notes feature coming soon!' : 'የማስታወሻ አገልግሎት በቅርቡ ይመጣል!',
-            style: TextStyle(fontSize: 16, color: isLight ? const Color(0xFF475569) : Colors.white70),
-          ),
-        ],
+    final Color headerColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final Color descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isLight ? const Color(0xFFEFF6FF) : const Color(0xFF1E293B),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.menu_book_rounded, 
+                size: 64, 
+                color: isLight ? const Color(0xFF1E88E5) : const Color(0xFF60A5FA)
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              widget.languageCode == 'en' ? 'Access Short Notes' : 'ማስታወሻዎችን ያንብቡ',
+              style: TextStyle(
+                fontSize: 20, 
+                fontWeight: FontWeight.w900, 
+                color: headerColor,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              widget.languageCode == 'en' 
+                  ? 'To read short notes, select your Grade and Subject from the Home page, choose a Unit, and select "Read Short Notes".'
+                  : 'ማስታወሻዎችን ለማንበብ ከዋናው ገጽ ክፍል እና የትምህርት አይነት ይምረጡ፣ ከዚያ ምዕራፍ በመጫን "አጫጭር ማስታወሻዎችን አንብብ" ይምረጡ።',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.5, 
+                height: 1.5,
+                fontWeight: FontWeight.w600,
+                color: descColor,
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: 180,
+              height: 46,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _currentIndex = 0; // Go to home page
+                  });
+                },
+                icon: const Icon(Icons.home_rounded, size: 18),
+                label: Text(
+                  widget.languageCode == 'en' ? 'Go to Home' : 'ወደ መነሻ ተመለስ',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E88E5),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

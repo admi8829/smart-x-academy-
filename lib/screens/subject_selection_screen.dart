@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../services/ad_helper.dart';
 import '../main.dart';
 import 'unit_selection_screen.dart';
 
@@ -23,6 +25,55 @@ class SubjectSelectionScreen extends StatefulWidget {
 }
 
 class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd?.dispose();
+    _bannerAd = null;
+    _isBannerAdLoaded = false;
+
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = true;
+            });
+          } else {
+            ad.dispose();
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          debugPrint('SubjectSelectionScreen BannerAd failed to load: $err. Code: ${err.code}');
+          ad.dispose();
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = false;
+              _bannerAd = null;
+            });
+          }
+        },
+      ),
+    );
+    _bannerAd!.load();
+  }
+
   // Translate title helper dynamically retrieving the language code
   String _local(String key, String languageCode) {
     final Map<String, Map<String, String>> localized = {
@@ -272,6 +323,19 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: (_isBannerAdLoaded && _bannerAd != null)
+          ? Container(
+              color: bgColor,
+              child: SafeArea(
+                top: false,
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

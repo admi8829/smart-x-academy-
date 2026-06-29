@@ -10,6 +10,7 @@ import '../services/quiz_service.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
 import 'registration_overlay.dart';
+import 'notes_screen.dart';
 
 class UnitSelectionScreen extends StatefulWidget {
   final int grade;
@@ -52,15 +53,21 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
 
+  InterstitialAd? _interstitialAd;
+  bool _isInterstitialAdLoaded = false;
+
   bool _isRegistered = false;
   bool _notificationPermissionDenied = false;
+  final Map<int, int> _unitBestScores = {};
 
   @override
   void initState() {
     super.initState();
     _loadBannerAd();
     _loadRewardedAd();
+    _loadInterstitialAd();
     _loadOfflineDownloads();
+    _loadBestScores();
     _checkRegistrationStatus();
     _checkNotificationStatus();
   }
@@ -124,7 +131,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
-  void _showQuizModeSelectionSheet(BuildContext context, int unitNumber) {
+  void _showUnitOptionsSheet(BuildContext context, int unitNumber, String unitId, String unitTitle, bool isDownloaded) {
     final bool isLight = !widget.isDarkMode;
     final Color sheetBg = isLight ? Colors.white : const Color(0xFF0F172A);
     final Color headerColor = isLight ? const Color(0xFF0F172A) : Colors.white;
@@ -156,7 +163,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  widget.languageCode == 'en' ? "Select Quiz Mode" : "የፈተና ዓይነት ይምረጡ",
+                  widget.languageCode == 'en' ? "Unit Activities" : "የክፍሉ ተግባራት",
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,
@@ -167,8 +174,8 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 const SizedBox(height: 4),
                 Text(
                   widget.languageCode == 'en' 
-                      ? "Choose how you want to practice for Unit $unitNumber" 
-                      : "ለክፍል $unitNumber እንዴት መለማመድ እንደሚፈልጉ ይምረጡ",
+                      ? "Choose how you want to study for Unit $unitNumber" 
+                      : "ለክፍል $unitNumber የሚፈልጉትን ተግባር ይምረጡ",
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -177,7 +184,71 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
                 const SizedBox(height: 24),
                 
-                // Practice Mode Card
+                // 1. Short Notes Card
+                InkWell(
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => NotesScreen(
+                          grade: widget.grade,
+                          subjectId: widget.subjectId,
+                          unitNumber: unitNumber,
+                          unitTitle: unitTitle,
+                          themeColor: widget.color,
+                          isDarkMode: widget.isDarkMode,
+                          languageCode: widget.languageCode,
+                        ),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF1E293B),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF10B981).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.menu_book_rounded, color: Color(0xFF10B981), size: 24),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.languageCode == 'en' ? "Read Short Notes" : "አጫጭር ማስታወሻዎችን አንብብ",
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: headerColor),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.languageCode == 'en' 
+                                    ? "Study summary, main concepts, formulas, and proofs" 
+                                    : "ዋና ዋና ሃሳቦችን፣ ቀመሮችን እና ማጠቃለያዎችን ያጥኑ",
+                                style: TextStyle(fontSize: 11.5, color: descColor, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right_rounded, color: descColor, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 2. Practice Mode Card
                 InkWell(
                   onTap: () {
                     Navigator.of(ctx).pop();
@@ -189,9 +260,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                             subject: widget.subjectId,
                             unit: unitNumber,
                             mode: QuizMode.practice,
+                            isOffline: isDownloaded,
+                            offlineUnitId: isDownloaded ? unitId : null,
                           ),
                         ),
-                      );
+                      ).then((_) {
+                        _loadBestScores();
+                      });
                     });
                   },
                   borderRadius: BorderRadius.circular(16),
@@ -240,7 +315,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                 ),
                 const SizedBox(height: 12),
                 
-                // Exam Mode Card
+                // 3. Exam Mode Card
                 InkWell(
                   onTap: () {
                     Navigator.of(ctx).pop();
@@ -252,9 +327,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                             subject: widget.subjectId,
                             unit: unitNumber,
                             mode: QuizMode.exam,
+                            isOffline: isDownloaded,
+                            offlineUnitId: isDownloaded ? unitId : null,
                           ),
                         ),
-                      );
+                      ).then((_) {
+                        _loadBestScores();
+                      });
                     });
                   },
                   borderRadius: BorderRadius.circular(16),
@@ -885,6 +964,33 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      interstitialAdLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _isInterstitialAdLoaded = true;
+          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+            onAdFailedToShowFullScreenContent: (ad, err) {
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+          );
+        },
+        onAdFailedToLoad: (err) {
+          debugPrint('Failed to load an interstitial ad: ${err.message}');
+          _isInterstitialAdLoaded = false;
+        },
+      ),
+    );
+  }
+
   void _loadOfflineDownloads() async {
     final downloaded = await OfflineManager.getDownloadedUnitIds();
     if (mounted) {
@@ -894,10 +1000,33 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     }
   }
 
+  void _loadBestScores() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allUnits = _getUnits();
+      final Map<int, int> loadedScores = {};
+      for (int i = 0; i < allUnits.length; i++) {
+        final int unitNum = i + 1;
+        final String scoreKey = 'best_score_${widget.grade}_${widget.subjectId}_u$unitNum';
+        final int? score = prefs.getInt(scoreKey);
+        if (score != null) {
+          loadedScores[unitNum] = score;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _unitBestScores.clear();
+          _unitBestScores.addAll(loadedScores);
+        });
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _bannerAd?.dispose();
     _rewardedAd?.dispose();
+    _interstitialAd?.dispose();
     super.dispose();
   }
 
@@ -1397,23 +1526,22 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
       }
     }
 
-    if (_isRewardedAdLoaded && _rewardedAd != null) {
-      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+    if (_isInterstitialAdLoaded && _interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
-          _loadRewardedAd();
+          _loadInterstitialAd();
+          performDownload();
         },
         onAdFailedToShowFullScreenContent: (ad, err) {
           ad.dispose();
-          _loadRewardedAd();
+          _loadInterstitialAd();
           performDownload();
         },
       );
-      _rewardedAd!.show(onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
-        performDownload();
-      });
-      _rewardedAd = null;
-      _isRewardedAdLoaded = false;
+      _interstitialAd!.show();
+      _interstitialAd = null;
+      _isInterstitialAdLoaded = false;
     } else {
       performDownload();
     }
@@ -1868,184 +1996,229 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                       },
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 14.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: cardBgColor,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: isLight ? 0.02 : 0.12),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: isSelected
-                                  ? widget.color
-                                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
-                              width: isSelected ? 1.5 : 1.0,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
-                                    setState(() {
-                                      _selectedUnitIndex = index;
-                                    });
-                                    final selectedUnit = filteredUnits[index];
-                                    final originalIndex = allUnits.indexOf(selectedUnit);
-                                    _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
-                                  });
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                                  child: Row(
-                                    children: [
-                                      // 1. UNIT NUMBER ON THE LEFT
-                                      Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: BoxDecoration(
-                                          color: (activeUnitNum > 1 && !_isRegistered)
-                                              ? Colors.grey.withValues(alpha: 0.08)
-                                              : widget.color.withValues(alpha: 0.08),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: (activeUnitNum > 1 && !_isRegistered)
-                                              ? Icon(
-                                                  Icons.lock_outline_rounded,
-                                                  color: const Color(0xFF94A3B8),
-                                                  size: 18,
-                                                )
-                                              : Text(
-                                                  "$activeUnitNum",
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w900,
-                                                    color: widget.color,
-                                                  ),
-                                                ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      // 2. UNIT TITLE IN THE MIDDLE (Wrapped in Expanded)
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: cardBgColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: isLight ? 0.02 : 0.12),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? widget.color
+                                        : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155)),
+                                    width: isSelected ? 1.5 : 1.0,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () {
+                                        _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                          setState(() {
+                                            _selectedUnitIndex = index;
+                                          });
+                                          _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                        });
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                        child: Row(
                                           children: [
-                                            Text(
-                                              title,
-                                              style: TextStyle(
-                                                fontSize: 15.0,
-                                                fontWeight: FontWeight.w900,
+                                            // 1. UNIT NUMBER ON THE LEFT
+                                            Container(
+                                              width: 44,
+                                              height: 44,
+                                              decoration: BoxDecoration(
                                                 color: (activeUnitNum > 1 && !_isRegistered)
-                                                    ? headerTextColor.withValues(alpha: 0.7)
-                                                    : headerTextColor,
-                                                height: 1.25,
+                                                    ? Colors.grey.withValues(alpha: 0.08)
+                                                    : widget.color.withValues(alpha: 0.08),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: (activeUnitNum > 1 && !_isRegistered)
+                                                    ? Icon(
+                                                        Icons.lock_outline_rounded,
+                                                        color: const Color(0xFF94A3B8),
+                                                        size: 18,
+                                                      )
+                                                    : Text(
+                                                        "$activeUnitNum",
+                                                        style: TextStyle(
+                                                          fontSize: 15,
+                                                          fontWeight: FontWeight.w900,
+                                                          color: widget.color,
+                                                        ),
+                                                      ),
                                               ),
                                             ),
-                                            const SizedBox(height: 3),
-                                            Text(
-                                              desc,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 12.0,
-                                                fontWeight: FontWeight.w500,
-                                                color: (activeUnitNum > 1 && !_isRegistered)
-                                                    ? descColor.withValues(alpha: 0.7)
-                                                    : descColor,
+                                            const SizedBox(width: 14),
+                                            // 2. UNIT TITLE IN THE MIDDLE (Wrapped in Expanded)
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    title,
+                                                    style: TextStyle(
+                                                      fontSize: 15.0,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: (activeUnitNum > 1 && !_isRegistered)
+                                                          ? headerTextColor.withValues(alpha: 0.7)
+                                                          : headerTextColor,
+                                                      height: 1.25,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 3),
+                                                  Text(
+                                                    desc,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      fontSize: 12.0,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: (activeUnitNum > 1 && !_isRegistered)
+                                                          ? descColor.withValues(alpha: 0.7)
+                                                          : descColor,
+                                                    ),
+                                                  ),
+                                                  if (_unitBestScores.containsKey(activeUnitNum)) ...[
+                                                    const SizedBox(height: 5),
+                                                    Row(
+                                                      children: [
+                                                        Container(
+                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                                            borderRadius: BorderRadius.circular(6),
+                                                            border: Border.all(
+                                                              color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                                                              width: 1.0,
+                                                            ),
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              const Icon(
+                                                                Icons.emoji_events_rounded,
+                                                                color: Colors.amber,
+                                                                size: 13,
+                                                              ),
+                                                              const SizedBox(width: 4),
+                                                              Text(
+                                                                "${widget.enTitle == 'Mathematics' ? 'Maths' : widget.enTitle}: ${_unitBestScores[activeUnitNum]}%",
+                                                                style: const TextStyle(
+                                                                  fontSize: 11.0,
+                                                                  fontWeight: FontWeight.w800,
+                                                                  color: Color(0xFF10B981),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            // 3. PLAY Action neatly on the right side
+                                            SizedBox(
+                                              width: 38,
+                                              height: 38,
+                                              child: IconButton(
+                                                padding: EdgeInsets.zero,
+                                                icon: Icon(
+                                                  (activeUnitNum > 1 && !_isRegistered)
+                                                      ? Icons.lock_outline_rounded
+                                                      : Icons.play_circle_fill_rounded,
+                                                  color: (activeUnitNum > 1 && !_isRegistered)
+                                                      ? const Color(0xFF94A3B8)
+                                                      : widget.color,
+                                                  size: 28,
+                                                ),
+                                                onPressed: () {
+                                                  _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                                    setState(() {
+                                                      _selectedUnitIndex = index;
+                                                    });
+                                                    _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
+                                                  });
+                                                },
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      // 3. ACTION ICONS (Download / Play) neatly on the right side
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          // Download Action
-                                          SizedBox(
-                                            width: 38,
-                                            height: 38,
-                                            child: Tooltip(
-                                              message: languageCode == 'en' ? 'Download' : 'አውርድ',
-                                              child: progress != null
-                                                  ? Center(
-                                                      child: SizedBox(
-                                                        width: 20,
-                                                        height: 20,
-                                                        child: CircularProgressIndicator(
-                                                          value: progress,
-                                                          strokeWidth: 2.5,
-                                                          color: widget.color,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : IconButton(
-                                                      padding: EdgeInsets.zero,
-                                                      icon: Icon(
-                                                        isDownloaded
-                                                            ? Icons.cloud_done_rounded
-                                                            : Icons.file_download_rounded,
-                                                        color: isDownloaded
-                                                            ? const Color(0xFF10B981)
-                                                            : (activeUnitNum > 1 && !_isRegistered
-                                                                ? const Color(0xFF94A3B8)
-                                                                : widget.color),
-                                                        size: 22,
-                                                      ),
-                                                      onPressed: () {
-                                                        _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
-                                                          _downloadUnitWithAd(unitId);
-                                                        });
-                                                      },
-                                                    ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          // Play Action
-                                          SizedBox(
-                                            width: 38,
-                                            height: 38,
-                                            child: IconButton(
-                                              padding: EdgeInsets.zero,
-                                              icon: Icon(
-                                                (activeUnitNum > 1 && !_isRegistered)
-                                                    ? Icons.lock_outline_rounded
-                                                    : Icons.play_circle_fill_rounded,
-                                                color: (activeUnitNum > 1 && !_isRegistered)
-                                                    ? const Color(0xFF94A3B8)
-                                                    : widget.color,
-                                                size: 28,
-                                              ),
-                                              onPressed: () {
-                                                _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
-                                                  setState(() {
-                                                    _selectedUnitIndex = index;
-                                                  });
-                                                  final selectedUnit = filteredUnits[index];
-                                                  final originalIndex = allUnits.indexOf(selectedUnit);
-                                                  _showQuizModeSelectionSheet(context, originalIndex >= 0 ? originalIndex + 1 : 1);
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 10),
+                            // Distinct Download icon button outside the unit selection box
+                            Container(
+                              width: 46,
+                              height: 46,
+                              decoration: BoxDecoration(
+                                color: isDownloaded 
+                                    ? const Color(0xFF10B981).withValues(alpha: 0.1) 
+                                    : widget.color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isDownloaded 
+                                      ? const Color(0xFF10B981).withValues(alpha: 0.25) 
+                                      : widget.color.withValues(alpha: 0.25),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Tooltip(
+                                message: languageCode == 'en' ? 'Download' : 'አውርድ',
+                                child: progress != null
+                                    ? Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            value: progress,
+                                            strokeWidth: 2.5,
+                                            color: widget.color,
+                                          ),
+                                        ),
+                                      )
+                                    : IconButton(
+                                        padding: EdgeInsets.zero,
+                                        icon: Icon(
+                                          isDownloaded
+                                              ? Icons.cloud_done_rounded
+                                              : Icons.file_download_rounded,
+                                          color: isDownloaded
+                                              ? const Color(0xFF10B981)
+                                              : (activeUnitNum > 1 && !_isRegistered
+                                                  ? const Color(0xFF94A3B8)
+                                                  : widget.color),
+                                          size: 22,
+                                        ),
+                                        onPressed: () {
+                                          _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
+                                            _downloadUnitWithAd(unitId);
+                                          });
+                                        },
+                                      ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );

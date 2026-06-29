@@ -52,6 +52,9 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
 
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+
   // Audio Feedbacks
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -70,6 +73,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadRewardedAd();
+    _loadBannerAd();
     _loadQuestions();
   }
 
@@ -77,6 +81,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _rewardedAd?.dispose();
+    _bannerAd?.dispose();
     _quizTimer?.cancel();
     _audioPlayer.dispose();
     super.dispose();
@@ -102,6 +107,40 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     if (sub.contains('bio')) return const Color(0xFFEC4899); // Pink
     if (sub.contains('math')) return const Color(0xFF3B82F6); // Blue
     return const Color(0xFF6366F1); // Indigo default
+  }
+
+  void _loadBannerAd() {
+    _bannerAd?.dispose();
+    _bannerAd = null;
+    _isBannerAdLoaded = false;
+
+    _bannerAd = BannerAd(
+      adUnitId: AdHelper.bannerAdUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = true;
+            });
+          } else {
+            ad.dispose();
+          }
+        },
+        onAdFailedToLoad: (ad, err) {
+          debugPrint('QuizScreen BannerAd failed to load: $err. Code: ${err.code}');
+          ad.dispose();
+          if (mounted) {
+            setState(() {
+              _isBannerAdLoaded = false;
+              _bannerAd = null;
+            });
+          }
+        },
+      ),
+    );
+    _bannerAd!.load();
   }
 
   void _loadRewardedAd() {
@@ -408,6 +447,15 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
 
     final percent = (score / _questions.length * 100).round();
     final bool isLight = Theme.of(context).brightness == Brightness.light;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String scoreKey = 'best_score_${widget.grade}_${widget.subject ?? ""}_u${widget.unit ?? 1}';
+      final int existingBest = prefs.getInt(scoreKey) ?? 0;
+      if (percent > existingBest) {
+        await prefs.setInt(scoreKey, percent);
+      }
+    } catch (_) {}
 
     // Play victory or completed sound
     _playFeedbackSound(percent >= 50);
@@ -758,6 +806,19 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
               ),
           ],
         ),
+        bottomNavigationBar: (_isBannerAdLoaded && _bannerAd != null)
+            ? Container(
+                color: backgroundColor,
+                child: SafeArea(
+                  top: false,
+                  child: SizedBox(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
+                ),
+              )
+            : null,
       ),
     );
   }
