@@ -26,6 +26,16 @@ class OfflineManager {
     }
   }
 
+  static Future<bool> hasOfflineQuestions(String unitId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final List<String>? jsonList = prefs.getStringList('offline_questions_$unitId');
+      return jsonList != null && jsonList.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<void> init() async {
     if (_isLoaded) return;
     try {
