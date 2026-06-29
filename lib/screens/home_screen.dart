@@ -1010,13 +1010,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          const SizedBox(height: 24.0),
+          const SizedBox(height: 12.0),
 
           // Section Title: Grade selection
           _animateItem(
             index: 2,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
+              padding: const EdgeInsets.only(bottom: 6.0),
               child: Text(
                 widget.languageCode == 'en' ? 'Select Your Grade' : 'ክፍልዎን ይምረጡ',
                 style: TextStyle(
@@ -2867,7 +2867,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2881,7 +2881,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 letterSpacing: -0.4,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             
             // Grade Selector Top Bar (Horizontal Filter)
             SingleChildScrollView(
@@ -2935,21 +2935,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 }).toList(),
               ),
             ),
-            const SizedBox(height: 24.0),
-
-            // Secondary subtitle
-            Text(
-              widget.languageCode == 'en'
-                  ? 'Select your subject to access quizzes and mock exams.'
-                  : 'የፈተና ጥያቄዎችን ለመለማመድ ከታች የትምህርት ዓይነት ይምረጡ።',
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-              ),
-            ),
-            const SizedBox(height: 16.0),
+            const SizedBox(height: 14.0),
 
             // Subject Cards Grid
             GridView.builder(
@@ -3237,12 +3223,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Expanded(
                               flex: 3,
                               child: InkWell(
-                                onTap: () => _navigateToCourseQuiz(course),
+                                onTap: () => _navigateToCourseUnitNotes(course, isLight),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      widget.languageCode == 'en' ? 'Quiz' : 'ፈተና',
+                                      widget.languageCode == 'en' ? 'Read' : 'ማንበብ',
                                       style: TextStyle(
                                         fontSize: 12.5,
                                         fontWeight: FontWeight.w900,
@@ -3254,14 +3240,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Icon(
-                                          Icons.help_rounded,
+                                          Icons.menu_book_rounded,
                                           color: isLight ? const Color(0xFF0D2353) : const Color(0xFF38BDF8),
                                           size: 22,
                                         ),
                                         const SizedBox(width: 5),
                                         Expanded(
                                           child: Text(
-                                            course['quizzesCount'],
+                                            widget.languageCode == 'en' ? 'Start Reading' : 'ማንበብ ይጀምሩ',
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w900,

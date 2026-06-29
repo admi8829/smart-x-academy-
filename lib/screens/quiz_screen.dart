@@ -572,7 +572,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
             alignment: Alignment.center,
             child: Math.tex(
               mathExpr.trim(),
-              style: baseStyle.copyWith(
+              textStyle: baseStyle.copyWith(
                 fontSize: baseStyle.fontSize != null ? baseStyle.fontSize! + 1.5 : 17,
               ),
               onErrorFallback: (err) => Text(
@@ -945,6 +945,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final bool isLight = Theme.of(context).brightness == Brightness.light;
     final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+    final titleTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
 
     final totalQ = _questions.length;
     final progress = (_currentIndex + 1) / totalQ;
@@ -1029,16 +1030,16 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 22.0),
             decoration: BoxDecoration(
               color: cardColor,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(24.0),
               border: Border.all(
-                color: _getSubjectThemeColor().withOpacity(0.15),
+                color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isLight ? 0.03 : 0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
+                  blurRadius: 16.0,
+                  offset: const Offset(0, 6),
                 )
               ],
             ),
@@ -1091,14 +1092,14 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                 txtCol = isLight ? const Color(0xFF991B1B) : const Color(0xFFFECACA);
                 trailingIcon = const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 16);
               } else {
-                borderCol = isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155);
+                borderCol = isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155);
                 bgCol = Colors.transparent;
                 txtCol = descColor.withOpacity(0.6);
               }
             } else {
               borderCol = isSelected
                   ? _getSubjectThemeColor()
-                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF475569));
+                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155));
               bgCol = isSelected
                   ? _getSubjectThemeColor().withOpacity(isLight ? 0.08 : 0.15)
                   : cardColor;
@@ -1113,11 +1114,18 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 11.0),
                 decoration: BoxDecoration(
                   color: bgCol,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24.0),
                   border: Border.all(
                     color: borderCol,
-                    width: isSelected || (showFeedback && _isOptionCorrect(q, optText, optIdx)) ? 2.0 : 1.2,
+                    width: isSelected || (showFeedback && _isOptionCorrect(q, optText, optIdx)) ? 2.0 : 1.5,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
+                      blurRadius: 16.0,
+                      offset: const Offset(0, 6),
+                    )
+                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

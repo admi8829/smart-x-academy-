@@ -236,22 +236,10 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
         child: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Beautiful descriptive subtitle
-                Text(
-                  _local('subtitle', currentLang),
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                    color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                  ),
-                ),
-                
-                const SizedBox(height: 20.0),
-
                 // Redesigned 2-column GridView subject selector matching request of 100% high-fidelity bento design
                 GridView.builder(
                   shrinkWrap: true,
