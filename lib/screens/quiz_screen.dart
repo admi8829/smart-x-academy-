@@ -62,7 +62,10 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   Timer? _quizTimer;
   int _timeLeftSeconds = 0;
   int _selectedPracticeTimeLimit = 0; // in minutes (0 means no limit)
-  bool _isPracticeSetupCompleted = false;
+  bool _isPracticeSetupCompleted = true; // Bypassed for Practice Mode
+
+  final ScrollController _scrollController = ScrollController();
+  List<GlobalKey> _questionKeys = [];
 
   // Privacy Protection Mode
   bool _isPrivacyEnabled = false;
@@ -84,6 +87,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     _bannerAd?.dispose();
     _quizTimer?.cancel();
     _audioPlayer.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -218,6 +222,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
 
       setState(() {
         _questions = fetched;
+        _questionKeys = List.generate(fetched.length, (_) => GlobalKey());
         _isLoading = false;
       });
 
@@ -311,11 +316,26 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     }
   }
 
+  void _scrollToActiveQuestion() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_currentIndex < _questionKeys.length && _questionKeys[_currentIndex].currentContext != null) {
+        Scrollable.ensureVisible(
+          _questionKeys[_currentIndex].currentContext!,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutCubic,
+          alignment: 0.1, // Align near the top of the viewport
+        );
+      }
+    });
+  }
+
   void _advanceToNext() {
     if (_currentIndex < _questions.length - 1) {
       setState(() {
         _currentIndex++;
       });
+      _scrollToActiveQuestion();
     } else {
       // Reached the end, navigate to submit screen/trigger submit results
       _showResults();
@@ -437,11 +457,9 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       }
     }
 
-    if (widget.mode == QuizMode.exam) {
-      setState(() => _isSubmittingScore = true);
-      await _submitScoreToLeaderboard(score);
-      setState(() => _isSubmittingScore = false);
-    }
+    setState(() => _isSubmittingScore = true);
+    await _submitScoreToLeaderboard(score);
+    setState(() => _isSubmittingScore = false);
 
     if (!mounted) return;
 
@@ -542,17 +560,16 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(height: 16),
-            if (widget.mode == QuizMode.exam)
-              Text(
-                "Your score has been successfully posted to the leaderboard. You can now review all questions and explanations.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  height: 1.4,
-                  fontWeight: FontWeight.w500,
-                  color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                ),
+            Text(
+              "Your score has been successfully posted to the leaderboard. You can now review all questions and explanations.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+                color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
               ),
+            ),
           ],
         ),
         actions: [
@@ -567,6 +584,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                     _showAnswersAndExplanations = true;
                     _currentIndex = 0; // Return to first question for review
                   });
+                  _scrollToActiveQuestion();
                 } else {
                   Navigator.of(context).pop();
                 }
@@ -589,12 +607,12 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildMathText(String text, TextStyle baseStyle) {
+  Widget _buildMathText(String text, TextStyle baseStyle, {TextAlign align = TextAlign.center}) {
     if (!text.contains(r'$') && !text.contains(r'\(') && !text.contains(r'\[')) {
       return Text(
         text,
         style: baseStyle,
-        textAlign: TextAlign.center,
+        textAlign: align,
       );
     }
 
@@ -607,7 +625,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
         spans.add(Text(
           text.substring(lastIndex, match.start),
           style: baseStyle,
-          textAlign: TextAlign.center,
+          textAlign: align,
         ));
       }
 
@@ -617,7 +635,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.center,
+            alignment: align == TextAlign.center ? Alignment.center : Alignment.centerLeft,
             child: Math.tex(
               mathExpr.trim(),
               textStyle: baseStyle.copyWith(
@@ -638,13 +656,21 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       spans.add(Text(
         text.substring(lastIndex),
         style: baseStyle,
-        textAlign: TextAlign.center,
+        textAlign: align,
       ));
     }
 
+    final wrapAlign = align == TextAlign.center
+        ? WrapAlignment.center
+        : (align == TextAlign.right ? WrapAlignment.end : WrapAlignment.start);
+
+    final crossAlign = align == TextAlign.center
+        ? WrapCrossAlignment.center
+        : (align == TextAlign.right ? WrapCrossAlignment.end : WrapCrossAlignment.start);
+
     return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
+      alignment: wrapAlign,
+      crossAxisAlignment: crossAlign,
       spacing: 4,
       runSpacing: 4,
       children: spans,
@@ -865,137 +891,383 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       );
     }
 
-    // Show Practice Setup Screen if in practice mode and not completed setup
-    if (widget.mode == QuizMode.practice && !_isPracticeSetupCompleted) {
-      return _buildPracticeSetupView();
-    }
-
     return _buildQuizActiveView();
   }
 
-  Widget _buildPracticeSetupView() {
-    final bool isLight = Theme.of(context).brightness == Brightness.light;
-    final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
-    final titleColor = isLight ? const Color(0xFF0F172A) : Colors.white;
-    final descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
+  Widget _buildCircularCheckbox({
+    required bool isSelected,
+    required bool showFeedback,
+    required bool isCorrect,
+    required Color subjectColor,
+    required bool isLight,
+  }) {
+    Color borderCol;
+    Color bgCol;
+    Widget? icon;
 
-    final List<int> limits = [0, 3, 5, 10, 15, 20];
+    if (showFeedback) {
+      if (isCorrect) {
+        borderCol = const Color(0xFF10B981);
+        bgCol = const Color(0xFF10B981);
+        icon = const Icon(Icons.check, color: Colors.white, size: 12);
+      } else if (isSelected) {
+        borderCol = const Color(0xFFEF4444);
+        bgCol = const Color(0xFFEF4444);
+        icon = const Icon(Icons.close, color: Colors.white, size: 12);
+      } else {
+        borderCol = isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+        bgCol = Colors.transparent;
+      }
+    } else {
+      borderCol = isSelected ? subjectColor : (isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569));
+      bgCol = isSelected ? subjectColor : Colors.transparent;
+      if (isSelected) {
+        icon = const Icon(Icons.check, color: Colors.white, size: 12);
+      }
+    }
 
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isLight ? 0.04 : 0.15),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _getSubjectThemeColor().withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.settings_suggest_rounded, 
-                  color: _getSubjectThemeColor(), 
-                  size: 36
-                ),
+    return Container(
+      width: 22.0,
+      height: 22.0,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: bgCol,
+        border: Border.all(
+          color: borderCol,
+          width: 2.0,
+        ),
+        boxShadow: isSelected && !showFeedback
+            ? [
+                BoxShadow(
+                  color: subjectColor.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
+      ),
+      child: icon != null ? Center(child: icon) : null,
+    );
+  }
+
+  Widget _buildQuestionBlock(int index, bool isLight, Color cardColor, Color descColor, Color titleTextColor) {
+    final q = _questions[index];
+    final optionsData = q.options;
+    final qText = q.questionText;
+
+    final bool isActive = index == _currentIndex;
+    final showFeedback = _shouldShowExplanation(index);
+    final isSubmitted = widget.mode == QuizMode.practice && _submittedQuestions.contains(index);
+    final hasSelected = _selectedAnswers.containsKey(index);
+
+    return Container(
+      key: _questionKeys[index],
+      margin: const EdgeInsets.only(bottom: 40.0), // beautiful gap between question blocks
+      child: IgnorePointer(
+        ignoring: !isActive,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 350),
+          opacity: isActive ? 1.0 : 0.2,
+          child: ClipRect(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(
+                sigmaX: isActive ? 0.0 : 5.0,
+                sigmaY: isActive ? 0.0 : 5.0,
               ),
-              const SizedBox(height: 20),
-              Text(
-                "Practice Mode Setup",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: titleColor),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Select a custom time limit for your practice session. Choose 'No limit' for relaxed learning.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, height: 1.4, color: descColor),
-              ),
-              const SizedBox(height: 24),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: limits.map((limit) {
-                  final isSelected = _selectedPracticeTimeLimit == limit;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedPracticeTimeLimit = limit;
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected 
-                            ? _getSubjectThemeColor().withOpacity(0.1) 
-                            : (isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155)),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected ? _getSubjectThemeColor() : Colors.transparent,
-                          width: 1.8,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Question Header Info
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Question ${index + 1} of ${_questions.length}",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _getSubjectThemeColor(),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            limit == 0 ? Icons.timer_off_rounded : Icons.timer_outlined,
-                            size: 16,
-                            color: isSelected ? _getSubjectThemeColor() : descColor,
+                      if (widget.mode == QuizMode.exam && isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            limit == 0 ? "No limit" : "$limit Mins",
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? _getSubjectThemeColor() : titleColor,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.timer_rounded, size: 14, color: Color(0xFFEF4444)),
+                              const SizedBox(width: 6),
+                              Text(
+                                _formatTime(_timeLeftSeconds),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: (index + 1) / _questions.length,
+                      backgroundColor: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                      valueColor: AlwaysStoppedAnimation<Color>(_getSubjectThemeColor()),
+                      minHeight: 6,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Unified white card box containing both question text and options
+                  Container(
+                    padding: const EdgeInsets.all(20.0),
+                    decoration: BoxDecoration(
+                      color: isLight ? Colors.white : const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(24.0),
+                      border: Border.all(
+                        color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
+                          blurRadius: 16.0,
+                          offset: const Offset(0, 6),
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Question text (centered display math support)
+                        _buildMathText(
+                          qText,
+                          TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w900,
+                            height: 1.45,
+                            color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Options
+                        if (optionsData.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              "No options available.",
+                              style: TextStyle(color: descColor, fontStyle: FontStyle.italic),
                             ),
+                          )
+                        else
+                          ...optionsData.asMap().entries.map((entry) {
+                            final optIdx = entry.key;
+                            final optText = entry.value;
+                            final isOptSelected = _selectedAnswers[index] == optIdx;
+
+                            Color borderCol;
+                            Color bgCol;
+                            Color txtCol;
+
+                            if (showFeedback) {
+                              final isCorrect = _isOptionCorrect(q, optText, optIdx);
+                              if (isCorrect) {
+                                borderCol = const Color(0xFF10B981);
+                                bgCol = isLight ? const Color(0xFFD1FAE5) : const Color(0xFF064E3B).withOpacity(0.5);
+                                txtCol = isLight ? const Color(0xFF065F46) : const Color(0xFFA7F3D0);
+                              } else if (isOptSelected) {
+                                borderCol = const Color(0xFFEF4444);
+                                bgCol = isLight ? const Color(0xFFFEE2E2) : const Color(0xFF7F1D1D).withOpacity(0.5);
+                                txtCol = isLight ? const Color(0xFF991B1B) : const Color(0xFFFECACA);
+                              } else {
+                                borderCol = isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155);
+                                bgCol = Colors.transparent;
+                                txtCol = descColor.withOpacity(0.6);
+                              }
+                            } else {
+                              borderCol = isOptSelected
+                                  ? _getSubjectThemeColor()
+                                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155));
+                              bgCol = isOptSelected
+                                  ? _getSubjectThemeColor().withOpacity(isLight ? 0.08 : 0.15)
+                                  : (isLight ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B));
+                              txtCol = isOptSelected ? _getSubjectThemeColor() : (isLight ? const Color(0xFF0F172A) : Colors.white);
+                            }
+
+                            return GestureDetector(
+                              onTap: () {
+                                if (isActive && !showFeedback) {
+                                  _onOptionSelected(optIdx);
+                                }
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                margin: const EdgeInsets.only(bottom: 12.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                                decoration: BoxDecoration(
+                                  color: bgCol,
+                                  borderRadius: BorderRadius.circular(16.0),
+                                  border: Border.all(
+                                    color: borderCol,
+                                    width: isOptSelected || (showFeedback && _isOptionCorrect(q, optText, optIdx)) ? 2.0 : 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // Custom beautifully designed circular checkbox
+                                    _buildCircularCheckbox(
+                                      isSelected: isOptSelected,
+                                      showFeedback: showFeedback,
+                                      isCorrect: _isOptionCorrect(q, optText, optIdx),
+                                      subjectColor: _getSubjectThemeColor(),
+                                      isLight: isLight,
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: _buildMathText(
+                                        optText,
+                                        TextStyle(
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: txtCol,
+                                        ),
+                                        align: TextAlign.left, // Left align inside rows for premium bento style
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
+
+                  // Practice Mode check answer button (rendered below the unified card)
+                  if (widget.mode == QuizMode.practice && !isSubmitted && isActive) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: hasSelected ? _submitPracticeAnswer : null,
+                        icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+                        label: const Text(
+                          "Check Answer",
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getSubjectThemeColor(),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                          disabledForegroundColor: Colors.grey,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Explanations Box
+                  if (showFeedback && q.explanation != null && q.explanation!.trim().isNotEmpty && isActive) ...[
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isLight ? const Color(0xFFF0F7FF) : const Color(0xFF1E293B).withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border(
+                          left: BorderSide(color: _getSubjectThemeColor(), width: 4.0),
+                          top: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                          right: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                          bottom: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.lightbulb_outline_rounded, size: 18, color: _getSubjectThemeColor()),
+                              const SizedBox(width: 8),
+                              Text(
+                                "Explanation",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w900,
+                                  color: _getSubjectThemeColor(),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          _buildMathText(
+                            q.explanation!.trim(),
+                            TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              height: 1.45,
+                              color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                            ),
+                            align: TextAlign.left,
                           ),
                         ],
                       ),
                     ),
-                  );
-                }).toList(),
+                  ],
+
+                  // Next Question Button / Finish Quiz button
+                  if (isActive && ((widget.mode == QuizMode.practice && isSubmitted) || (widget.mode == QuizMode.exam && hasSelected) || _showAnswersAndExplanations)) ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          if (index == _questions.length - 1) {
+                            _showResults();
+                          } else {
+                            _advanceToNext();
+                          }
+                        },
+                        icon: Icon(
+                          index == _questions.length - 1
+                              ? Icons.assignment_turned_in_rounded
+                              : Icons.arrow_forward_rounded,
+                          size: 16,
+                        ),
+                        label: Text(
+                          index == _questions.length - 1
+                              ? (_showAnswersAndExplanations ? "Finish Review" : "Finish Quiz")
+                              : "Next Question",
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: _getSubjectThemeColor(), width: 1.5),
+                          foregroundColor: _getSubjectThemeColor(),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  if (_selectedPracticeTimeLimit > 0) {
-                    _timeLeftSeconds = _selectedPracticeTimeLimit * 60;
-                    _startTimer();
-                  }
-                  setState(() {
-                    _isPracticeSetupCompleted = true;
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getSubjectThemeColor(),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "Start Practice Session",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1008,333 +1280,31 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
     final titleTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
 
-    final totalQ = _questions.length;
-    final progress = (_currentIndex + 1) / totalQ;
-
-    // Show finished state if currentIndex has reached questions list length
-    if (_currentIndex == _questions.length) {
-      return SingleChildScrollView(
-        child: _buildFinishedSection(),
-      );
-    }
-
-    final q = _questions[_currentIndex];
-    final optionsData = q.options;
-    final qText = q.questionText;
-
-    final showFeedback = _shouldShowExplanation(_currentIndex);
-    final isSubmitted = widget.mode == QuizMode.practice && _submittedQuestions.contains(_currentIndex);
-    final hasSelected = _selectedAnswers.containsKey(_currentIndex);
-
-    final showTimer = (widget.mode == QuizMode.exam) || (widget.mode == QuizMode.practice && _selectedPracticeTimeLimit > 0);
-
     return Center(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 620),
         child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          controller: _scrollController,
+          physics: const NeverScrollableScrollPhysics(), // Scroll programmatic only!
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-          // Upper progress and info block
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Question ${_currentIndex + 1} of $totalQ",
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: _getSubjectThemeColor(),
-                ),
-              ),
-              if (showTimer)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.timer_rounded, size: 14, color: Color(0xFFEF4444)),
-                      const SizedBox(width: 6),
-                      Text(
-                        _formatTime(_timeLeftSeconds),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: Color(0xFFEF4444),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              ...List.generate(_questions.length, (index) {
+                return _buildQuestionBlock(index, isLight, cardColor, descColor, titleTextColor);
+              }),
+              
+              // End block when finished
+              if (_currentIndex == _questions.length) ...[
+                _buildFinishedSection(),
+              ] else ...[
+                // Generous vertical spacing at the bottom so we can center scroll the last question perfectly!
+                const SizedBox(height: 500),
+              ],
             ],
           ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-              valueColor: AlwaysStoppedAnimation<Color>(_getSubjectThemeColor()),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Question container: reduced height, center-aligned, cohesive themed border
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 22.0),
-            decoration: BoxDecoration(
-              color: cardColor,
-              borderRadius: BorderRadius.circular(24.0),
-              border: Border.all(
-                color: isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
-                  blurRadius: 16.0,
-                  offset: const Offset(0, 6),
-                )
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildMathText(
-                  qText,
-                  TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w900,
-                    height: 1.45,
-                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Center-aligned, reduced-height options list
-          if (optionsData.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "No options available.",
-                style: TextStyle(color: descColor, fontStyle: FontStyle.italic),
-              ),
-            ),
-          
-          ...optionsData.asMap().entries.map((entry) {
-            final optIdx = entry.key;
-            final optText = entry.value;
-            final isSelected = _selectedAnswers[_currentIndex] == optIdx;
-
-            Color borderCol;
-            Color bgCol;
-            Color txtCol;
-            Widget? trailingIcon;
-
-            if (showFeedback) {
-              final isCorrect = _isOptionCorrect(q, optText, optIdx);
-              if (isCorrect) {
-                borderCol = const Color(0xFF10B981);
-                bgCol = isLight ? const Color(0xFFD1FAE5) : const Color(0xFF064E3B).withOpacity(0.5);
-                txtCol = isLight ? const Color(0xFF065F46) : const Color(0xFFA7F3D0);
-                trailingIcon = const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 16);
-              } else if (isSelected) {
-                borderCol = const Color(0xFFEF4444);
-                bgCol = isLight ? const Color(0xFFFEE2E2) : const Color(0xFF7F1D1D).withOpacity(0.5);
-                txtCol = isLight ? const Color(0xFF991B1B) : const Color(0xFFFECACA);
-                trailingIcon = const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 16);
-              } else {
-                borderCol = isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155);
-                bgCol = Colors.transparent;
-                txtCol = descColor.withOpacity(0.6);
-              }
-            } else {
-              borderCol = isSelected
-                  ? _getSubjectThemeColor()
-                  : (isLight ? const Color(0xFFEDF2F7) : const Color(0xFF334155));
-              bgCol = isSelected
-                  ? _getSubjectThemeColor().withOpacity(isLight ? 0.08 : 0.15)
-                  : cardColor;
-              txtCol = isSelected ? _getSubjectThemeColor() : titleTextColor;
-            }
-
-            return GestureDetector(
-              onTap: () => _onOptionSelected(optIdx),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                margin: const EdgeInsets.only(bottom: 10.0),
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 11.0),
-                decoration: BoxDecoration(
-                  color: bgCol,
-                  borderRadius: BorderRadius.circular(24.0),
-                  border: Border.all(
-                    color: borderCol,
-                    width: isSelected || (showFeedback && _isOptionCorrect(q, optText, optIdx)) ? 2.0 : 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isLight ? 0.04 : 0.16),
-                      blurRadius: 16.0,
-                      offset: const Offset(0, 6),
-                    )
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 11,
-                          backgroundColor: showFeedback && _isOptionCorrect(q, optText, optIdx)
-                              ? const Color(0xFF10B981)
-                              : (isSelected ? _getSubjectThemeColor() : descColor.withOpacity(0.2)),
-                          child: Text(
-                            String.fromCharCode(65 + optIdx),
-                            style: TextStyle(
-                              color: isSelected || (showFeedback && _isOptionCorrect(q, optText, optIdx)) ? Colors.white : titleTextColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        if (trailingIcon != null) ...[
-                          const SizedBox(width: 6),
-                          trailingIcon,
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    _buildMathText(
-                      optText,
-                      TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: txtCol,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-
-          // Check answer button (only practice mode and not submitted)
-          if (widget.mode == QuizMode.practice && !isSubmitted) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: hasSelected ? _submitPracticeAnswer : null,
-                icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
-                label: const Text(
-                  "Check Answer",
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getSubjectThemeColor(),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155)),
-                  disabledForegroundColor: Colors.grey,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
-          ],
-
-          // Explanations Box
-          if (showFeedback && q.explanation != null && q.explanation!.trim().isNotEmpty) ...[
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isLight ? const Color(0xFFF0F7FF) : const Color(0xFF1E293B).withOpacity(0.8),
-                borderRadius: BorderRadius.circular(16),
-                border: Border(
-                  left: BorderSide(color: _getSubjectThemeColor(), width: 4.0),
-                  top: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
-                  right: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
-                  bottom: BorderSide(color: isLight ? const Color(0xFFDBEAFE) : const Color(0xFF334155), width: 1.0),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.lightbulb_outline_rounded, size: 18, color: _getSubjectThemeColor()),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Explanation",
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: _getSubjectThemeColor(),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    q.explanation!.trim(),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1.45,
-                      color: isLight ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          // Next Question Navigation Logic
-          if ((widget.mode == QuizMode.practice && isSubmitted) || (widget.mode == QuizMode.exam && hasSelected) || _showAnswersAndExplanations) ...[
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _advanceToNext,
-                icon: Icon(
-                  _currentIndex == totalQ - 1 
-                      ? Icons.assignment_turned_in_rounded 
-                      : Icons.arrow_forward_rounded, 
-                  size: 16
-                ),
-                label: Text(
-                  _currentIndex == totalQ - 1 
-                      ? (_showAnswersAndExplanations ? "Finish Review" : "Finish Quiz")
-                      : "Next Question",
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: _getSubjectThemeColor(), width: 1.5),
-                  foregroundColor: _getSubjectThemeColor(),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
-    ),
-    ),
     );
   }
 
