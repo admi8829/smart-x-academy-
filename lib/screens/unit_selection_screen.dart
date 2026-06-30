@@ -105,7 +105,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
     if (e is PostgrestException) {
       final code = e.code;
       final message = e.message.toLowerCase();
-      final details = (e.details ?? '').toLowerCase();
+      final details = (e.details?.toString() ?? '').toLowerCase();
 
       if (code == '23505' || message.contains('unique') || details.contains('already exists')) {
         if (message.contains('phone_number') || details.contains('phone_number')) {

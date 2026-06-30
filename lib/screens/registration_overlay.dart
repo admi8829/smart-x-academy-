@@ -157,7 +157,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     if (e is PostgrestException) {
       final code = e.code;
       final message = e.message.toLowerCase();
-      final details = (e.details ?? '').toLowerCase();
+      final details = (e.details?.toString() ?? '').toLowerCase();
 
       // Check for unique key constraint violations (SQL code 23505)
       if (code == '23505' || message.contains('unique') || details.contains('already exists')) {
