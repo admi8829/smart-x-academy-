@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
 import '../services/quiz_service.dart';
+import '../services/supabase_limiter.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
 import 'registration_overlay.dart';
@@ -90,11 +91,58 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
   void _checkRegistrationStatus() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() {
-        _isRegistered = (prefs.getBool('has_registered') ?? false) ||
-                        (prefs.getBool('is_authenticated') ?? false);
-      });
+       setState(() {
+         _isRegistered = (prefs.getBool('has_registered') ?? false) ||
+                         (prefs.getBool('is_authenticated') ?? false);
+       });
     }
+  }
+
+  String _getFriendlyDatabaseErrorMessage(dynamic e) {
+    String englishMsg = 'Registration failed. Please check your internet connection and try again.';
+    String amharicMsg = 'ምዝገባው አልተሳካም። እባክዎ የኢንተርኔት ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።';
+
+    if (e is PostgrestException) {
+      final code = e.code;
+      final message = e.message.toLowerCase();
+      final details = (e.details ?? '').toLowerCase();
+
+      if (code == '23505' || message.contains('unique') || details.contains('already exists')) {
+        if (message.contains('phone_number') || details.contains('phone_number')) {
+          englishMsg = 'This phone number is already registered. Please check or use another number.';
+          amharicMsg = 'ይህ ስልክ ቁጥር ቀድሞ ተመዝግቧል። እባክዎ ሌላ ስልክ ቁጥር ይጠቀሙ ወይም ያረጋግጡ።';
+        } else if (message.contains('email') || details.contains('email')) {
+          englishMsg = 'This email address is already in use by another student.';
+          amharicMsg = 'ይህ የኢሜል አድራሻ ቀድሞውኑ በሌላ ተማሪ ጥቅም ላይ ውሏል።';
+        } else {
+          englishMsg = 'A record with these details already exists in our database.';
+          amharicMsg = 'እነዚህን ዝርዝሮች የያዘ ተማሪ ቀድሞ በመረጃ ቋቱ ውስጥ ተመዝግቧል።';
+        }
+      } else if (code == '42P01') {
+        englishMsg = 'Service configuration error (profiles table is missing). Please contact support.';
+        amharicMsg = 'የአገልግሎት ማዋቀር ስህተት (የተማሪዎች ሰንጠረዥ አልተገኘም)። እባክዎ ድጋፍ ሰጪዎችን ያግኙ።';
+      } else if (code != null) {
+        englishMsg = 'Database processing error (Code: $code): ${e.message}';
+        amharicMsg = 'የመረጃ ቋት ማስኬጃ ስህተት (ኮድ: $code): ${e.message}';
+      } else {
+        englishMsg = 'Database insertion failed: ${e.message}';
+        amharicMsg = 'የመረጃ ቋት ምዝገባ አልተሳካም: ${e.message}';
+      }
+    } else {
+      final str = e.toString().toLowerCase();
+      if (str.contains('timeout') || str.contains('time out') || str.contains('connection timed out')) {
+        englishMsg = 'The database connection timed out. Please try again when your connection is stable.';
+        amharicMsg = 'የመረጃ ቋት ግንኙነት ጊዜ አልፏል። እባክዎ ግንኙነትዎ ሲረጋጋ እንደገና ይሞክሩ።';
+      } else if (str.contains('socketexception') || str.contains('failed host lookup') || str.contains('network') || str.contains('offline')) {
+        englishMsg = 'Supabase network server is unreachable. Please check if your mobile data or Wi-Fi is active.';
+        amharicMsg = 'የመረጃ ቋት አገልጋዩን ማግኘት አልተቻለም። እባክዎ የሞባይል ዳታ ወይም ዋይፋይ መብራቱን ያረጋግጡ።';
+      } else if (str.contains('request limit') || str.contains('exceeded') || str.contains('cap')) {
+        englishMsg = 'Network request limit reached (Max 5). Try starting a new session to clear.';
+        amharicMsg = 'የአውታረ መረብ ጥያቄ ገደብ ላይ ደርሰዋል (ከፍተኛ 5)። አዲስ ክፍለ-ጊዜ በመጀመር እንደገና ይሞክሩ።';
+      }
+    }
+
+    return widget.languageCode == 'en' ? englishMsg : amharicMsg;
   }
 
   Future<void> _checkRegistrationAndProceed(int index, int activeUnitNum, {required VoidCallback onSuccess}) async {
@@ -687,6 +735,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               final String fullPhone = '$_dialogSelectedCountryCode $phone';
 
                                               try {
+                                                // Check/Increment request limiter
+                                                SupabaseRequestLimiter.increment();
+
                                                 final prefs = await SharedPreferences.getInstance();
                                                 String? profileId = prefs.getString('user_id');
                                                 if (profileId == null) {
@@ -756,6 +807,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                   _isLoading = false;
                                                 });
 
+                                                String errMsg;
+                                                if (e is SupabaseRequestLimitException) {
+                                                  errMsg = widget.languageCode == 'en' ? e.message : e.amharicMessage;
+                                                } else {
+                                                  errMsg = _getFriendlyDatabaseErrorMessage(e);
+                                                }
+
                                                 if (context.mounted) {
                                                   ScaffoldMessenger.of(context).clearSnackBars();
                                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -766,9 +824,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                           const SizedBox(width: 8),
                                                           Expanded(
                                                             child: Text(
-                                                              widget.languageCode == 'en'
-                                                                  ? 'Registration failed. Please check your internet connection and try again.'
-                                                                  : 'ምዝገባው አልተሳካም። እባክዎ የኢንተርኔት ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።',
+                                                              errMsg,
                                                               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                                             ),
                                                           ),
@@ -1937,14 +1993,14 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                         );
                       },
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 14.0),
+                        padding: const EdgeInsets.only(bottom: 11.0),
                         child: Row(
                           children: [
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: cardBgColor,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withValues(alpha: isLight ? 0.02 : 0.12),
@@ -1960,7 +2016,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   ),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
@@ -1989,13 +2045,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         });
                                       },
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 11.0),
                                         child: Row(
                                           children: [
                                             // 1. UNIT NUMBER ON THE LEFT
                                             Container(
-                                              width: 44,
-                                              height: 44,
+                                              width: 36,
+                                              height: 36,
                                               decoration: BoxDecoration(
                                                 color: (activeUnitNum > 1 && !_isRegistered)
                                                     ? Colors.grey.withValues(alpha: 0.08)
@@ -2004,22 +2060,22 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               ),
                                               child: Center(
                                                 child: (activeUnitNum > 1 && !_isRegistered)
-                                                    ? Icon(
+                                                    ? const Icon(
                                                         Icons.lock_outline_rounded,
-                                                        color: const Color(0xFF94A3B8),
-                                                        size: 18,
+                                                        color: Color(0xFF94A3B8),
+                                                        size: 16,
                                                       )
                                                     : Text(
                                                         "$activeUnitNum",
                                                         style: TextStyle(
-                                                          fontSize: 15,
+                                                          fontSize: 13,
                                                           fontWeight: FontWeight.w900,
                                                           color: widget.color,
                                                         ),
                                                       ),
                                               ),
                                             ),
-                                            const SizedBox(width: 14),
+                                            const SizedBox(width: 10),
                                             // 2. UNIT TITLE IN THE MIDDLE (Wrapped in Expanded)
                                             Expanded(
                                               child: Column(
@@ -2029,7 +2085,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                   Text(
                                                     title,
                                                     style: TextStyle(
-                                                      fontSize: 15.0,
+                                                      fontSize: 14.0,
                                                       fontWeight: FontWeight.w900,
                                                       color: (activeUnitNum > 1 && !_isRegistered)
                                                           ? headerTextColor.withValues(alpha: 0.7)
@@ -2037,13 +2093,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                       height: 1.25,
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 3),
+                                                  const SizedBox(height: 2),
                                                   Text(
                                                     desc,
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
                                                     style: TextStyle(
-                                                      fontSize: 12.0,
+                                                      fontSize: 11.5,
                                                       fontWeight: FontWeight.w500,
                                                       color: (activeUnitNum > 1 && !_isRegistered)
                                                           ? descColor.withValues(alpha: 0.7)
@@ -2051,11 +2107,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     ),
                                                   ),
                                                   if (_unitBestScores.containsKey(activeUnitNum)) ...[
-                                                    const SizedBox(height: 5),
+                                                    const SizedBox(height: 4),
                                                     Row(
                                                       children: [
                                                         Container(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                                           decoration: BoxDecoration(
                                                             color: const Color(0xFF10B981).withValues(alpha: 0.12),
                                                             borderRadius: BorderRadius.circular(6),
@@ -2070,13 +2126,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                               const Icon(
                                                                 Icons.emoji_events_rounded,
                                                                 color: Colors.amber,
-                                                                size: 13,
+                                                                size: 12,
                                                               ),
                                                               const SizedBox(width: 4),
                                                               Text(
                                                                 "${widget.enTitle == 'Mathematics' ? 'Maths' : widget.enTitle}: ${_unitBestScores[activeUnitNum]}%",
                                                                 style: const TextStyle(
-                                                                  fontSize: 11.0,
+                                                                  fontSize: 10.5,
                                                                   fontWeight: FontWeight.w800,
                                                                   color: Color(0xFF10B981),
                                                                 ),
@@ -2090,11 +2146,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
+                                            const SizedBox(width: 6),
                                             // 3. PLAY Action neatly on the right side
                                             SizedBox(
-                                              width: 38,
-                                              height: 38,
+                                              width: 34,
+                                              height: 34,
                                               child: IconButton(
                                                 padding: EdgeInsets.zero,
                                                 icon: Icon(
@@ -2104,7 +2160,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                   color: (activeUnitNum > 1 && !_isRegistered)
                                                       ? const Color(0xFF94A3B8)
                                                       : widget.color,
-                                                  size: 28,
+                                                  size: 24,
                                                 ),
                                                 onPressed: () {
                                                   _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
@@ -2140,34 +2196,43 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 8),
                             // Distinct Download icon button outside the unit selection box
                             Container(
-                              width: 46,
-                              height: 46,
+                              width: 36,
+                              height: 36,
                               decoration: BoxDecoration(
                                 color: isDownloaded 
-                                    ? const Color(0xFF10B981).withValues(alpha: 0.1) 
-                                    : widget.color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(14),
+                                    ? const Color(0xFF10B981) 
+                                    : widget.color.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isDownloaded 
-                                      ? const Color(0xFF10B981).withValues(alpha: 0.25) 
-                                      : widget.color.withValues(alpha: 0.25),
-                                  width: 1.5,
+                                      ? const Color(0xFF10B981) 
+                                      : widget.color.withOpacity(0.15),
+                                  width: 1.0,
                                 ),
+                                boxShadow: isDownloaded ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF10B981).withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ] : null,
                               ),
                               child: Tooltip(
-                                message: languageCode == 'en' ? 'Download' : 'አውርድ',
+                                message: languageCode == 'en' 
+                                    ? (isDownloaded ? 'Downloaded' : 'Download') 
+                                    : (isDownloaded ? 'ወርዷል' : 'አውርድ'),
                                 child: progress != null
                                     ? Center(
                                         child: SizedBox(
-                                          width: 20,
-                                          height: 20,
+                                          width: 16,
+                                          height: 16,
                                           child: CircularProgressIndicator(
                                             value: progress,
-                                            strokeWidth: 2.5,
-                                            color: widget.color,
+                                            strokeWidth: 2.0,
+                                            color: isDownloaded ? Colors.white : widget.color,
                                           ),
                                         ),
                                       )
@@ -2178,11 +2243,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               ? Icons.cloud_done_rounded
                                               : Icons.file_download_rounded,
                                           color: isDownloaded
-                                              ? const Color(0xFF10B981)
+                                              ? Colors.white
                                               : (activeUnitNum > 1 && !_isRegistered
                                                   ? const Color(0xFF94A3B8)
                                                   : widget.color),
-                                          size: 22,
+                                          size: 18,
                                         ),
                                         onPressed: () {
                                           _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_limiter.dart';
 
 class RegistrationOverlay extends StatefulWidget {
   final bool isDarkMode;
@@ -57,6 +58,9 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     final gradeLabel = 'Grade $_selectedGrade';
 
     try {
+      // 1. Check and increment request limiter
+      SupabaseRequestLimiter.increment();
+
       final supabase = Supabase.instance.client;
       final String profileId = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
       
@@ -109,6 +113,14 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     } catch (e) {
       debugPrint("Supabase insertion to 'student_profiles' failed: $e");
 
+      // Translate specific database exceptions or limit exceptions to highly descriptive friendly messages
+      String errMsg;
+      if (e is SupabaseRequestLimitException) {
+        errMsg = widget.languageCode == 'en' ? e.message : e.amharicMessage;
+      } else {
+        errMsg = _getFriendlyDatabaseErrorMessage(e);
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -118,9 +130,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    widget.languageCode == 'en'
-                        ? 'Registration failed. Please check your network and try again.'
-                        : 'ምዝገባው አልተሳካም። እባክዎ ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።',
+                    errMsg,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -140,6 +150,54 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     }
   }
 
+  String _getFriendlyDatabaseErrorMessage(dynamic e) {
+    String englishMsg = 'Registration failed. Please check your internet connection and try again.';
+    String amharicMsg = 'ምዝገባው አልተሳካም። እባክዎ የኢንተርኔት ግንኙነትዎን ያረጋግጡና እንደገና ይሞክሩ።';
+
+    if (e is PostgrestException) {
+      final code = e.code;
+      final message = e.message.toLowerCase();
+      final details = (e.details ?? '').toLowerCase();
+
+      // Check for unique key constraint violations (SQL code 23505)
+      if (code == '23505' || message.contains('unique') || details.contains('already exists')) {
+        if (message.contains('phone_number') || details.contains('phone_number')) {
+          englishMsg = 'This phone number is already registered. Please check or use another number.';
+          amharicMsg = 'ይህ ስልክ ቁጥር ቀድሞ ተመዝግቧል። እባክዎ ሌላ ስልክ ቁጥር ይጠቀሙ ወይም ያረጋግጡ።';
+        } else if (message.contains('email') || details.contains('email')) {
+          englishMsg = 'This email address is already in use by another student.';
+          amharicMsg = 'ይህ የኢሜል አድራሻ ቀድሞውኑ በሌላ ተማሪ ጥቅም ላይ ውሏል።';
+        } else {
+          englishMsg = 'A record with these details already exists in our database.';
+          amharicMsg = 'እነዚህን ዝርዝሮች የያዘ ተማሪ ቀድሞ በመረጃ ቋቱ ውስጥ ተመዝግቧል።';
+        }
+      } else if (code == '42P01') {
+        englishMsg = 'Service configuration error (profiles table is missing). Please contact support.';
+        amharicMsg = 'የአገልግሎት ማዋቀር ስህተት (የተማሪዎች ሰንጠረዥ አልተገኘም)። እባክዎ ድጋፍ ሰጪዎችን ያግኙ።';
+      } else if (code != null) {
+        englishMsg = 'Database processing error (Code: $code): ${e.message}';
+        amharicMsg = 'የመረጃ ቋት ማስኬጃ ስህተት (ኮድ: $code): ${e.message}';
+      } else {
+        englishMsg = 'Database insertion failed: ${e.message}';
+        amharicMsg = 'የመረጃ ቋት ምዝገባ አልተሳካም: ${e.message}';
+      }
+    } else {
+      final str = e.toString().toLowerCase();
+      if (str.contains('timeout') || str.contains('time out') || str.contains('connection timed out')) {
+        englishMsg = 'The database connection timed out. Please try again when your connection is stable.';
+        amharicMsg = 'የመረጃ ቋት ግንኙነት ጊዜ አልፏል። እባክዎ ግንኙነትዎ ሲረጋጋ እንደገና ይሞክሩ።';
+      } else if (str.contains('socketexception') || str.contains('failed host lookup') || str.contains('network') || str.contains('offline')) {
+        englishMsg = 'Supabase network server is unreachable. Please check if your mobile data or Wi-Fi is active.';
+        amharicMsg = 'የመረጃ ቋት አገልጋዩን ማግኘት አልተቻለም። እባክዎ የሞባይል ዳታ ወይም ዋይፋይ መብራቱን ያረጋግጡ።';
+      } else if (str.contains('request limit') || str.contains('exceeded') || str.contains('cap')) {
+        englishMsg = 'Network request limit reached (Max 5). Try starting a new session to clear.';
+        amharicMsg = 'የአውታረ መረብ ጥያቄ ገደብ ላይ ደርሰዋል (ከፍተኛ 5)። አዲስ ክፍለ-ጊዜ በመጀመር እንደገና ይሞክሩ።';
+      }
+    }
+
+    return widget.languageCode == 'en' ? englishMsg : amharicMsg;
+  }
+
   Future<void> _handleCancel() async {
     debugPrint("User cancelled registration overlay.");
     if (mounted) {
@@ -150,122 +208,204 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
   @override
   Widget build(BuildContext context) {
     final isLight = !widget.isDarkMode;
-    final backgroundColor = isLight ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final overlayColor = isLight ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.65);
     final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final subtitleColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: overlayColor, // Semi-transparent overlay background
       body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Lock/Premium Badge
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(20.0),
-                          decoration: BoxDecoration(
-                            color: widget.primaryColor.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.lock_open_rounded,
-                            color: widget.primaryColor,
-                            size: 48,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Header Message
-                      Text(
-                        widget.languageCode == 'en' ? 'Unlock Premium Material' : 'ፕሪሚየም ይዘቶችን ይክፈቱ',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: textColor,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        widget.languageCode == 'en'
-                            ? 'Register once to unlock access to all advanced prep modules.'
-                            : 'ሁሉንም የላቁ ይዘቶች ለመክፈት አንድ ጊዜ ይመዝገቡ።',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: subtitleColor,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Full Name Field
-                      _buildFieldLabel(widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *', isLight),
-                      _buildFieldContainer(
-                        isLight: isLight,
-                        child: TextFormField(
-                          controller: _nameController,
-                          enabled: !_isLoading,
-                          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
-                            hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                            prefixIcon: Icon(Icons.person_outline_rounded, color: widget.primaryColor, size: 20),
-                          ),
-                          validator: (val) {
-                            if (val == null || val.trim().isEmpty) {
-                              return widget.languageCode == 'en' ? 'Name is required' : 'እባክዎን ስምዎን ያስገቡ';
-                            }
-                            if (val.trim().length < 3) {
-                              return widget.languageCode == 'en' ? 'Name too short' : 'ስም በጣም አጭር ነው';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Phone Number Field with Country Code Selection
-                      _buildFieldLabel(widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *', isLight),
-                      _buildFieldContainer(
-                        isLight: isLight,
-                        child: Row(
+        child: Center(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 450), // Gorgeous maximum width for card
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isLight ? 0.08 : 0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  )
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Stack(
+                  children: [
+                    Form(
+                      key: _formKey,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-                                borderRadius: BorderRadius.circular(8),
+                            // Lock/Premium Badge
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(20.0),
+                                decoration: BoxDecoration(
+                                  color: widget.primaryColor.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.lock_open_rounded,
+                                  color: widget.primaryColor,
+                                  size: 40,
+                                ),
                               ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Header Message
+                            Text(
+                              widget.languageCode == 'en' ? 'Unlock Premium Material' : 'ፕሪሚየም ይዘቶችን ይክፈቱ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: textColor,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.languageCode == 'en'
+                                  ? 'Register once to unlock access to all advanced prep modules.'
+                                  : 'ሁሉንም የላቁ ይዘቶች ለመክፈት አንድ ጊዜ ይመዝገቡ።',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: subtitleColor,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Full Name Field
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *', isLight),
+                            _buildFieldContainer(
+                              isLight: isLight,
+                              child: TextFormField(
+                                controller: _nameController,
+                                enabled: !_isLoading,
+                                style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
+                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
+                                  prefixIcon: Icon(Icons.person_outline_rounded, color: widget.primaryColor, size: 20),
+                                ),
+                                validator: (val) {
+                                  if (val == null || val.trim().isEmpty) {
+                                    return widget.languageCode == 'en' ? 'Name is required' : 'እባክዎን ስምዎን ያስገቡ';
+                                  }
+                                  if (val.trim().length < 3) {
+                                    return widget.languageCode == 'en' ? 'Name too short' : 'ስም በጣም አጭር ነው';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Phone Number Field with Country Code Selection
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *', isLight),
+                            _buildFieldContainer(
+                              isLight: isLight,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedCountryCode,
+                                        dropdownColor: cardColor,
+                                        icon: const Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
+                                        style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.bold),
+                                        items: countryCodes.map((country) {
+                                          return DropdownMenuItem<String>(
+                                            value: country['code'],
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(country['flag']!, style: const TextStyle(fontSize: 14)),
+                                                const SizedBox(width: 4),
+                                                Text(country['code']!, style: const TextStyle(fontSize: 12)),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: _isLoading
+                                            ? null
+                                            : (val) {
+                                                if (val != null) {
+                                                  setState(() {
+                                                    _selectedCountryCode = val;
+                                                  });
+                                                }
+                                              },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _phoneController,
+                                      enabled: !_isLoading,
+                                      keyboardType: TextInputType.phone,
+                                      style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: '912345678',
+                                        hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
+                                        prefixIcon: Icon(Icons.phone_iphone_rounded, color: widget.primaryColor, size: 20),
+                                      ),
+                                      validator: (val) {
+                                        if (val == null || val.trim().isEmpty) {
+                                          return widget.languageCode == 'en' ? 'Phone is required' : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                        }
+                                        final clean = val.replaceAll(RegExp(r'\D'), '');
+                                        if (clean.length < 9) {
+                                          return widget.languageCode == 'en' ? 'Invalid phone number' : 'ትክክለኛ ያልሆነ ስልክ ቁጥር';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Grade Dropdown
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Grade *' : 'የክፍል ደረጃ *', isLight),
+                            _buildFieldContainer(
+                              isLight: isLight,
                               child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _selectedCountryCode,
+                                child: DropdownButton<int>(
+                                  value: _selectedGrade,
+                                  isExpanded: true,
                                   dropdownColor: cardColor,
-                                  icon: const Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
-                                  style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.bold),
-                                  items: countryCodes.map((country) {
-                                    return DropdownMenuItem<String>(
-                                      value: country['code'],
+                                  icon: Icon(Icons.arrow_drop_down, color: widget.primaryColor),
+                                  style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
+                                  items: [9, 10, 11, 12].map((g) {
+                                    return DropdownMenuItem<int>(
+                                      value: g,
                                       child: Row(
-                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(country['flag']!, style: const TextStyle(fontSize: 14)),
-                                          const SizedBox(width: 4),
-                                          Text(country['code']!, style: const TextStyle(fontSize: 12)),
+                                          Icon(Icons.school_outlined, color: widget.primaryColor, size: 18),
+                                          const SizedBox(width: 10),
+                                          Text(widget.languageCode == 'en' ? 'Grade $g' : 'ክፍል $g'),
                                         ],
                                       ),
                                     );
@@ -275,163 +415,111 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                       : (val) {
                                           if (val != null) {
                                             setState(() {
-                                              _selectedCountryCode = val;
+                                              _selectedGrade = val;
                                             });
                                           }
                                         },
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
+                            const SizedBox(height: 14),
+
+                            // Email Field
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Email Address *' : 'የኢሜል አድራሻ *', isLight),
+                            _buildFieldContainer(
+                              isLight: isLight,
                               child: TextFormField(
-                                controller: _phoneController,
+                                controller: _emailController,
                                 enabled: !_isLoading,
-                                keyboardType: TextInputType.phone,
+                                keyboardType: TextInputType.emailAddress,
                                 style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: '912345678',
+                                  hintText: widget.languageCode == 'en' ? 'e.g. email@example.com' : 'ምሳሌ: email@example.com',
                                   hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                                  prefixIcon: Icon(Icons.phone_iphone_rounded, color: widget.primaryColor, size: 20),
+                                  prefixIcon: Icon(Icons.mail_outline_rounded, color: widget.primaryColor, size: 20),
                                 ),
                                 validator: (val) {
                                   if (val == null || val.trim().isEmpty) {
-                                    return widget.languageCode == 'en' ? 'Phone is required' : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                    return widget.languageCode == 'en' ? 'Email is required' : 'እባክዎን ኢሜል ያስገቡ';
                                   }
-                                  final clean = val.replaceAll(RegExp(r'\D'), '');
-                                  if (clean.length < 9) {
-                                    return widget.languageCode == 'en' ? 'Invalid phone number' : 'ትክክለኛ ያልሆነ ስልክ ቁጥር';
+                                  final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                                  if (!emailRegExp.hasMatch(val.trim())) {
+                                    return widget.languageCode == 'en' ? 'Enter a valid email' : 'እባክዎን ትክክለኛ ኢሜል ያስገቡ';
                                   }
                                   return null;
                                 },
                               ),
                             ),
+                            const SizedBox(height: 28),
+
+                            // Register Button
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _handleRegister,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: widget.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 2,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      ),
+                                    )
+                                  : Text(
+                                      widget.languageCode == 'en' ? 'Register Now' : 'አሁን ይመዝገቡ',
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                                    ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            // Cancel Button
+                            OutlinedButton(
+                              onPressed: _isLoading ? null : _handleCancel,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                side: BorderSide(
+                                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
+                                  width: 1.5,
+                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: Text(
+                                widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
+                                style: TextStyle(
+                                  color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Grade Dropdown
-                      _buildFieldLabel(widget.languageCode == 'en' ? 'Grade *' : 'የክፍል ደረጃ *', isLight),
-                      _buildFieldContainer(
-                        isLight: isLight,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<int>(
-                            value: _selectedGrade,
-                            isExpanded: true,
-                            dropdownColor: cardColor,
-                            icon: Icon(Icons.arrow_drop_down, color: widget.primaryColor),
-                            style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
-                            items: [9, 10, 11, 12].map((g) {
-                              return DropdownMenuItem<int>(
-                                value: g,
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.school_outlined, color: widget.primaryColor, size: 18),
-                                    const SizedBox(width: 10),
-                                    Text(widget.languageCode == 'en' ? 'Grade $g' : 'ክፍል $g'),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: _isLoading
-                                ? null
-                                : (val) {
-                                    if (val != null) {
-                                      setState(() {
-                                        _selectedGrade = val;
-                                      });
-                                    }
-                                  },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Email Field
-                      _buildFieldLabel(widget.languageCode == 'en' ? 'Email Address *' : 'የኢሜል አድራሻ *', isLight),
-                      _buildFieldContainer(
-                        isLight: isLight,
-                        child: TextFormField(
-                          controller: _emailController,
-                          enabled: !_isLoading,
-                          keyboardType: TextInputType.emailAddress,
-                          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: widget.languageCode == 'en' ? 'e.g. email@example.com' : 'ምሳሌ: email@example.com',
-                            hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                            prefixIcon: Icon(Icons.mail_outline_rounded, color: widget.primaryColor, size: 20),
-                          ),
-                          validator: (val) {
-                            if (val == null || val.trim().isEmpty) {
-                              return widget.languageCode == 'en' ? 'Email is required' : 'እባክዎን ኢሜል ያስገቡ';
-                            }
-                            final emailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                            if (!emailRegExp.hasMatch(val.trim())) {
-                              return widget.languageCode == 'en' ? 'Enter a valid email' : 'እባክዎን ትክክለኛ ኢሜል ያስገቡ';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Register Button
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _handleRegister,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                widget.languageCode == 'en' ? 'Register Now' : 'አሁን ይመዝገቡ',
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                              ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Cancel Bottom Button
-                      OutlinedButton(
+                    ),
+                    // "X" Close Button in Top Right Corner
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: IconButton(
+                        icon: Icon(Icons.close_rounded, color: subtitleColor, size: 22),
                         onPressed: _isLoading ? null : _handleCancel,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: BorderSide(
-                            color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        child: Text(
-                          widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
-                          style: TextStyle(
-                            color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        tooltip: widget.languageCode == 'en' ? 'Close' : 'ዝጋ',
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
