@@ -7,7 +7,6 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/ad_helper.dart';
 import '../services/offline_manager.dart';
 import '../services/quiz_service.dart';
-import '../services/supabase_limiter.dart';
 import '../main.dart';
 import 'quiz_screen.dart';
 import 'registration_overlay.dart';
@@ -735,9 +734,6 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               final String fullPhone = '$_dialogSelectedCountryCode $phone';
 
                                               try {
-                                                // Check/Increment request limiter
-                                                SupabaseRequestLimiter.increment();
-
                                                 final prefs = await SharedPreferences.getInstance();
                                                 String? profileId = prefs.getString('user_id');
                                                 if (profileId == null) {
@@ -807,12 +803,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                   _isLoading = false;
                                                 });
 
-                                                String errMsg;
-                                                if (e is SupabaseRequestLimitException) {
-                                                  errMsg = widget.languageCode == 'en' ? e.message : e.amharicMessage;
-                                                } else {
-                                                  errMsg = _getFriendlyDatabaseErrorMessage(e);
-                                                }
+                                                String errMsg = _getFriendlyDatabaseErrorMessage(e);
 
                                                 if (context.mounted) {
                                                   ScaffoldMessenger.of(context).clearSnackBars();

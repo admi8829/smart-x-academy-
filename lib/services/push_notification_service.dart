@@ -9,10 +9,24 @@ import '../screens/notification_list_screen.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  
+  String? title;
+  String? body;
+  
   if (message.notification != null) {
-    final title = message.notification!.title ?? 'New Notification';
-    final body = message.notification!.body ?? '';
-    await PushNotificationService.saveLocalNotification(title, body, data: message.data);
+    title = message.notification!.title;
+    body = message.notification!.body;
+  }
+  
+  title ??= message.data['title']?.toString();
+  body ??= message.data['body']?.toString() ?? message.data['message']?.toString();
+  
+  if (title != null || body != null) {
+    await PushNotificationService.saveLocalNotification(
+      title ?? 'New Notification',
+      body ?? '',
+      data: message.data,
+    );
   }
 }
 
@@ -65,23 +79,35 @@ class PushNotificationService {
         debugPrint('Got a message whilst in the foreground!');
         debugPrint('Message data: ${message.data}');
 
+        String? title;
+        String? body;
+
         if (message.notification != null) {
-          final title = message.notification!.title ?? 'New Notification';
-          final body = message.notification!.body ?? '';
-          
+          title = message.notification!.title;
+          body = message.notification!.body;
+        }
+
+        title ??= message.data['title']?.toString();
+        body ??= message.data['body']?.toString() ?? message.data['message']?.toString();
+
+        if (title != null || body != null) {
+          title ??= 'New Notification';
+          body ??= '';
+
           final prefs = await SharedPreferences.getInstance();
-          final userName = prefs.getString('user_name') ?? prefs.getString('user_fullName') ?? 'ተማሪ';
+          final userName = prefs.getString('user_fullName') ?? prefs.getString('user_name') ?? 'ተማሪ';
+          final personalizedTitle = title.replaceAll('[name]', userName);
           final personalizedBody = body.replaceAll('[name]', userName);
-          
-          debugPrint('Message also contained a notification: $title - $personalizedBody');
-          
-          await saveLocalNotification(title, personalizedBody, data: message.data);
+
+          debugPrint('Message also contained a notification: $personalizedTitle - $personalizedBody');
+
+          await saveLocalNotification(personalizedTitle, personalizedBody, data: message.data);
 
           // Show local notification with action buttons
           final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
           await showLocalNotificationWithActions(
             id: DateTime.now().millisecondsSinceEpoch % 100000,
-            title: title,
+            title: personalizedTitle,
             body: personalizedBody,
             payload: jsonEncode({
               'id': notificationId,
@@ -133,9 +159,10 @@ class PushNotificationService {
       final prefs = await SharedPreferences.getInstance();
       final List<String> list = prefs.getStringList('local_notifications') ?? [];
       
-      // Personalization: Extract 'user_name' from SharedPreferences and replace [name] placeholder (fallback to 'ተማሪ')
-      final String userName = prefs.getString('user_name') ?? prefs.getString('user_fullName') ?? 'ተማሪ';
+      // Personalization: Extract 'user_fullName' or 'user_name' from SharedPreferences and replace [name] placeholder (fallback to 'ተማሪ')
+      final String userName = prefs.getString('user_fullName') ?? prefs.getString('user_name') ?? 'ተማሪ';
       final String personalizedBody = body.replaceAll('[name]', userName);
+      final String personalizedTitle = title.replaceAll('[name]', userName);
 
       // Extract URL if any exists in message body or data
       String? url;
@@ -147,7 +174,7 @@ class PushNotificationService {
 
       final newNotification = {
         'id': data?['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'title': title,
+        'title': personalizedTitle,
         'message': personalizedBody,
         'time': _getFormattedTime(DateTime.now()),
         'is_read': false,

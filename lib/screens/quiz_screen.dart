@@ -10,6 +10,7 @@ import '../models/question_model.dart';
 import '../services/quiz_service.dart';
 import '../services/offline_manager.dart';
 import '../services/ad_helper.dart';
+import '../main.dart';
 
 enum QuizMode {
   practice,
@@ -48,6 +49,33 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   final Map<int, int> _selectedAnswers = {};
   final Set<int> _submittedQuestions = {}; // Only for practice mode (already checked)
   bool _showAnswersAndExplanations = false; // Set to true after exam is finished/submitted
+  bool _isSavingOffline = false;
+
+  String _getUnitId() {
+    if (widget.offlineUnitId != null && widget.offlineUnitId!.isNotEmpty) {
+      return widget.offlineUnitId!;
+    }
+    String sub = (widget.subject ?? 'Physics').toLowerCase();
+    String prefix = 'phys_u';
+    if (sub.contains('math')) {
+      prefix = 'math_u';
+    } else if (sub.contains('biol')) {
+      prefix = 'bio_u';
+    } else if (sub.contains('phys')) {
+      prefix = 'phys_u';
+    } else if (sub.contains('chem')) {
+      prefix = 'chem_u';
+    } else if (sub.contains('geog')) {
+      prefix = 'geo_u';
+    } else if (sub.contains('hist')) {
+      prefix = 'hist_u';
+    } else if (sub.contains('civ')) {
+      prefix = 'civ_u';
+    } else if (sub.contains('agri')) {
+      prefix = 'agri_u';
+    }
+    return '$prefix${widget.unit ?? 1}';
+  }
 
   RewardedAd? _rewardedAd;
   bool _isRewardedAdLoaded = false;
@@ -1030,6 +1058,8 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final qText = q.questionText;
 
     final bool isActive = index == _currentIndex;
+    final bool isExamReview = widget.mode == QuizMode.exam && _showAnswersAndExplanations;
+    final bool isVisible = isActive || isExamReview;
     final showFeedback = _shouldShowExplanation(index);
     final isSubmitted = widget.mode == QuizMode.practice && _submittedQuestions.contains(index);
     final hasSelected = _selectedAnswers.containsKey(index);
@@ -1038,15 +1068,15 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       key: _questionKeys[index],
       margin: const EdgeInsets.only(bottom: 40.0), // beautiful gap between question blocks
       child: IgnorePointer(
-        ignoring: !isActive,
+        ignoring: isExamReview ? true : !isActive,
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 350),
-          opacity: isActive ? 1.0 : 0.2,
+          opacity: isVisible ? 1.0 : 0.2,
           child: ClipRect(
             child: ImageFiltered(
               imageFilter: ImageFilter.blur(
-                sigmaX: isActive ? 0.0 : 5.0,
-                sigmaY: isActive ? 0.0 : 5.0,
+                sigmaX: isVisible ? 0.0 : 5.0,
+                sigmaY: isVisible ? 0.0 : 5.0,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1306,7 +1336,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                   ],
 
                   // Next Question Button / Finish Quiz button
-                  if (isActive && ((widget.mode == QuizMode.practice && isSubmitted) || (widget.mode == QuizMode.exam && hasSelected) || _showAnswersAndExplanations)) ...[
+                  if (!isExamReview && isActive && ((widget.mode == QuizMode.practice && isSubmitted) || (widget.mode == QuizMode.exam && hasSelected) || _showAnswersAndExplanations)) ...[
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
@@ -1353,6 +1383,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final descColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
     final titleTextColor = isLight ? const Color(0xFF0F172A) : Colors.white;
+    final bool isExamReview = widget.mode == QuizMode.exam && _showAnswersAndExplanations;
 
     return Center(
       child: Container(
@@ -1369,7 +1400,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
               }),
               
               // End block when finished
-              if (_currentIndex == _questions.length) ...[
+              if (_currentIndex == _questions.length || isExamReview) ...[
                 _buildFinishedSection(),
               ] else ...[
                 // Generous vertical spacing at the bottom so we can center scroll the last question perfectly!
@@ -1388,18 +1419,94 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     final bool allAnswered = _selectedAnswers.length == _questions.length;
     
     if (_showAnswersAndExplanations) {
+      final bool isExam = widget.mode == QuizMode.exam;
+      final String languageCode = AppStateProvider.of(context).languageCode;
+      final bool isDownloaded = OfflineManager.isDownloadedSync(_getUnitId());
+
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
         child: Column(
           children: [
             const Icon(Icons.check_circle_rounded, size: 64, color: Color(0xFF10B981)),
             const SizedBox(height: 16),
-            const Text(
-              "Review Finished!",
+            Text(
+              isExam
+                  ? (languageCode == 'en' ? "Exam Review Complete" : "የፈተና ግምገማ ተጠናቋል")
+                  : (languageCode == 'en' ? "Review Finished!" : "ግምገማው ተጠናቋል!"),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 24),
+            if (isExam) ...[
+              ElevatedButton.icon(
+                onPressed: _isSavingOffline
+                    ? null
+                    : () async {
+                        setState(() {
+                          _isSavingOffline = true;
+                        });
+                        try {
+                          final String unitId = _getUnitId();
+                          await OfflineManager.saveOfflineQuestions(unitId, _questions);
+                          await OfflineManager.addDownload(unitId);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).clearSnackBars();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        languageCode == 'en'
+                                            ? 'Successfully downloaded exam review for offline study!'
+                                            : 'የፈተና ክለሳው ከመስመር ውጭ ለማጥናት በተሳካ ሁኔታ ወርዷል!',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: const Color(0xFF10B981),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          debugPrint("Failed to download offline: $e");
+                        } finally {
+                          if (mounted) {
+                            setState(() {
+                              _isSavingOffline = false;
+                            });
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF10B981),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 3,
+                ),
+                icon: _isSavingOffline
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Icon(isDownloaded ? Icons.download_done_rounded : Icons.offline_pin_rounded),
+                label: Text(
+                  _isSavingOffline
+                      ? (languageCode == 'en' ? "Saving Offline..." : "በማስቀመጥ ላይ...")
+                      : (isDownloaded
+                          ? (languageCode == 'en' ? "Saved Offline (Click to Update)" : "ከመስመር ውጭ ተቀምጧል (ለመቀየር ይጫኑ)")
+                          : (languageCode == 'en' ? "Download Exam Review" : "የፈተና ክለሳ አውርድ")),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
@@ -1408,7 +1515,10 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
                 minimumSize: const Size(double.infinity, 56),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text("Go Back", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              child: Text(
+                languageCode == 'en' ? "Go Back" : "ተመለስ",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),

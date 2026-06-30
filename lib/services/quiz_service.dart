@@ -2,7 +2,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/question_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'supabase_limiter.dart';
 
 class QuizService {
   static final SupabaseClient _supabase = Supabase.instance.client;
@@ -17,7 +16,6 @@ class QuizService {
     int? unit,
   }) async {
     try {
-      SupabaseRequestLimiter.increment();
       // Build dynamic section_id: "grade_${grade}_${subject.toLowerCase().substring(0, 4)}_${unit}"
       String subPrefix = (subject ?? "physics").toLowerCase().trim();
       if (subPrefix.length > 4) {
@@ -51,7 +49,6 @@ class QuizService {
     required int totalQuestions,
   }) async {
     try {
-      SupabaseRequestLimiter.increment();
       final prefs = await SharedPreferences.getInstance();
       final String studentId = prefs.getString('user_id') ?? 'user_${DateTime.now().millisecondsSinceEpoch}';
 

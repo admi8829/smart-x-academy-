@@ -158,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   LeaderboardEntry? _myLeaderboardEntry;
   int _myRank = -1;
   int _leaderboardSelectedGrade = 0; // 0 means All Grades
+  Timer? _leaderboardCarouselTimer;
+  int _totalStudentsInSelectedGrade = 0;
 
   // Dictionary for dynamic translation matching 'EN/አማርኛ'
   final Map<String, Map<String, String>> _localizedValues = {
@@ -319,6 +321,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       final numStr = _userGradeStr.replaceAll(RegExp(r'[^0-9]'), '');
       _selectedGrade = int.tryParse(numStr) ?? 12;
     });
+    _manageLeaderboardTimer();
   }
 
   Future<void> _removeProfileImage() async {
@@ -373,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _leaderboardCarouselTimer?.cancel();
     _fullNameController.dispose();
     _emailController.dispose();
     _schoolNameController.dispose();
@@ -1278,14 +1282,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         fontSize: 12.0,
                         fontWeight: FontWeight.bold,
                       ),
-                      onChanged: (int? newValue) {
-                        if (newValue != null) {
-                          setState(() {
-                            _leaderboardSelectedGrade = newValue;
-                            _applyLeaderboardFilter();
-                          });
-                        }
-                      },
+                      onChanged: _isLoggedIn
+                          ? null
+                          : (int? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _leaderboardSelectedGrade = newValue;
+                                  _applyLeaderboardFilter();
+                                });
+                              }
+                            },
                       items: [
                         DropdownMenuItem<int>(
                           value: 0,
@@ -1327,6 +1333,42 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         ],
       ),
     );
+  }
+
+  void _manageLeaderboardTimer() {
+    _leaderboardCarouselTimer?.cancel();
+    _leaderboardCarouselTimer = null;
+
+    if (_currentIndex == 2 && !_isLoggedIn) {
+      if (_leaderboardSelectedGrade == 0) {
+        _leaderboardSelectedGrade = 9;
+        _applyLeaderboardFilter();
+      }
+      _leaderboardCarouselTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        if (_currentIndex != 2 || _isLoggedIn) {
+          timer.cancel();
+          _leaderboardCarouselTimer = null;
+          return;
+        }
+        setState(() {
+          // Rotate grade filter: 9 -> 10 -> 11 -> 12 -> 9
+          if (_leaderboardSelectedGrade == 9) {
+            _leaderboardSelectedGrade = 10;
+          } else if (_leaderboardSelectedGrade == 10) {
+            _leaderboardSelectedGrade = 11;
+          } else if (_leaderboardSelectedGrade == 11) {
+            _leaderboardSelectedGrade = 12;
+          } else {
+            _leaderboardSelectedGrade = 9;
+          }
+          _applyLeaderboardFilter();
+        });
+      });
+    }
   }
 
   Future<void> _fetchLeaderboardData() async {
@@ -1405,10 +1447,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   void _applyLeaderboardFilter() {
+    if (_isLoggedIn) {
+      _leaderboardSelectedGrade = _selectedGrade;
+    }
     List<LeaderboardEntry> filtered = _allLeaderboardEntries;
     if (_leaderboardSelectedGrade != 0) {
       filtered = _allLeaderboardEntries.where((e) => e.grade == _leaderboardSelectedGrade).toList();
     }
+    _totalStudentsInSelectedGrade = filtered.length;
 
     // Determine top 10 from filtered list
     _filteredLeaderboardEntries = filtered.take(10).toList();
@@ -1430,6 +1476,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       
       // If we are not in the list but we are logged in, we can display our name and 0 score
       if (_myRank == -1) {
+        _myRank = filtered.length + 1;
         _myLeaderboardEntry = LeaderboardEntry(
           userId: currentUserId,
           fullName: _userName,
@@ -1450,13 +1497,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   String maskPhoneNumber(String phone) {
-    final clean = phone.trim().replaceAll(RegExp(r'\s+'), '');
-    if (clean.length < 4) {
-      return clean; // Too short to mask
+    if (phone.isEmpty) return "";
+    var clean = phone.trim().replaceAll(RegExp(r'[\s\-\+\(\)]'), '');
+    if (clean.startsWith('251')) {
+      clean = '0' + clean.substring(3);
     }
-    final firstTwo = clean.substring(0, 2);
-    final lastTwo = clean.substring(clean.length - 2);
-    return "$firstTwo****$lastTwo";
+    if (clean.length >= 6) {
+      final start = clean.substring(0, 4);
+      final end = clean.substring(clean.length - 2);
+      return "$start****$end";
+    }
+    if (clean.length < 4) return clean;
+    return "${clean.substring(0, 2)}****${clean.substring(clean.length - 1)}";
   }
 
   Widget _buildLeaderboardCard(bool isLight) {
@@ -1581,8 +1633,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
         const SizedBox(height: 12.0),
 
-        // My Rank Card
-        if (_myLeaderboardEntry != null)
+        // My Rank Card (Show ONLY if registered/logged-in AND NOT in top 10)
+        if (_isLoggedIn && _myLeaderboardEntry != null && _myRank > 10)
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1726,11 +1778,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 3.0),
                 Text(
-                  cleanPhone.isNotEmpty ? cleanPhone : (widget.languageCode == 'en' ? "No phone" : "ስልክ የለም"),
+                  isMyRankCard
+                      ? (widget.languageCode == 'en'
+                          ? "Rank $rank out of $_totalStudentsInSelectedGrade"
+                          : "ደረጃ $rank ከ $_totalStudentsInSelectedGrade ተማሪዎች")
+                      : (cleanPhone.isNotEmpty ? cleanPhone : (widget.languageCode == 'en' ? "No phone" : "ስልክ የለም")),
                   style: TextStyle(
                     fontSize: 12.0,
                     fontWeight: FontWeight.w600,
-                    color: subtitleColor,
+                    color: isMyRankCard ? const Color(0xFF1E88E5) : subtitleColor,
                   ),
                 ),
               ],
@@ -3633,6 +3689,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         );
         setState(() {
           _currentIndex = 0; // Go back to Home screen
+          _manageLeaderboardTimer();
         });
       }
     } else {
@@ -4702,6 +4759,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               onPressed: () {
                 setState(() {
                   _currentIndex = 0; // Go to home
+                  _manageLeaderboardTimer();
                 });
               },
               style: ElevatedButton.styleFrom(
@@ -5026,6 +5084,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         onTap: () {
           setState(() {
             _currentIndex = index;
+            _manageLeaderboardTimer();
+            if (_currentIndex == 2) {
+              _fetchLeaderboardData();
+            }
           });
         },
         child: Container(

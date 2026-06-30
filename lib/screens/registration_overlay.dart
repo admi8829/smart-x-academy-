@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/supabase_limiter.dart';
 
 class RegistrationOverlay extends StatefulWidget {
   final bool isDarkMode;
@@ -58,9 +57,6 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     final gradeLabel = 'Grade $_selectedGrade';
 
     try {
-      // 1. Check and increment request limiter
-      SupabaseRequestLimiter.increment();
-
       final supabase = Supabase.instance.client;
       final String profileId = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
       
@@ -114,12 +110,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
       debugPrint("Supabase insertion to 'student_profiles' failed: $e");
 
       // Translate specific database exceptions or limit exceptions to highly descriptive friendly messages
-      String errMsg;
-      if (e is SupabaseRequestLimitException) {
-        errMsg = widget.languageCode == 'en' ? e.message : e.amharicMessage;
-      } else {
-        errMsg = _getFriendlyDatabaseErrorMessage(e);
-      }
+      String errMsg = _getFriendlyDatabaseErrorMessage(e);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
