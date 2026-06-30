@@ -287,6 +287,12 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     });
 
     _playFeedbackSound(isCorrect);
+
+    if (widget.mode == QuizMode.practice) {
+      _scrollToExplanation();
+    } else if (widget.mode == QuizMode.exam) {
+      _scrollToShiftExamQuestionUp();
+    }
   }
 
   void _submitPracticeAnswer() {
@@ -301,6 +307,8 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     setState(() {
       _submittedQuestions.add(_currentIndex);
     });
+
+    _scrollToExplanation();
   }
 
   Future<void> _playFeedbackSound(bool isCorrect) async {
@@ -325,6 +333,34 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
           duration: const Duration(milliseconds: 600),
           curve: Curves.easeInOutCubic,
           alignment: 0.1, // Align near the top of the viewport
+        );
+      }
+    });
+  }
+
+  void _scrollToExplanation() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_currentIndex < _questionKeys.length && _questionKeys[_currentIndex].currentContext != null) {
+        Scrollable.ensureVisible(
+          _questionKeys[_currentIndex].currentContext!,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutCubic,
+          alignment: 1.0, // Align to bottom of viewport to reveal explanation block
+        );
+      }
+    });
+  }
+
+  void _scrollToShiftExamQuestionUp() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_currentIndex < _questionKeys.length && _questionKeys[_currentIndex].currentContext != null) {
+        Scrollable.ensureVisible(
+          _questionKeys[_currentIndex].currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          alignment: 0.3, // Scroll slightly up so card and Next button are beautifully framed
         );
       }
     });
@@ -417,13 +453,21 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
 
   void _showExitConfirmationDialog() {
     final bool isLight = Theme.of(context).brightness == Brightness.light;
+    final isExam = widget.mode == QuizMode.exam;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Exit Exam?", style: TextStyle(fontWeight: FontWeight.w900)),
-        content: const Text("Are you sure you want to quit? Your progress in this session will be lost."),
+        title: Text(
+          isExam ? "Exit Exam?" : "Exit Quiz?",
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          isExam
+              ? "Are you sure you want to quit this exam? Your progress will be lost and your score won't be saved."
+              : "Are you sure you want to quit this practice session? Your progress will be lost.",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -608,7 +652,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildMathText(String text, TextStyle baseStyle, {TextAlign align = TextAlign.center}) {
-    if (!text.contains(r'$') && !text.contains(r'\(') && !text.contains(r'\[')) {
+    if (!text.contains(r'$') && !text.contains(r'\(') && !text.contains(r'\[') && !text.contains(r'\\(') && !text.contains(r'\\[')) {
       return Text(
         text,
         style: baseStyle,
@@ -617,7 +661,19 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     }
 
     final List<Widget> spans = [];
-    final regex = RegExp(r'\$\$([\s\S]+?)\$\$|\$([\s\S]+?)\$');
+    // Matches:
+    // 1. $$...$$ (Block math)
+    // 2. $...$ (Inline math)
+    // 3. \[...\] or \\\[...\\\] (Block math)
+    // 4. \(...\) or \\\(...\\\) (Inline math)
+    final regex = RegExp(
+      r'\$\$([\s\S]+?)\$\$|'
+      r'\$([\s\S]+?)\$|'
+      r'\\\[([\s\S]+?)\\\]|'
+      r'\\\(([\s\S]+?)\\\)|'
+      r'\\\\\[([\s\S]+?)\\\\\]|'
+      r'\\\\\(([\s\S]+?)\\\\\)'
+    );
     int lastIndex = 0;
 
     for (final match in regex.allMatches(text)) {
@@ -629,7 +685,14 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
         ));
       }
 
-      final mathExpr = match.group(1) ?? match.group(2) ?? '';
+      final mathExpr = match.group(1) ??
+          match.group(2) ??
+          match.group(3) ??
+          match.group(4) ??
+          match.group(5) ??
+          match.group(6) ??
+          '';
+
       if (mathExpr.isNotEmpty) {
         spans.add(Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
@@ -698,6 +761,17 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
       child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            tooltip: "Exit",
+            onPressed: () {
+              if (_showAnswersAndExplanations || (widget.mode == QuizMode.practice && !_isPracticeSetupCompleted) || _questions.isEmpty) {
+                Navigator.of(context).pop();
+              } else {
+                _showExitConfirmationDialog();
+              }
+            },
+          ),
           title: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1285,7 +1359,7 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
         constraints: const BoxConstraints(maxWidth: 620),
         child: SingleChildScrollView(
           controller: _scrollController,
-          physics: const NeverScrollableScrollPhysics(), // Scroll programmatic only!
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
