@@ -530,7 +530,9 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
     }
 
     setState(() => _isSubmittingScore = true);
-    await _submitScoreToLeaderboard(score);
+    if (widget.mode == QuizMode.exam) {
+      await _submitScoreToLeaderboard(score);
+    }
     setState(() => _isSubmittingScore = false);
 
     if (!mounted) return;
@@ -1438,73 +1440,6 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 24),
             if (isExam) ...[
-              ElevatedButton.icon(
-                onPressed: _isSavingOffline
-                    ? null
-                    : () async {
-                        setState(() {
-                          _isSavingOffline = true;
-                        });
-                        try {
-                          final String unitId = _getUnitId();
-                          await OfflineManager.saveOfflineQuestions(unitId, _questions);
-                          await OfflineManager.addDownload(unitId);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: [
-                                    const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        languageCode == 'en'
-                                            ? 'Successfully downloaded exam review for offline study!'
-                                            : 'የፈተና ክለሳው ከመስመር ውጭ ለማጥናት በተሳካ ሁኔታ ወርዷል!',
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                backgroundColor: const Color(0xFF10B981),
-                                behavior: SnackBarBehavior.floating,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          debugPrint("Failed to download offline: $e");
-                        } finally {
-                          if (mounted) {
-                            setState(() {
-                              _isSavingOffline = false;
-                            });
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 3,
-                ),
-                icon: _isSavingOffline
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : Icon(isDownloaded ? Icons.download_done_rounded : Icons.offline_pin_rounded),
-                label: Text(
-                  _isSavingOffline
-                      ? (languageCode == 'en' ? "Saving Offline..." : "በማስቀመጥ ላይ...")
-                      : (isDownloaded
-                          ? (languageCode == 'en' ? "Saved Offline (Click to Update)" : "ከመስመር ውጭ ተቀምጧል (ለመቀየር ይጫኑ)")
-                          : (languageCode == 'en' ? "Download Exam Review" : "የፈተና ክለሳ አውርድ")),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-                ),
-              ),
               const SizedBox(height: 16),
             ],
             ElevatedButton(

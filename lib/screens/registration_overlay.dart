@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math' as math;
 
 class RegistrationOverlay extends StatefulWidget {
   final bool isDarkMode;
@@ -27,6 +28,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
   int _selectedGrade = 12; // Default grade level
   String _selectedCountryCode = '+251'; // Default to Ethiopia
   bool _isLoading = false;
+  bool _acceptedTerms = false;
 
   final List<Map<String, String>> countryCodes = [
     {'code': '+251', 'flag': '🇪🇹', 'name': 'Ethiopia'},
@@ -44,6 +46,21 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
     super.dispose();
   }
 
+  String _generateUuidV4() {
+    final random = math.Random();
+    String generateHex(int length) {
+      final buffer = StringBuffer();
+      for (int i = 0; i < length; i++) {
+        buffer.write(random.nextInt(16).toRadixString(16));
+      }
+      return buffer.toString();
+    }
+    
+    final y = (random.nextInt(4) + 8).toRadixString(16); // 8, 9, a, or b
+    
+    return '${generateHex(8)}-${generateHex(4)}-4${generateHex(3)}-$y${generateHex(3)}-${generateHex(12)}';
+  }
+
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -58,7 +75,7 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
 
     try {
       final supabase = Supabase.instance.client;
-      final String profileId = 'user_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecondsSinceEpoch % 9000))}';
+      final String profileId = _generateUuidV4();
       
       // Perform database insertion to the 'student_profiles' table
       await supabase.from('student_profiles').insert({
@@ -199,13 +216,12 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
   @override
   Widget build(BuildContext context) {
     final isLight = !widget.isDarkMode;
-    final overlayColor = isLight ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.65);
     final cardColor = isLight ? Colors.white : const Color(0xFF1E293B);
     final textColor = isLight ? const Color(0xFF0F172A) : Colors.white;
     final subtitleColor = isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8);
 
     return Scaffold(
-      backgroundColor: overlayColor, // Semi-transparent overlay background
+      backgroundColor: Colors.transparent, // Transparent background as requested
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -218,9 +234,9 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isLight ? 0.08 : 0.25),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10),
+                    color: Colors.black.withOpacity(isLight ? 0.15 : 0.4),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
                   )
                 ],
               ),
@@ -236,50 +252,50 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Lock/Premium Badge
-                            Center(
-                              child: Container(
-                                padding: const EdgeInsets.all(20.0),
-                                decoration: BoxDecoration(
-                                  color: widget.primaryColor.withOpacity(0.1),
-                                  shape: BoxShape.circle,
+                            // Smart X Branding
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.menu_book_rounded, color: widget.primaryColor, size: 28),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Smart X Academy',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: textColor,
+                                    letterSpacing: -0.5,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.lock_open_rounded,
-                                  color: widget.primaryColor,
-                                  size: 40,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Header Message
-                            Text(
-                              widget.languageCode == 'en' ? 'Unlock Premium Material' : 'ፕሪሚየም ይዘቶችን ይክፈቱ',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: textColor,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              widget.languageCode == 'en'
-                                  ? 'Register once to unlock access to all advanced prep modules.'
-                                  : 'ሁሉንም የላቁ ይዘቶች ለመክፈት አንድ ጊዜ ይመዝገቡ።',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: subtitleColor,
-                                height: 1.4,
-                              ),
+                              ],
                             ),
                             const SizedBox(height: 24),
+                            
+                            // Header Message
+                            Text(
+                              widget.languageCode == 'en' ? 'Create Account' : 'መለያ ይፍጠሩ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              widget.languageCode == 'en'
+                                  ? 'Sign up to manage your academic profile.'
+                                  : 'የትምህርት መገለጫዎን ለማስተዳደር ይመዝገቡ።',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: subtitleColor,
+                              ),
+                            ),
+                            const SizedBox(height: 28),
 
                             // Full Name Field
-                            _buildFieldLabel(widget.languageCode == 'en' ? 'Full Name *' : 'ሙሉ ስም *', isLight),
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Full Name' : 'ሙሉ ስም', isLight),
                             _buildFieldContainer(
                               isLight: isLight,
                               child: TextFormField(
@@ -288,9 +304,9 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                 style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: widget.languageCode == 'en' ? 'e.g. Abebe Bekele' : 'ምሳሌ: አበበ በቀለ',
+                                  hintText: widget.languageCode == 'en' ? 'John Doe' : 'አበበ በቀለ',
                                   hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                                  prefixIcon: Icon(Icons.person_outline_rounded, color: widget.primaryColor, size: 20),
+                                  prefixIcon: Icon(Icons.person_outline_rounded, color: subtitleColor, size: 20),
                                 ),
                                 validator: (val) {
                                   if (val == null || val.trim().isEmpty) {
@@ -303,83 +319,10 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 14),
-
-                            // Phone Number Field with Country Code Selection
-                            _buildFieldLabel(widget.languageCode == 'en' ? 'Phone Number *' : 'ስልክ ቁጥር *', isLight),
-                            _buildFieldContainer(
-                              isLight: isLight,
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: DropdownButtonHideUnderline(
-                                      child: DropdownButton<String>(
-                                        value: _selectedCountryCode,
-                                        dropdownColor: cardColor,
-                                        icon: const Icon(Icons.arrow_drop_down, size: 16, color: Colors.grey),
-                                        style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.bold),
-                                        items: countryCodes.map((country) {
-                                          return DropdownMenuItem<String>(
-                                            value: country['code'],
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(country['flag']!, style: const TextStyle(fontSize: 14)),
-                                                const SizedBox(width: 4),
-                                                Text(country['code']!, style: const TextStyle(fontSize: 12)),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChanged: _isLoading
-                                            ? null
-                                            : (val) {
-                                                if (val != null) {
-                                                  setState(() {
-                                                    _selectedCountryCode = val;
-                                                  });
-                                                }
-                                              },
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: _phoneController,
-                                      enabled: !_isLoading,
-                                      keyboardType: TextInputType.phone,
-                                      style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
-                                      decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: '912345678',
-                                        hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                                        prefixIcon: Icon(Icons.phone_iphone_rounded, color: widget.primaryColor, size: 20),
-                                      ),
-                                      validator: (val) {
-                                        if (val == null || val.trim().isEmpty) {
-                                          return widget.languageCode == 'en' ? 'Phone is required' : 'እባክዎን ስልክ ቁጥር ያስገቡ';
-                                        }
-                                        final clean = val.replaceAll(RegExp(r'\D'), '');
-                                        if (clean.length < 9) {
-                                          return widget.languageCode == 'en' ? 'Invalid phone number' : 'ትክክለኛ ያልሆነ ስልክ ቁጥር';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 16),
 
                             // Grade Dropdown
-                            _buildFieldLabel(widget.languageCode == 'en' ? 'Grade *' : 'የክፍል ደረጃ *', isLight),
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Grade' : 'የክፍል ደረጃ', isLight),
                             _buildFieldContainer(
                               isLight: isLight,
                               child: DropdownButtonHideUnderline(
@@ -387,16 +330,16 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                   value: _selectedGrade,
                                   isExpanded: true,
                                   dropdownColor: cardColor,
-                                  icon: Icon(Icons.arrow_drop_down, color: widget.primaryColor),
+                                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: subtitleColor),
                                   style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
                                   items: [9, 10, 11, 12].map((g) {
                                     return DropdownMenuItem<int>(
                                       value: g,
                                       child: Row(
                                         children: [
-                                          Icon(Icons.school_outlined, color: widget.primaryColor, size: 18),
+                                          Icon(Icons.menu_book_rounded, color: subtitleColor, size: 18),
                                           const SizedBox(width: 10),
-                                          Text(widget.languageCode == 'en' ? 'Grade $g' : 'ክፍል $g'),
+                                          Text(widget.languageCode == 'en' ? '${g}th Grade' : 'ክፍል $g'),
                                         ],
                                       ),
                                     );
@@ -413,10 +356,39 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 16),
+
+                            // Phone Number Field
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Phone Number' : 'ስልክ ቁጥር', isLight),
+                            _buildFieldContainer(
+                              isLight: isLight,
+                              child: TextFormField(
+                                controller: _phoneController,
+                                enabled: !_isLoading,
+                                keyboardType: TextInputType.phone,
+                                style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: '(123) 456-7890',
+                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
+                                  prefixIcon: Icon(Icons.phone_outlined, color: subtitleColor, size: 20),
+                                ),
+                                validator: (val) {
+                                  if (val == null || val.trim().isEmpty) {
+                                    return widget.languageCode == 'en' ? 'Phone is required' : 'እባክዎን ስልክ ቁጥር ያስገቡ';
+                                  }
+                                  final clean = val.replaceAll(RegExp(r'\D'), '');
+                                  if (clean.length < 9) {
+                                    return widget.languageCode == 'en' ? 'Invalid phone number' : 'ትክክለኛ ያልሆነ ስልክ ቁጥር';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
                             // Email Field
-                            _buildFieldLabel(widget.languageCode == 'en' ? 'Email Address *' : 'የኢሜል አድራሻ *', isLight),
+                            _buildFieldLabel(widget.languageCode == 'en' ? 'Email Address' : 'የኢሜል አድራሻ', isLight),
                             _buildFieldContainer(
                               isLight: isLight,
                               child: TextFormField(
@@ -426,9 +398,9 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                 style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.bold),
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: widget.languageCode == 'en' ? 'e.g. email@example.com' : 'ምሳሌ: email@example.com',
+                                  hintText: widget.languageCode == 'en' ? 'john.doe@email.com' : 'ምሳሌ: john.doe@email.com',
                                   hintStyle: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.normal),
-                                  prefixIcon: Icon(Icons.mail_outline_rounded, color: widget.primaryColor, size: 20),
+                                  prefixIcon: Icon(Icons.mail_outline_rounded, color: subtitleColor, size: 20),
                                 ),
                                 validator: (val) {
                                   if (val == null || val.trim().isEmpty) {
@@ -442,53 +414,101 @@ class _RegistrationOverlayState extends State<RegistrationOverlay> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 28),
+                            const SizedBox(height: 20),
 
-                            // Register Button
-                            ElevatedButton(
-                              onPressed: _isLoading ? null : _handleRegister,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: widget.primaryColor,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                            // Terms Agreement Checkbox
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Checkbox(
+                                  value: _acceptedTerms,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _acceptedTerms = val ?? false;
+                                    });
+                                  },
+                                  activeColor: widget.primaryColor,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                                 ),
-                                elevation: 2,
-                              ),
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : Text(
-                                      widget.languageCode == 'en' ? 'Register Now' : 'አሁን ይመዝገቡ',
-                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                                Expanded(
+                                  child: Text(
+                                    widget.languageCode == 'en'
+                                        ? 'I agree to the terms and privacy policy.'
+                                        : 'በአገልግሎት ውሎች እና ግላዊነት ፖሊሲ እስማማለሁ።',
+                                    style: TextStyle(
+                                      color: textColor,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                            ),
-                            const SizedBox(height: 10),
-
-                            // Cancel Button
-                            OutlinedButton(
-                              onPressed: _isLoading ? null : _handleCancel,
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                side: BorderSide(
-                                  color: isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155),
-                                  width: 1.5,
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Action Buttons (Cancel / Register)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    onPressed: _isLoading ? null : _handleCancel,
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: isLight ? const Color(0xFF64748B) : const Color(0xFF334155),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24), // Pill shape matching mockup
+                                      ),
+                                    ),
+                                    child: Text(
+                                      widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: (_isLoading || !_acceptedTerms) ? null : _handleRegister,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF007AFF), // Blue color from mockup
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor: const Color(0xFF007AFF).withOpacity(0.5),
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24), // Pill shape matching mockup
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                            ),
+                                          )
+                                        : Text(
+                                            widget.languageCode == 'en' ? 'Register' : 'ይመዝገቡ',
+                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Already have an account
+                            Center(
                               child: Text(
-                                widget.languageCode == 'en' ? 'Cancel' : 'ሰርዝ',
+                                widget.languageCode == 'en'
+                                    ? 'Already have an account? Sign In.'
+                                    : 'አካውንት አለዎት? ይግቡ።',
                                 style: TextStyle(
-                                  color: isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8),
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.bold,
+                                  color: subtitleColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),

@@ -2036,13 +2036,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         });
                                       },
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 11.0),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                                         child: Row(
                                           children: [
                                             // 1. UNIT NUMBER ON THE LEFT
                                             Container(
-                                              width: 36,
-                                              height: 36,
+                                              width: 44,
+                                              height: 44,
                                               decoration: BoxDecoration(
                                                 color: (activeUnitNum > 1 && !_isRegistered)
                                                     ? Colors.grey.withValues(alpha: 0.08)
@@ -2190,13 +2190,13 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                             const SizedBox(width: 8),
                             // Distinct Download icon button outside the unit selection box
                             Container(
-                              width: 36,
-                              height: 36,
+                              width: 44,
+                              height: 44,
                               decoration: BoxDecoration(
                                 color: isDownloaded 
                                     ? const Color(0xFF10B981) 
                                     : widget.color.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isDownloaded 
                                       ? const Color(0xFF10B981) 
@@ -2205,9 +2205,9 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 ),
                                 boxShadow: isDownloaded ? [
                                   BoxShadow(
-                                    color: const Color(0xFF10B981).withOpacity(0.3),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
+                                    color: const Color(0xFF10B981).withOpacity(0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   )
                                 ] : null,
                               ),
@@ -2218,11 +2218,11 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 child: progress != null
                                     ? Center(
                                         child: SizedBox(
-                                          width: 16,
-                                          height: 16,
+                                          width: 20,
+                                          height: 20,
                                           child: CircularProgressIndicator(
                                             value: progress,
-                                            strokeWidth: 2.0,
+                                            strokeWidth: 2.5,
                                             color: isDownloaded ? Colors.white : widget.color,
                                           ),
                                         ),
@@ -2238,7 +2238,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                               : (activeUnitNum > 1 && !_isRegistered
                                                   ? const Color(0xFF94A3B8)
                                                   : widget.color),
-                                          size: 18,
+                                          size: 22,
                                         ),
                                         onPressed: () {
                                           _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
