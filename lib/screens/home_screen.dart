@@ -988,8 +988,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildScholarPodiumCard(Map<String, dynamic> scholar, bool isLight) {
     final int rank = scholar['rank'];
     final bool isRank1 = rank == 1;
-    final double width = isRank1 ? 134.0 : 118.0;
-    final double height = isRank1 ? 172.0 : 156.0;
+    final double width = isRank1 ? 154.0 : 136.0;
+    final double height = isRank1 ? 198.0 : 178.0;
     
     Color rankColor;
     if (rank == 1) {
@@ -1033,8 +1033,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             alignment: Alignment.center,
             children: [
               Container(
-                width: isRank1 ? 52.0 : 44.0,
-                height: isRank1 ? 52.0 : 44.0,
+                width: isRank1 ? 60.0 : 50.0,
+                height: isRank1 ? 60.0 : 50.0,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -1059,47 +1059,47 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   child: const Icon(
                     Icons.verified_rounded,
                     color: Color(0xFF1E88E5), // Verified blue
-                    size: 13.0,
+                    size: 14.0,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6.0),
+          const SizedBox(height: 8.0),
           Text(
             widget.languageCode == 'en' ? "Mathematics - Note View" : "ሂሳብ - ማስታወሻ እይታ",
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 7.5,
+              fontSize: 8.0,
               fontWeight: FontWeight.bold,
               color: subTextColor,
             ),
           ),
-          const SizedBox(height: 2.0),
+          const SizedBox(height: 3.0),
           Text(
             "$rank. ${formatName(scholar['fullName'])}",
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w900,
               color: textColor,
             ),
           ),
-          const SizedBox(height: 1.5),
+          const SizedBox(height: 2.0),
           Text(
             "Phone: ${scholar['phoneNumber']}",
             style: TextStyle(
-              fontSize: 8.5,
+              fontSize: 9.0,
               color: subTextColor,
             ),
           ),
-          const SizedBox(height: 1.5),
+          const SizedBox(height: 2.0),
           Text(
             "Score: ${scholar['totalScore']}",
             style: const TextStyle(
-              fontSize: 9.5,
+              fontSize: 10.5,
               fontWeight: FontWeight.w900,
               color: Color(0xFF10B981),
             ),
@@ -1187,7 +1187,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       children: [
         // Horizontal list
         SizedBox(
-          height: 186.0,
+          height: 216.0,
           child: ListView.builder(
             controller: _leaderboardCarouselController,
             scrollDirection: Axis.horizontal,
@@ -1549,9 +1549,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           ],
                         ),
                       ),
-                      // Pill shaped READ button
-                      ElevatedButton(
-                        onPressed: () {
+                      // Beautiful custom START button with gradient and themed shadow
+                      GestureDetector(
+                        onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => UnitSelectionScreen(
@@ -1570,33 +1570,46 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             ),
                           );
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: subject['color'],
-                          foregroundColor: Colors.white,
-                          elevation: 1,
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24.0),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.languageCode == 'en' ? 'READ' : 'አንብብ',
-                              style: const TextStyle(
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 9.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                subject['color'],
+                                Color.lerp(subject['color'], Colors.black, 0.12) ?? subject['color'],
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(30.0),
+                            boxShadow: [
+                              BoxShadow(
+                                color: subject['color'].withOpacity(0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3.5),
                               ),
-                            ),
-                            const SizedBox(width: 4.0),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 14.0,
-                              color: Colors.white,
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.languageCode == 'en' ? 'START' : 'ጀምር',
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                              const SizedBox(width: 4.0),
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14.0,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
