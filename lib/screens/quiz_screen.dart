@@ -248,9 +248,58 @@ class _QuizScreenState extends State<QuizScreen> with WidgetsBindingObserver {
         return;
       }
 
+      // Shuffle the list of questions so they appear in a random sequence every session
+      final List<QuestionModel> randomizedQuestions = List<QuestionModel>.from(fetched)..shuffle();
+
+      // For each question, dynamically shuffle its options list and update the corresponding index / value for correctAnswer
+      final List<QuestionModel> processedQuestions = randomizedQuestions.map((q) {
+        // Find the correct option text from the original options and correctAnswer
+        String correctOptionText = '';
+        for (int i = 0; i < q.options.length; i++) {
+          final option = q.options[i];
+          bool isOrigCorrect = false;
+          if (option.trim().toLowerCase() == q.correctAnswer.trim().toLowerCase()) {
+            isOrigCorrect = true;
+          } else if (q.correctAnswer.trim() == i.toString()) {
+            isOrigCorrect = true;
+          } else {
+            final Map<String, int> letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+            final String cleanCorrect = q.correctAnswer.trim().toLowerCase();
+            if (letterMap.containsKey(cleanCorrect) && letterMap[cleanCorrect] == i) {
+              isOrigCorrect = true;
+            }
+          }
+          if (isOrigCorrect) {
+            correctOptionText = option;
+            break;
+          }
+        }
+
+        // Fallback if not found
+        if (correctOptionText.isEmpty) {
+          correctOptionText = q.correctAnswer;
+        }
+
+        // Shuffle the options
+        final shuffledOptions = List<String>.from(q.options)..shuffle();
+
+        // Return a new QuestionModel with the shuffled options and exact correctOptionText
+        return QuestionModel(
+          id: q.id,
+          grade: q.grade,
+          subject: q.subject,
+          unit: q.unit,
+          questionText: q.questionText,
+          options: shuffledOptions,
+          correctAnswer: correctOptionText,
+          explanation: q.explanation,
+          createdAt: q.createdAt,
+        );
+      }).toList();
+
       setState(() {
-        _questions = fetched;
-        _questionKeys = List.generate(fetched.length, (_) => GlobalKey());
+        _questions = processedQuestions;
+        _questionKeys = List.generate(processedQuestions.length, (_) => GlobalKey());
         _isLoading = false;
       });
 

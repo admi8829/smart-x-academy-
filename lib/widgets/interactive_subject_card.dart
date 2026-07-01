@@ -172,8 +172,8 @@ class _InteractiveSubjectCardState extends State<InteractiveSubjectCard> with Si
                     const SizedBox(height: 8.0),
                     // Pill button styled with a compact, beautiful rounded pill
                     Container(
-                      width: 95.0,
-                      height: 26.0,
+                      width: 130.0,
+                      height: 32.0,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -200,16 +200,16 @@ class _InteractiveSubjectCardState extends State<InteractiveSubjectCard> with Si
                             widget.btnText,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10.0,
+                              fontSize: 12.0,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 0.3,
                             ),
                           ),
-                          const SizedBox(width: 2.0),
+                          const SizedBox(width: 4.0),
                           const Icon(
                             Icons.chevron_right, // Required chevron_right arrow icon
                             color: Colors.white,
-                            size: 11.0,
+                            size: 13.0,
                           ),
                         ],
                       ),

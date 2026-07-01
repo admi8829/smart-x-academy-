@@ -1810,26 +1810,14 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                     ),
                     const SizedBox(height: 8),
                     // Custom layout ProgressBar
-                    Stack(
-                      children: [
-                        Container(
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: widget.color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 500),
-                          height: 7,
-                          width: MediaQuery.of(context).size.width * 
-                              (allUnits.isEmpty ? 0 : (_downloadedUnits.length / allUnits.length)) * 0.85,
-                          decoration: BoxDecoration(
-                            color: widget.color,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ],
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: allUnits.isEmpty ? 0.0 : (_downloadedUnits.length / allUnits.length),
+                        minHeight: 6.0,
+                        backgroundColor: widget.color.withOpacity(0.12),
+                        valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+                      ),
                     ),
                   ],
                 ),
@@ -1931,7 +1919,19 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                   ),
                 ),
 
-              const SizedBox(height: 8.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+                child: Text(
+                  languageCode == 'en'
+                      ? 'Units Available (${filteredUnits.length})'
+                      : 'የቀረቡ የትምህርት ክፍሎች (${filteredUnits.length})',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                  ),
+                ),
+              ),
 
               // Filtered list of Units
               if (filteredUnits.isEmpty)
@@ -1991,7 +1991,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: cardBgColor,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withValues(alpha: isLight ? 0.02 : 0.12),
@@ -2007,7 +2007,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                   ),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
@@ -2039,7 +2039,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
                                         child: Row(
                                           children: [
-                                            // 1. UNIT NUMBER ON THE LEFT
+                                            // Left: circular container with a coral calendar icon
                                             Container(
                                               width: 44,
                                               height: 44,
@@ -2054,20 +2054,17 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                     ? const Icon(
                                                         Icons.lock_outline_rounded,
                                                         color: Color(0xFF94A3B8),
-                                                        size: 16,
+                                                        size: 18,
                                                       )
-                                                    : Text(
-                                                        "$activeUnitNum",
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          fontWeight: FontWeight.w900,
-                                                          color: widget.color,
-                                                        ),
+                                                    : Icon(
+                                                        Icons.calendar_today_rounded,
+                                                        color: widget.color,
+                                                        size: 18,
                                                       ),
                                               ),
                                             ),
-                                            const SizedBox(width: 10),
-                                            // 2. UNIT TITLE IN THE MIDDLE (Wrapped in Expanded)
+                                            const SizedBox(width: 14),
+                                            // Middle: Unit Title and subtitle
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2084,7 +2081,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                       height: 1.25,
                                                     ),
                                                   ),
-                                                  const SizedBox(height: 2),
+                                                  const SizedBox(height: 4),
                                                   Text(
                                                     desc,
                                                     maxLines: 1,
@@ -2137,47 +2134,12 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                                 ],
                                               ),
                                             ),
-                                            const SizedBox(width: 6),
-                                            // 3. PLAY Action neatly on the right side
-                                            SizedBox(
-                                              width: 34,
-                                              height: 34,
-                                              child: IconButton(
-                                                padding: EdgeInsets.zero,
-                                                icon: Icon(
-                                                  (activeUnitNum > 1 && !_isRegistered)
-                                                      ? Icons.lock_outline_rounded
-                                                      : Icons.play_circle_fill_rounded,
-                                                  color: (activeUnitNum > 1 && !_isRegistered)
-                                                      ? const Color(0xFF94A3B8)
-                                                      : widget.color,
-                                                  size: 24,
-                                                ),
-                                                onPressed: () {
-                                                  _checkRegistrationAndProceed(index, activeUnitNum, onSuccess: () {
-                                                    setState(() {
-                                                      _selectedUnitIndex = index;
-                                                    });
-                                                    if (widget.isShortNotesMode) {
-                                                      Navigator.of(context).push(
-                                                        MaterialPageRoute(
-                                                          builder: (context) => NotesScreen(
-                                                            grade: widget.grade,
-                                                            subjectId: widget.subjectId,
-                                                            unitNumber: activeUnitNum,
-                                                            unitTitle: title,
-                                                            themeColor: widget.color,
-                                                            isDarkMode: widget.isDarkMode,
-                                                            languageCode: widget.languageCode,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    } else {
-                                                      _showUnitOptionsSheet(context, activeUnitNum, unitId, title, isDownloaded);
-                                                    }
-                                                  });
-                                                },
-                                              ),
+                                            const SizedBox(width: 8),
+                                            // Tiny grey chevron arrow on the right
+                                            Icon(
+                                              Icons.chevron_right_rounded,
+                                              color: isLight ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+                                              size: 16,
                                             ),
                                           ],
                                         ),
@@ -2187,29 +2149,23 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            // Distinct Download icon button outside the unit selection box
+                            const SizedBox(width: 10),
+                            // Separate Download Button next to each card
                             Container(
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
                                 color: isDownloaded 
                                     ? const Color(0xFF10B981) 
-                                    : widget.color.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isDownloaded 
-                                      ? const Color(0xFF10B981) 
-                                      : widget.color.withOpacity(0.15),
-                                  width: 1.0,
-                                ),
-                                boxShadow: isDownloaded ? [
+                                    : const Color(0xFFEF4444),
+                                shape: BoxShape.circle,
+                                boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF10B981).withOpacity(0.4),
+                                    color: (isDownloaded ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withOpacity(0.35),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   )
-                                ] : null,
+                                ],
                               ),
                               child: Tooltip(
                                 message: languageCode == 'en' 
@@ -2223,7 +2179,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                           child: CircularProgressIndicator(
                                             value: progress,
                                             strokeWidth: 2.5,
-                                            color: isDownloaded ? Colors.white : widget.color,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       )
@@ -2233,11 +2189,7 @@ class _UnitSelectionScreenState extends State<UnitSelectionScreen> {
                                           isDownloaded
                                               ? Icons.cloud_done_rounded
                                               : Icons.file_download_rounded,
-                                          color: isDownloaded
-                                              ? Colors.white
-                                              : (activeUnitNum > 1 && !_isRegistered
-                                                  ? const Color(0xFF94A3B8)
-                                                  : widget.color),
+                                          color: Colors.white,
                                           size: 22,
                                         ),
                                         onPressed: () {

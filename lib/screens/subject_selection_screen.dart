@@ -261,7 +261,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 1.15,
+                    childAspectRatio: 1.0,
                   ),
                   itemCount: subjects.length,
                   itemBuilder: (context, index) {
