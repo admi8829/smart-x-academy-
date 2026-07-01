@@ -379,10 +379,8 @@ class PushNotificationService {
             builder: (context) => QuizScreen(
               mode: QuizMode.exam,
               grade: grade,
-              subjectId: subjectId,
-              unitNumber: unitNumber,
-              isDarkMode: isDarkMode,
-              languageCode: languageCode,
+              subject: subjectId,
+              unit: unitNumber,
             ),
           ),
         );

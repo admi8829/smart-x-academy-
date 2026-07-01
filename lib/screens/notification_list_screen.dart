@@ -480,10 +480,8 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
             builder: (ctx) => QuizScreen(
               mode: QuizMode.exam,
               grade: grade,
-              subjectId: subjectId,
-              unitNumber: unitNumber,
-              isDarkMode: widget.isDarkMode,
-              languageCode: widget.languageCode,
+              subject: subjectId,
+              unit: unitNumber,
             ),
           ),
         );
