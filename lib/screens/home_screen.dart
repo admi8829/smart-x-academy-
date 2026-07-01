@@ -181,6 +181,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Timer? _leaderboardCarouselTimer;
   int _totalStudentsInSelectedGrade = 0;
   bool _isLeaderboardOffline = false;
+  final ScrollController _leaderboardCarouselController = ScrollController();
 
   // Dictionary for dynamic translation matching 'EN/አማርኛ'
   final Map<String, Map<String, String>> _localizedValues = {
@@ -399,6 +400,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   void dispose() {
     _leaderboardCarouselTimer?.cancel();
     _fullNameController.dispose();
+    _leaderboardCarouselController.dispose();
     _emailController.dispose();
     _schoolNameController.dispose();
     _phoneController.dispose();
@@ -902,263 +904,424 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildMiniLeaderboardBanner(bool isLight) {
-    // Take Top 3 overall
-    final topThree = _allLeaderboardEntries.take(3).toList();
+  Widget _buildGradeLeaderboardRibbon(bool isLight, int gradeNum) {
+    final String gradeText = widget.languageCode == 'en' ? 'Grade $gradeNum Leaderboard' : 'የክፍል $gradeNum የመሪዎች ሰሌዳ';
+    
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 32,
+                  height: 1.5,
+                  color: const Color(0xFFD97706).withOpacity(0.35),
+                ),
+                const SizedBox(width: 210),
+                Container(
+                  width: 32,
+                  height: 1.5,
+                  color: const Color(0xFFD97706).withOpacity(0.35),
+                ),
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              decoration: BoxDecoration(
+                color: isLight ? const Color(0xFFFFFDF9) : const Color(0xFF2C241D),
+                borderRadius: BorderRadius.circular(30.0),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFBBF24).withOpacity(0.1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Text(
+                gradeText,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFB45309), // Warm gold-brown
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 5.0),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 3.5),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF59E0B),
+            borderRadius: BorderRadius.circular(12.0),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD97706).withOpacity(0.2),
+                blurRadius: 3,
+                offset: const Offset(0, 1.5),
+              ),
+            ],
+          ),
+          child: const Text(
+            "TOP 10",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 9.0,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.6,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScholarPodiumCard(Map<String, dynamic> scholar, bool isLight) {
+    final int rank = scholar['rank'];
+    final bool isRank1 = rank == 1;
+    final double width = isRank1 ? 134.0 : 118.0;
+    final double height = isRank1 ? 172.0 : 156.0;
+    
+    Color rankColor;
+    if (rank == 1) {
+      rankColor = const Color(0xFFFBBF24); // Gold
+    } else if (rank == 2) {
+      rankColor = const Color(0xFF94A3B8); // Silver
+    } else {
+      rankColor = const Color(0xFFD97706); // Bronze
+    }
+
+    final Color cardBg = isLight ? Colors.white : const Color(0xFF1E293B);
+    final Color textColor = isLight ? const Color(0xFF1F2937) : Colors.white;
+    final Color subTextColor = isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF);
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12.0),
+      width: width,
+      height: height,
+      margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
       decoration: BoxDecoration(
-        gradient: isLight
-            ? const LinearGradient(
-                colors: [Color(0xFFE0F2FE), Color(0xFFEFF6FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : const LinearGradient(
-                colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+        color: cardBg,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: isLight ? const Color(0xFFBAE6FD) : const Color(0xFF312E81),
-          width: 1.5,
+          color: isRank1 ? const Color(0xFFFBBF24).withOpacity(0.5) : const Color(0xFFE2E8F0).withOpacity(0.5),
+          width: isRank1 ? 1.8 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isLight ? 0.03 : 0.15),
-            blurRadius: 8,
+            color: isRank1 
+                ? const Color(0xFFFBBF24).withOpacity(0.12)
+                : Colors.black.withOpacity(0.04),
+            blurRadius: isRank1 ? 10 : 6,
             offset: const Offset(0, 4),
           ),
         ],
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
+          Stack(
+            alignment: Alignment.center,
             children: [
-              const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 16),
-              const SizedBox(width: 6.0),
-              Text(
-                widget.languageCode == 'en' ? 'Top Scholars Overall' : 'ምርጥ ተማሪዎች በአጠቃላይ',
-                style: TextStyle(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.w900,
-                  color: isLight ? const Color(0xFF0369A1) : const Color(0xFF38BDF8),
-                  letterSpacing: 0.2,
+              Container(
+                width: isRank1 ? 52.0 : 44.0,
+                height: isRank1 ? 52.0 : 44.0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: rankColor,
+                    width: isRank1 ? 2.5 : 2.0,
+                  ),
+                  image: DecorationImage(
+                    image: NetworkImage(scholar['avatar']),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                widget.languageCode == 'en' ? 'Verified Excellence' : 'የተረጋገጠ ብቃት',
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: isLight ? const Color(0xFF059669) : const Color(0xFF34D399),
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(1.5),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.verified_rounded,
+                    color: Color(0xFF1E88E5), // Verified blue
+                    size: 13.0,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8.0),
-          if (topThree.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: Text(
-                widget.languageCode == 'en' 
-                    ? "Complete quizzes to claim your spot on the top scholars board!"
-                    : "የመሪነት ደረጃዎን ለመያዝ ጥያቄዎችን ያጠናቅቁ!",
-                style: TextStyle(
-                  fontSize: 10.5,
-                  color: isLight ? Colors.grey.shade700 : Colors.grey.shade400,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            )
-          else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(topThree.length, (index) {
-                final scholar = topThree[index];
-                final rank = index + 1;
-                
-                Color rankColor;
-                if (rank == 1) rankColor = const Color(0xFFFBBF24); // Gold
-                else if (rank == 2) rankColor = const Color(0xFF94A3B8); // Silver
-                else rankColor = const Color(0xFFD97706); // Bronze
-
-                return Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(right: index < topThree.length - 1 ? 6.0 : 0.0),
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
-                    decoration: BoxDecoration(
-                      color: isLight ? Colors.white.withOpacity(0.85) : Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(10.0),
-                      border: Border.all(
-                        color: rankColor.withOpacity(0.4),
-                        width: 1.0,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Rank Circle
-                        Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: rankColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              rank.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9.0,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4.0),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      formatName(scholar.fullName),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 10.0,
-                                        fontWeight: FontWeight.bold,
-                                        color: isLight ? const Color(0xFF1E293B) : Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 1.5),
-                                  const Icon(
-                                    Icons.verified_rounded,
-                                    color: Color(0xFF3B82F6),
-                                    size: 10.0,
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                "${scholar.totalScore} pts",
-                                style: TextStyle(
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
+          const SizedBox(height: 6.0),
+          Text(
+            widget.languageCode == 'en' ? "Mathematics - Note View" : "ሂሳብ - ማስታወሻ እይታ",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 7.5,
+              fontWeight: FontWeight.bold,
+              color: subTextColor,
             ),
+          ),
+          const SizedBox(height: 2.0),
+          Text(
+            "$rank. ${formatName(scholar['fullName'])}",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w900,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 1.5),
+          Text(
+            "Phone: ${scholar['phoneNumber']}",
+            style: TextStyle(
+              fontSize: 8.5,
+              color: subTextColor,
+            ),
+          ),
+          const SizedBox(height: 1.5),
+          Text(
+            "Score: ${scholar['totalScore']}",
+            style: const TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF10B981),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildUniqueGradeSelector(bool isLight) {
-    final List<int> grades = [9, 10, 11, 12];
-    final Map<int, String> gradeSubtitlesEn = {
-      9: "Introductory",
-      10: "Intermediate",
-      11: "Preparatory",
-      12: "Advanced",
-    };
-    final Map<int, String> gradeSubtitlesAm = {
-      9: "መሰረታዊ",
-      10: "መካከለኛ",
-      11: "ዝግጅት",
-      12: "ከፍተኛ",
-    };
+  Widget _buildLeaderboardCarouselWidget(bool isLight) {
+    // Top scholars from DB for the selected grade
+    final gradeEntries = _allLeaderboardEntries.where((e) => e.grade == _selectedGradeForNotesTab).toList();
+    
+    // Default high quality mockups representing exact photo metrics from the image
+    final List<Map<String, dynamic>> defaultScholars = [
+      {
+        'rank': 1,
+        'fullName': 'Habtamu Yifiru',
+        'phoneNumber': '0992****02',
+        'totalScore': 985,
+        'avatar': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
+      },
+      {
+        'rank': 2,
+        'fullName': 'Mahlet Hailu',
+        'phoneNumber': '0911****14',
+        'totalScore': 975,
+        'avatar': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      },
+      {
+        'rank': 3,
+        'fullName': 'Dawit Kebebe',
+        'phoneNumber': '0922****55',
+        'totalScore': 968,
+        'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      },
+      {
+        'rank': 4,
+        'fullName': 'Tigist Abraham',
+        'phoneNumber': '0912****34',
+        'totalScore': 940,
+        'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+      },
+      {
+        'rank': 5,
+        'fullName': 'Almaz Bekele',
+        'phoneNumber': '0930****87',
+        'totalScore': 915,
+        'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+      }
+    ];
 
-    return SizedBox(
-      height: 54.0,
-      child: Row(
-        children: grades.map((gradeNum) {
-          final bool isSelected = _selectedGradeForNotesTab == gradeNum;
-          final String title = widget.languageCode == 'en' ? 'G-$gradeNum' : 'ክ-$gradeNum';
-          final String subtitle = widget.languageCode == 'en' 
-              ? gradeSubtitlesEn[gradeNum]! 
-              : gradeSubtitlesAm[gradeNum]!;
-          
-          final Color activeBgColor = isSelected 
-              ? const Color(0xFF10B981) // Emerald Green accent
-              : (isLight ? Colors.white : const Color(0xFF1E293B));
-          
-          final Color borderColor = isSelected 
-              ? const Color(0xFF10B981)
-              : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155));
+    final List<Map<String, dynamic>> displayScholars = [];
+    for (int i = 0; i < gradeEntries.length; i++) {
+      displayScholars.add({
+        'rank': i + 1,
+        'fullName': gradeEntries[i].fullName,
+        'phoneNumber': maskPhoneNumber(gradeEntries[i].phoneNumber),
+        'totalScore': gradeEntries[i].totalScore,
+        'avatar': i == 0 
+            ? 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150'
+            : (i == 1 ? 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'),
+      });
+    }
 
-          return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedGradeForNotesTab = gradeNum;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                decoration: BoxDecoration(
-                  color: activeBgColor,
-                  borderRadius: BorderRadius.circular(12.0),
-                  border: Border.all(color: borderColor, width: 1.5),
-                  boxShadow: isSelected
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF10B981).withOpacity(0.25),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          )
-                        ]
-                      : [],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 12.0,
-                        fontWeight: FontWeight.w900,
-                        color: isSelected 
-                            ? Colors.white 
-                            : (isLight ? const Color(0xFF1F2937) : Colors.white),
-                      ),
-                    ),
-                    const SizedBox(height: 1.0),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 8.0,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected 
-                            ? Colors.white.withOpacity(0.85) 
-                            : (isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
-                      ),
-                    ),
-                  ],
-                ),
+    if (displayScholars.isEmpty) {
+      displayScholars.addAll(defaultScholars);
+    }
+
+    // Sort to place Rank 2, Rank 1, Rank 3 in order for perfect podium view in carousel
+    final List<Map<String, dynamic>> carouselScholars = [];
+    if (displayScholars.length >= 3) {
+      carouselScholars.add(displayScholars[1]); // Rank 2 on left
+      carouselScholars.add(displayScholars[0]); // Rank 1 in middle (elevated)
+      carouselScholars.add(displayScholars[2]); // Rank 3 on right
+      for (int i = 3; i < displayScholars.length; i++) {
+        carouselScholars.add(displayScholars[i]);
+      }
+    } else {
+      carouselScholars.addAll(displayScholars);
+    }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Horizontal list
+        SizedBox(
+          height: 186.0,
+          child: ListView.builder(
+            controller: _leaderboardCarouselController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            itemCount: carouselScholars.length,
+            itemBuilder: (context, index) {
+              final scholar = carouselScholars[index];
+              return Center(
+                child: _buildScholarPodiumCard(scholar, isLight),
+              );
+            },
+          ),
+        ),
+        // Left Arrow Overlay
+        Positioned(
+          left: 4.0,
+          child: GestureDetector(
+            onTap: () => _scrollLeaderboardCarousel(false),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.chevron_left_rounded,
+                color: Color(0xFF64748B),
+                size: 18,
               ),
             ),
-          );
-        }).toList(),
+          ),
+        ),
+        // Right Arrow Overlay
+        Positioned(
+          right: 4.0,
+          child: GestureDetector(
+            onTap: () => _scrollLeaderboardCarousel(true),
+            child: Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1.5),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                color: Color(0xFF64748B),
+                size: 18,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _scrollLeaderboardCarousel(bool goRight) {
+    if (_leaderboardCarouselController.hasClients) {
+      final double currentOffset = _leaderboardCarouselController.offset;
+      final double maxScroll = _leaderboardCarouselController.position.maxScrollExtent;
+      double targetOffset = goRight ? currentOffset + 120.0 : currentOffset - 120.0;
+      if (targetOffset < 0) targetOffset = 0;
+      if (targetOffset > maxScroll) targetOffset = maxScroll;
+      
+      _leaderboardCarouselController.animateTo(
+        targetOffset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  Widget _buildUnifiedSegmentedGradeSelector(bool isLight) {
+    final List<int> grades = [9, 10, 11, 12];
+    
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: isLight ? const Color(0xFFEFF3F8) : const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Row(
+          children: grades.map((gradeNum) {
+            final bool isSelected = _selectedGradeForNotesTab == gradeNum;
+            final String title = widget.languageCode == 'en' ? 'G-$gradeNum' : 'ክ-$gradeNum';
+            
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedGradeForNotesTab = gradeNum;
+                  });
+                },
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? const Color(0xFF3B82F6) // Vibrant blue pill matching image
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                      color: isSelected 
+                          ? Colors.white 
+                          : (isLight ? const Color(0xFF475569) : const Color(0xFF94A3B8)),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -1169,56 +1332,64 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         'id': 'Mathematics',
         'amTitle': 'ሂሳብ',
         'enTitle': 'Mathematics',
-        'color': const Color(0xFF0084FF),
+        'color': const Color(0xFF3B82F6), // Vibrant blue
+        'lightBg': const Color(0xFFEFF6FF),
         'illustration': const DraftingGeometryWidget(),
       },
       {
         'id': 'Biology',
         'amTitle': 'ስነ-ህይወት',
         'enTitle': 'Biology',
-        'color': const Color(0xFF2E7D32),
+        'color': const Color(0xFF10B981), // Emerald green
+        'lightBg': const Color(0xFFECFDF5),
         'illustration': const CellBiologyWidget(),
       },
       {
         'id': 'Physics',
         'amTitle': 'ፊዚክስ',
         'enTitle': 'Physics',
-        'color': const Color(0xFFE53935),
+        'color': const Color(0xFFDC2626), // Crimson red
+        'lightBg': const Color(0xFFFEF2F2),
         'illustration': const AtomPhysicsWidget(),
       },
       {
         'id': 'Chemistry',
         'amTitle': 'ኬሚስትሪ',
         'enTitle': 'Chemistry',
-        'color': const Color(0xFFEF6C00),
+        'color': const Color(0xFFEA580C), // Orange
+        'lightBg': const Color(0xFFFFF7ED),
         'illustration': const ChemistryFlaskWidget(),
       },
       {
         'id': 'Geography',
         'amTitle': 'ጂኦግራፊ',
         'enTitle': 'Geography',
-        'color': const Color(0xFF8E24AA),
+        'color': const Color(0xFF8E24AA), // Purple
+        'lightBg': const Color(0xFFFDF4FF),
         'illustration': const WorldMapGeographyWidget(),
       },
       {
         'id': 'History',
         'amTitle': 'ታሪክ',
         'enTitle': 'History',
-        'color': const Color(0xFFF5B041),
+        'color': const Color(0xFFD97706), // Brown gold
+        'lightBg': const Color(0xFFFEF3C7),
         'illustration': const AksumObeliskWidget(),
       },
       {
         'id': 'Civics',
         'amTitle': 'ዜግነት',
         'enTitle': 'Civics',
-        'color': const Color(0xFF1E88E5),
+        'color': const Color(0xFF1E88E5), // Blue civics
+        'lightBg': const Color(0xFFEFF6FF),
         'illustration': const CivicsGavelWidget(),
       },
       {
         'id': 'Agriculture',
         'amTitle': 'ግብርና',
         'enTitle': 'Agriculture',
-        'color': const Color(0xFF8D6E63),
+        'color': const Color(0xFF8D6E63), // Brown
+        'lightBg': const Color(0xFFEFEBE9),
         'illustration': const AgricultureSproutWidget(),
       },
     ];
@@ -1239,113 +1410,199 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Header: compact mini-leaderboard preview banner representing the top-tier rankings
-            _buildMiniLeaderboardBanner(isLight),
+            // Upgraded Grade Leaderboard ribbon banner
+            _buildGradeLeaderboardRibbon(isLight, _selectedGradeForNotesTab),
+            const SizedBox(height: 12.0),
+
+            // Horizontal podium scholars carousel with overlays
+            _buildLeaderboardCarouselWidget(isLight),
             const SizedBox(height: 18.0),
 
-            // Grade Selector Row (Headings)
+            // Select Grade & Practice Notes row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 15.5,
                     fontWeight: FontWeight.w900,
                     color: headerTextColor,
                     letterSpacing: -0.4,
                   ),
                 ),
-                Text(
-                  widget.languageCode == 'en' ? 'Short Notes' : 'አጫጭር ማስታወሻዎች',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isLight ? const Color(0xFF52C29F) : const Color(0xFF475569),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+                        title: Text(
+                          widget.languageCode == 'en' ? 'Practice Notes Mode' : 'የማስታወሻ ልምምድ',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        content: Text(
+                          widget.languageCode == 'en'
+                              ? 'Get ready! Practice Notes helps you master all key concepts. Select any subject below to begin your comprehensive study session!'
+                              : 'ይዘጋጁ! የማስታወሻ ልምምድ ቁልፍ ፅንሰ-ሀሳቦችን ለመቆጣጠር ይረዳዎታል። ሁሉን አቀፍ የጥናት ጊዜዎን ለመጀመር ከታች ያሉትን ማናቸውንም የትምህርት አይነቶች ይምረጡ!',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(widget.languageCode == 'en' ? 'OK' : 'እሺ'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: Text(
+                    widget.languageCode == 'en' ? 'Practice Notes' : 'የማስታወሻ ልምምድ',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3B82F6),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8.0),
 
-            // Unique styled Grade Selector
-            _buildUniqueGradeSelector(isLight),
+            // Upgraded pill-shaped unified segmented grade selector matching image
+            _buildUnifiedSegmentedGradeSelector(isLight),
             const SizedBox(height: 18.0),
 
-            // Carousel Title / Label
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.languageCode == 'en' ? 'Available Subjects' : 'የቀረቡ የትምህርት አይነቶች',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: headerTextColor,
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                Icon(
-                  Icons.swipe_left_rounded,
-                  size: 16.0,
-                  color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8.0),
+            // Upgraded vertical list of beautiful cards
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                final String subjectTitle = widget.languageCode == 'en' ? subject['enTitle'] : subject['amTitle'];
+                final String subjectSubtitle = widget.languageCode == 'en' ? 'Grade $_selectedGradeForNotesTab' : 'ክፍል $_selectedGradeForNotesTab';
 
-            // Horizontal Subject Carousel
-            SizedBox(
-              height: 172.0,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                itemCount: subjects.length,
-                itemBuilder: (context, index) {
-                  final subject = subjects[index];
-                  return Container(
-                    width: 152.0,
-                    margin: EdgeInsets.only(
-                      right: index == subjects.length - 1 ? 0.0 : 14.0,
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12.0),
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: isLight ? Colors.white : const Color(0xFF1E293B),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(
+                      color: isLight ? const Color(0xFFF1F5F9) : const Color(0xFF334155),
+                      width: 1.0,
                     ),
-                    child: InteractiveSubjectCard(
-                      amTitle: subject['amTitle'],
-                      enTitle: subject['enTitle'],
-                      color: subject['color'],
-                      illustration: subject['illustration'],
-                      isLight: isLight,
-                      gradeColor: const Color(0xFF1E88E5),
-                      languageCode: widget.languageCode,
-                      grade: _selectedGradeForNotesTab,
-                      btnText: widget.languageCode == 'en' ? 'READ' : 'አንብብ',
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => UnitSelectionScreen(
-                              grade: _selectedGradeForNotesTab,
-                              subjectId: subject['id'],
-                              enTitle: subject['enTitle'],
-                              amTitle: subject['amTitle'],
-                              color: subject['color'],
-                              icon: subject['illustration'],
-                              isDarkMode: widget.isDarkMode,
-                              languageCode: widget.languageCode,
-                              onToggleTheme: widget.onToggleTheme,
-                              onToggleLanguage: widget.onToggleLanguage,
-                              isShortNotesMode: true, // Directly read short notes!
-                            ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isLight ? 0.03 : 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Circular subject illustration container
+                      Container(
+                        width: 52,
+                        height: 52,
+                        padding: const EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: isLight ? subject['lightBg'] : subject['color'].withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: subject['illustration'],
                           ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      ),
+                      const SizedBox(width: 14.0),
+                      // Text block (Title & Grade Subtitle)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              subjectTitle,
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w900,
+                                color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 2.5),
+                            Text(
+                              subjectSubtitle,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                                color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Pill shaped READ button
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => UnitSelectionScreen(
+                                grade: _selectedGradeForNotesTab,
+                                subjectId: subject['id'],
+                                enTitle: subject['enTitle'],
+                                amTitle: subject['amTitle'],
+                                color: subject['color'],
+                                icon: subject['illustration'],
+                                isDarkMode: widget.isDarkMode,
+                                languageCode: widget.languageCode,
+                                onToggleTheme: widget.onToggleTheme,
+                                onToggleLanguage: widget.onToggleLanguage,
+                                isShortNotesMode: true,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: subject['color'],
+                          foregroundColor: Colors.white,
+                          elevation: 1,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24.0),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.languageCode == 'en' ? 'READ' : 'አንብብ',
+                              style: const TextStyle(
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 4.0),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 14.0,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
