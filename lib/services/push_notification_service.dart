@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../screens/notification_list_screen.dart';
+import '../screens/quiz_screen.dart';
+import '../screens/notes_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -22,10 +24,30 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   body ??= message.data['body']?.toString() ?? message.data['message']?.toString();
   
   if (title != null || body != null) {
+    title ??= 'New Notification';
+    body ??= '';
+
+    final prefs = await SharedPreferences.getInstance();
+    final String userName = prefs.getString('user_fullName') ?? prefs.getString('user_name') ?? 'ተማሪ';
+    final String personalizedTitle = title.replaceAll('[name]', userName);
+    final String personalizedBody = body.replaceAll('[name]', userName);
+
     await PushNotificationService.saveLocalNotification(
-      title ?? 'New Notification',
-      body ?? '',
+      personalizedTitle,
+      personalizedBody,
       data: message.data,
+    );
+
+    final String notificationId = message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString();
+    await PushNotificationService.showLocalNotificationWithActions(
+      id: DateTime.now().millisecondsSinceEpoch % 100000,
+      title: personalizedTitle,
+      body: personalizedBody,
+      payload: jsonEncode({
+        'id': notificationId,
+        ...message.data,
+      }),
+      actionsPayload: message.data['actions']?.toString(),
     );
   }
 }
@@ -52,8 +74,13 @@ class PushNotificationService {
       await _localNotifications.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) async {
-          // Ensure tapping the notification opens the application and routes to NotificationListScreen properly
-          await _navigateToNotificationScreen();
+          final actionId = response.actionId;
+          final p = response.payload;
+          if (actionId != null && actionId.isNotEmpty) {
+            await _handleCustomAction(actionId, p);
+          } else {
+            await _navigateToNotificationScreen();
+          }
         },
       );
 
@@ -113,6 +140,7 @@ class PushNotificationService {
               'id': notificationId,
               ...message.data,
             }),
+            actionsPayload: message.data['actions']?.toString(),
           );
         }
       });
@@ -127,18 +155,70 @@ class PushNotificationService {
     required String title,
     required String body,
     required String payload,
+    String? actionsPayload,
   }) async {
     try {
-      const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+      // Ensure Flutter Local Notifications is initialized in this isolate/context
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+      );
+      
+      await _localNotifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) async {
+          final actionId = response.actionId;
+          final p = response.payload;
+          if (actionId != null && actionId.isNotEmpty) {
+            await _handleCustomAction(actionId, p);
+          } else {
+            await _navigateToNotificationScreen();
+          }
+        },
+      );
+
+      List<AndroidNotificationAction> androidActions = [];
+      if (actionsPayload != null && actionsPayload.isNotEmpty) {
+        try {
+          final List<dynamic> parsedActions = jsonDecode(actionsPayload);
+          for (var i = 0; i < parsedActions.length && i < 3; i++) {
+            final act = parsedActions[i];
+            if (act is Map) {
+              final aId = act['id']?.toString() ?? '';
+              final aTitle = act['title']?.toString() ?? '';
+              if (aId.isNotEmpty && aTitle.isNotEmpty) {
+                androidActions.add(
+                  AndroidNotificationAction(
+                    aId,
+                    aTitle,
+                    showsUserInterface: true,
+                    cancelNotification: true,
+                  ),
+                );
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('Error parsing actions: $e');
+        }
+      }
+
+      final AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
         'smart_x_channel_id',
         'Smart X Notifications',
         channelDescription: 'Main Notification Channel for Smart X Academy',
         importance: Importance.max,
         priority: Priority.high,
         ticker: 'ticker',
+        playSound: true,
+        enableLights: true,
+        enableVibration: true,
+        styleInformation: BigTextStyleInformation(body),
+        actions: androidActions.isNotEmpty ? androidActions : null,
       );
 
-      const NotificationDetails notificationDetails = NotificationDetails(
+      final NotificationDetails notificationDetails = NotificationDetails(
         android: androidNotificationDetails,
       );
 
@@ -179,6 +259,12 @@ class PushNotificationService {
         'time': _getFormattedTime(DateTime.now()),
         'is_read': false,
         'url': url,
+        'actions': data?['actions'],
+        'grade': data?['grade']?.toString(),
+        'subjectId': data?['subjectId']?.toString(),
+        'unitNumber': data?['unitNumber']?.toString(),
+        'unitTitle': data?['unitTitle']?.toString(),
+        'themeColor': data?['themeColor']?.toString(),
       };
       list.insert(0, jsonEncode(newNotification)); // newest first
       await prefs.setStringList('local_notifications', list);
@@ -217,6 +303,95 @@ class PushNotificationService {
       );
     } catch (e) {
       debugPrint('Error navigating to NotificationListScreen: $e');
+    }
+  }
+
+  static Color _parseThemeColor(String? colorStr) {
+    if (colorStr == null || colorStr.isEmpty) return const Color(0xFF3B82F6);
+    try {
+      if (colorStr.startsWith('#')) {
+        final hex = colorStr.replaceAll('#', '');
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        } else if (hex.length == 8) {
+          return Color(int.parse(hex, radix: 16));
+        }
+      } else if (colorStr.startsWith('0x') || colorStr.startsWith('0X')) {
+        final hex = colorStr.substring(2);
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        } else if (hex.length == 8) {
+          return Color(int.parse(hex, radix: 16));
+        }
+      }
+      
+      switch (colorStr.toLowerCase()) {
+        case 'red': return Colors.red;
+        case 'blue': return Colors.blue;
+        case 'green': return Colors.green;
+        case 'orange': return Colors.orange;
+        case 'purple': return Colors.purple;
+        case 'teal': return Colors.teal;
+        case 'amber': return Colors.amber;
+        case 'pink': return Colors.pink;
+      }
+    } catch (_) {}
+    return const Color(0xFF3B82F6);
+  }
+
+  static Future<void> _handleCustomAction(String actionId, String? payloadStr) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      final languageCode = prefs.getString('languageCode') ?? 'en';
+      final int userGrade = prefs.getInt('user_grade') ?? 12;
+
+      Map<String, dynamic> data = {};
+      if (payloadStr != null && payloadStr.isNotEmpty) {
+        try {
+          data = jsonDecode(payloadStr) as Map<String, dynamic>;
+        } catch (_) {}
+      }
+
+      final grade = int.tryParse(data['grade']?.toString() ?? '') ?? userGrade;
+      final subjectId = data['subjectId']?.toString() ?? 'physics';
+      final unitNumber = int.tryParse(data['unitNumber']?.toString() ?? '') ?? 1;
+      final unitTitle = data['unitTitle']?.toString() ?? 'Unit $unitNumber';
+      final themeColor = _parseThemeColor(data['themeColor']?.toString());
+
+      if (actionId == 'read' || actionId == 'አንብብ') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => NotesScreen(
+              grade: grade,
+              subjectId: subjectId,
+              unitNumber: unitNumber,
+              unitTitle: unitTitle,
+              themeColor: themeColor,
+              isDarkMode: isDarkMode,
+              languageCode: languageCode,
+            ),
+          ),
+        );
+      } else if (actionId == 'quiz' || actionId == 'ፈተና ጀምር') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (context) => QuizScreen(
+              mode: QuizMode.exam,
+              grade: grade,
+              subjectId: subjectId,
+              unitNumber: unitNumber,
+              isDarkMode: isDarkMode,
+              languageCode: languageCode,
+            ),
+          ),
+        );
+      } else {
+        await _navigateToNotificationScreen();
+      }
+    } catch (e) {
+      debugPrint('Error in _handleCustomAction: $e');
+      await _navigateToNotificationScreen();
     }
   }
 

@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'notes_screen.dart';
+import 'quiz_screen.dart';
 
 class NotificationListScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -385,6 +387,10 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                                   ),
                                 ),
                               ],
+                              if (notification['actions'] != null) ...[
+                                const SizedBox(height: 12),
+                                _buildNotificationActionButtons(context, notification),
+                              ],
                             ],
                           ),
                         ),
@@ -393,5 +399,130 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                   },
                 ),
     );
+  }
+
+  Widget _buildNotificationActionButtons(BuildContext context, Map<String, dynamic> notification) {
+    try {
+      final actionsField = notification['actions'];
+      List<dynamic> actions = [];
+      if (actionsField is String) {
+        actions = jsonDecode(actionsField);
+      } else if (actionsField is List) {
+        actions = actionsField;
+      }
+      
+      if (actions.isEmpty) return const SizedBox.shrink();
+      
+      return Row(
+        children: actions.map<Widget>((act) {
+          if (act is! Map) return const SizedBox.shrink();
+          final String actionId = act['id']?.toString() ?? '';
+          final String actionTitle = act['title']?.toString() ?? '';
+          if (actionId.isEmpty || actionTitle.isEmpty) return const SizedBox.shrink();
+          
+          return Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ElevatedButton(
+              onPressed: () async {
+                final String id = notification['id'].toString();
+                if (!(notification['is_read'] ?? false)) {
+                  await _markAsRead(id);
+                }
+                _handleUIAction(context, actionId, notification);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3B82F6).withOpacity(0.1),
+                foregroundColor: const Color(0xFF3B82F6),
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                actionTitle,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+  }
+
+  void _handleUIAction(BuildContext context, String actionId, Map<String, dynamic> notification) {
+    try {
+      final grade = int.tryParse(notification['grade']?.toString() ?? '') ?? 12;
+      final subjectId = notification['subjectId']?.toString() ?? 'physics';
+      final unitNumber = int.tryParse(notification['unitNumber']?.toString() ?? '') ?? 1;
+      final unitTitle = notification['unitTitle']?.toString() ?? 'Unit $unitNumber';
+      final themeColor = _parseThemeColor(notification['themeColor']?.toString());
+      
+      if (actionId == 'read' || actionId == 'አንብብ') {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (ctx) => NotesScreen(
+              grade: grade,
+              subjectId: subjectId,
+              unitNumber: unitNumber,
+              unitTitle: unitTitle,
+              themeColor: themeColor,
+              isDarkMode: widget.isDarkMode,
+              languageCode: widget.languageCode,
+            ),
+          ),
+        );
+      } else if (actionId == 'quiz' || actionId == 'ፈተና ጀምር') {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (ctx) => QuizScreen(
+              mode: QuizMode.exam,
+              grade: grade,
+              subjectId: subjectId,
+              unitNumber: unitNumber,
+              isDarkMode: widget.isDarkMode,
+              languageCode: widget.languageCode,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error handling UI action: $e');
+    }
+  }
+
+  Color _parseThemeColor(String? colorStr) {
+    if (colorStr == null || colorStr.isEmpty) return const Color(0xFF3B82F6);
+    try {
+      if (colorStr.startsWith('#')) {
+        final hex = colorStr.replaceAll('#', '');
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        } else if (hex.length == 8) {
+          return Color(int.parse(hex, radix: 16));
+        }
+      } else if (colorStr.startsWith('0x') || colorStr.startsWith('0X')) {
+        final hex = colorStr.substring(2);
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        } else if (hex.length == 8) {
+          return Color(int.parse(hex, radix: 16));
+        }
+      }
+      
+      switch (colorStr.toLowerCase()) {
+        case 'red': return Colors.red;
+        case 'blue': return Colors.blue;
+        case 'green': return Colors.green;
+        case 'orange': return Colors.orange;
+        case 'purple': return Colors.purple;
+        case 'teal': return Colors.teal;
+        case 'amber': return Colors.amber;
+        case 'pink': return Colors.pink;
+      }
+    } catch (_) {}
+    return const Color(0xFF3B82F6);
   }
 }
