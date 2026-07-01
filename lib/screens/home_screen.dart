@@ -32,6 +32,26 @@ class LeaderboardEntry {
     required this.grade,
     required this.totalScore,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'fullName': fullName,
+      'phoneNumber': phoneNumber,
+      'grade': grade,
+      'totalScore': totalScore,
+    };
+  }
+
+  factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
+    return LeaderboardEntry(
+      userId: json['userId'] ?? '',
+      fullName: json['fullName'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      grade: json['grade'] ?? 0,
+      totalScore: json['totalScore'] ?? 0,
+    );
+  }
 }
 
 class HomeScreen extends StatefulWidget {
@@ -160,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   int _leaderboardSelectedGrade = 0; // 0 means All Grades
   Timer? _leaderboardCarouselTimer;
   int _totalStudentsInSelectedGrade = 0;
+  bool _isLeaderboardOffline = false;
 
   // Dictionary for dynamic translation matching 'EN/አማርኛ'
   final Map<String, Map<String, String>> _localizedValues = {
@@ -881,6 +902,267 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildMiniLeaderboardBanner(bool isLight) {
+    // Take Top 3 overall
+    final topThree = _allLeaderboardEntries.take(3).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        gradient: isLight
+            ? const LinearGradient(
+                colors: [Color(0xFFE0F2FE), Color(0xFFEFF6FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(
+          color: isLight ? const Color(0xFFBAE6FD) : const Color(0xFF312E81),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isLight ? 0.03 : 0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.stars_rounded, color: Color(0xFFF59E0B), size: 16),
+              const SizedBox(width: 6.0),
+              Text(
+                widget.languageCode == 'en' ? 'Top Scholars Overall' : 'ምርጥ ተማሪዎች በአጠቃላይ',
+                style: TextStyle(
+                  fontSize: 12.0,
+                  fontWeight: FontWeight.w900,
+                  color: isLight ? const Color(0xFF0369A1) : const Color(0xFF38BDF8),
+                  letterSpacing: 0.2,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                widget.languageCode == 'en' ? 'Verified Excellence' : 'የተረጋገጠ ብቃት',
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  color: isLight ? const Color(0xFF059669) : const Color(0xFF34D399),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8.0),
+          if (topThree.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Text(
+                widget.languageCode == 'en' 
+                    ? "Complete quizzes to claim your spot on the top scholars board!"
+                    : "የመሪነት ደረጃዎን ለመያዝ ጥያቄዎችን ያጠናቅቁ!",
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: isLight ? Colors.grey.shade700 : Colors.grey.shade400,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(topThree.length, (index) {
+                final scholar = topThree[index];
+                final rank = index + 1;
+                
+                Color rankColor;
+                if (rank == 1) rankColor = const Color(0xFFFBBF24); // Gold
+                else if (rank == 2) rankColor = const Color(0xFF94A3B8); // Silver
+                else rankColor = const Color(0xFFD97706); // Bronze
+
+                return Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(right: index < topThree.length - 1 ? 6.0 : 0.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 6.0),
+                    decoration: BoxDecoration(
+                      color: isLight ? Colors.white.withOpacity(0.85) : Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: rankColor.withOpacity(0.4),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Rank Circle
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: rankColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              rank.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 4.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      formatName(scholar.fullName),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 10.0,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLight ? const Color(0xFF1E293B) : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 1.5),
+                                  const Icon(
+                                    Icons.verified_rounded,
+                                    color: Color(0xFF3B82F6),
+                                    size: 10.0,
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                "${scholar.totalScore} pts",
+                                style: TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: isLight ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUniqueGradeSelector(bool isLight) {
+    final List<int> grades = [9, 10, 11, 12];
+    final Map<int, String> gradeSubtitlesEn = {
+      9: "Introductory",
+      10: "Intermediate",
+      11: "Preparatory",
+      12: "Advanced",
+    };
+    final Map<int, String> gradeSubtitlesAm = {
+      9: "መሰረታዊ",
+      10: "መካከለኛ",
+      11: "ዝግጅት",
+      12: "ከፍተኛ",
+    };
+
+    return SizedBox(
+      height: 54.0,
+      child: Row(
+        children: grades.map((gradeNum) {
+          final bool isSelected = _selectedGradeForNotesTab == gradeNum;
+          final String title = widget.languageCode == 'en' ? 'G-$gradeNum' : 'ክ-$gradeNum';
+          final String subtitle = widget.languageCode == 'en' 
+              ? gradeSubtitlesEn[gradeNum]! 
+              : gradeSubtitlesAm[gradeNum]!;
+          
+          final Color activeBgColor = isSelected 
+              ? const Color(0xFF10B981) // Emerald Green accent
+              : (isLight ? Colors.white : const Color(0xFF1E293B));
+          
+          final Color borderColor = isSelected 
+              ? const Color(0xFF10B981)
+              : (isLight ? const Color(0xFFE2E8F0) : const Color(0xFF334155));
+
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  _selectedGradeForNotesTab = gradeNum;
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
+                decoration: BoxDecoration(
+                  color: activeBgColor,
+                  borderRadius: BorderRadius.circular(12.0),
+                  border: Border.all(color: borderColor, width: 1.5),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          )
+                        ]
+                      : [],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 12.0,
+                        fontWeight: FontWeight.w900,
+                        color: isSelected 
+                            ? Colors.white 
+                            : (isLight ? const Color(0xFF1F2937) : Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 1.0),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 8.0,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected 
+                            ? Colors.white.withOpacity(0.85) 
+                            : (isLight ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildNotesScreenTab(bool isLight) {
     final List<Map<String, dynamic>> subjects = [
       {
@@ -961,14 +1243,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Headings / Subtitle matching subject selection screen look
+            // Top Header: compact mini-leaderboard preview banner representing the top-tier rankings
+            _buildMiniLeaderboardBanner(isLight),
+            const SizedBox(height: 18.0),
+
+            // Grade Selector Row (Headings)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   widget.languageCode == 'en' ? 'Select Grade' : 'ክፍል ይምረጡ',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w900,
                     color: headerTextColor,
                     letterSpacing: -0.4,
@@ -977,72 +1263,89 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Text(
                   widget.languageCode == 'en' ? 'Short Notes' : 'አጫጭር ማስታወሻዎች',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: isLight ? const Color(0xFF52C29F) : const Color(0xFF475569),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 8.0),
 
-            // Redesigned Compact Slide Grade Selector
-            CompactGradeSelector(
-              selectedGrade: _selectedGradeForNotesTab,
-              onGradeSelected: (int val) {
-                setState(() {
-                  _selectedGradeForNotesTab = val;
-                });
-              },
-              isLight: isLight,
-              languageCode: widget.languageCode,
-            ),
+            // Unique styled Grade Selector
+            _buildUniqueGradeSelector(isLight),
             const SizedBox(height: 18.0),
 
-            // Subject Cards Grid using the beautiful animated Bento InteractiveSubjectCard
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16.0,
-                mainAxisSpacing: 16.0,
-                childAspectRatio: 1.15,
+            // Carousel Title / Label
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.languageCode == 'en' ? 'Available Subjects' : 'የቀረቡ የትምህርት አይነቶች',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: headerTextColor,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                Icon(
+                  Icons.swipe_left_rounded,
+                  size: 16.0,
+                  color: isLight ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+
+            // Horizontal Subject Carousel
+            SizedBox(
+              height: 172.0,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                itemCount: subjects.length,
+                itemBuilder: (context, index) {
+                  final subject = subjects[index];
+                  return Container(
+                    width: 152.0,
+                    margin: EdgeInsets.only(
+                      right: index == subjects.length - 1 ? 0.0 : 14.0,
+                    ),
+                    child: InteractiveSubjectCard(
+                      amTitle: subject['amTitle'],
+                      enTitle: subject['enTitle'],
+                      color: subject['color'],
+                      illustration: subject['illustration'],
+                      isLight: isLight,
+                      gradeColor: const Color(0xFF1E88E5),
+                      languageCode: widget.languageCode,
+                      grade: _selectedGradeForNotesTab,
+                      btnText: widget.languageCode == 'en' ? 'READ' : 'አንብብ',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => UnitSelectionScreen(
+                              grade: _selectedGradeForNotesTab,
+                              subjectId: subject['id'],
+                              enTitle: subject['enTitle'],
+                              amTitle: subject['amTitle'],
+                              color: subject['color'],
+                              icon: subject['illustration'],
+                              isDarkMode: widget.isDarkMode,
+                              languageCode: widget.languageCode,
+                              onToggleTheme: widget.onToggleTheme,
+                              onToggleLanguage: widget.onToggleLanguage,
+                              isShortNotesMode: true, // Directly read short notes!
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
-              itemCount: subjects.length,
-              itemBuilder: (context, index) {
-                final subject = subjects[index];
-                return InteractiveSubjectCard(
-                  amTitle: subject['amTitle'],
-                  enTitle: subject['enTitle'],
-                  color: subject['color'],
-                  illustration: subject['illustration'],
-                  isLight: isLight,
-                  gradeColor: const Color(0xFF1E88E5),
-                  languageCode: widget.languageCode,
-                  grade: _selectedGradeForNotesTab,
-                  btnText: widget.languageCode == 'en' ? 'READ' : 'አንብብ',
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => UnitSelectionScreen(
-                          grade: _selectedGradeForNotesTab,
-                          subjectId: subject['id'],
-                          enTitle: subject['enTitle'],
-                          amTitle: subject['amTitle'],
-                          color: subject['color'],
-                          icon: subject['illustration'],
-                          isDarkMode: widget.isDarkMode,
-                          languageCode: widget.languageCode,
-                          onToggleTheme: widget.onToggleTheme,
-                          onToggleLanguage: widget.onToggleLanguage,
-                          isShortNotesMode: true, // Directly read short notes!
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
             ),
           ],
         ),
@@ -1253,13 +1556,43 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  widget.languageCode == 'en' ? 'Top 10 Leaderboard' : 'ምርጥ 10 የመሪዎች ሰሌዳ',
-                  style: TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w900,
-                    color: isLight ? const Color(0xFF0F172A) : Colors.white,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      widget.languageCode == 'en' ? 'Top 10 Leaderboard' : 'ምርጥ 10 የመሪዎች ሰሌዳ',
+                      style: TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w900,
+                        color: isLight ? const Color(0xFF0F172A) : Colors.white,
+                      ),
+                    ),
+                    if (_isLeaderboardOffline) ...[
+                      const SizedBox(width: 8.0),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(6.0),
+                          border: Border.all(color: Colors.amber.shade700, width: 0.8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.wifi_off_rounded, color: Colors.amber.shade700, size: 10.0),
+                            const SizedBox(width: 3.0),
+                            Text(
+                              widget.languageCode == 'en' ? 'Offline' : 'ከመስመር ውጭ',
+                              style: TextStyle(
+                                color: Colors.amber.shade700,
+                                fontSize: 9.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 // Dropdown for filtering leaderboard by grade
                 Container(
@@ -1432,16 +1765,57 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       // 6. Sort by score descending
       entries.sort((a, b) => b.totalScore.compareTo(a.totalScore));
 
+      // Cache the successfully fetched leaderboard list
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final List<Map<String, dynamic>> jsonList = entries.map((e) => e.toJson()).toList();
+        await prefs.setString('cached_leaderboard', jsonEncode(jsonList));
+      } catch (cacheWriteError) {
+        debugPrint("Error writing to leaderboard cache: $cacheWriteError");
+      }
+
       setState(() {
         _allLeaderboardEntries = entries;
         _isLeaderboardLoading = false;
+        _isLeaderboardOffline = false;
+        _leaderboardError = null;
         _applyLeaderboardFilter();
       });
     } catch (e) {
       debugPrint("Error fetching leaderboard data: $e");
+      
+      // Load from local SharedPreferences cache
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final String? cachedStr = prefs.getString('cached_leaderboard');
+        if (cachedStr != null) {
+          final List<dynamic> decodedList = jsonDecode(cachedStr);
+          final List<LeaderboardEntry> cachedEntries = decodedList
+              .map((item) => LeaderboardEntry.fromJson(item as Map<String, dynamic>))
+              .toList();
+
+          setState(() {
+            _allLeaderboardEntries = cachedEntries;
+            _isLeaderboardLoading = false;
+            _isLeaderboardOffline = true;
+            _leaderboardError = null; // No error if cache was loaded
+            _applyLeaderboardFilter();
+          });
+          return;
+        }
+      } catch (cacheReadError) {
+        debugPrint("Error reading from leaderboard cache: $cacheReadError");
+      }
+
+      // Show highly polite, friendly student-oriented alert if fetch failed and no cache is available
+      final String friendlyError = widget.languageCode == 'en'
+          ? "We couldn't connect to the servers right now. Please check your internet connection and try again."
+          : "በአሁኑ ጊዜ ከሰርቨሮች ጋር መገናኘት አልተቻለም። እባክዎ የኢንተርኔት ግንኙነትዎን አረጋግጠው እንደገና ይሞክሩ።";
+
       setState(() {
         _isLeaderboardLoading = false;
-        _leaderboardError = e.toString();
+        _isLeaderboardOffline = false;
+        _leaderboardError = friendlyError;
       });
     }
   }
@@ -1756,6 +2130,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         color: titleColor,
                       ),
                     ),
+                    if (rank >= 1 && rank <= 3) ...[
+                      const SizedBox(width: 5.0),
+                      Tooltip(
+                        message: widget.languageCode == 'en'
+                            ? "Verified Academic Excellence"
+                            : "የተረጋገጠ የላቀ የትምህርት አፈፃፀም",
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: Color(0xFF3B82F6), // Blue verified checkmark
+                          size: 15.0,
+                        ),
+                      ),
+                    ],
                     if (isMyRankCard) ...[
                       const SizedBox(width: 6.0),
                       Container(
